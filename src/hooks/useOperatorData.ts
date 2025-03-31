@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { ExtendedOperator, OPERATORS_STORAGE_KEY } from "@/types/operator";
+import { safeLocalStorage } from "@/utils/fileUtils";
 
 export const useOperatorData = (operatorId: string | undefined) => {
   const navigate = useNavigate();
@@ -23,7 +24,7 @@ export const useOperatorData = (operatorId: string | undefined) => {
   useEffect(() => {
     const loadOperator = () => {
       try {
-        const storedOperators = localStorage.getItem(OPERATORS_STORAGE_KEY);
+        const storedOperators = safeLocalStorage.getItem(OPERATORS_STORAGE_KEY);
         if (!storedOperators) {
           toast.error("Nessun operatore trovato");
           navigate("/operators");

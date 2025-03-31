@@ -1,8 +1,7 @@
-
 import { useState } from "react";
 import { toast } from "sonner";
 import { ExtendedOperator, OPERATORS_STORAGE_KEY } from "@/types/operator";
-import { fileToBase64 } from "@/utils/fileUtils";
+import { fileToBase64, safeLocalStorage } from "@/utils/fileUtils";
 
 export const useOperatorOperations = (
   operator: ExtendedOperator | null,
@@ -145,7 +144,7 @@ export const useOperatorOperations = (
         }
       };
       
-      const storedOperators = localStorage.getItem(OPERATORS_STORAGE_KEY);
+      const storedOperators = safeLocalStorage.getItem(OPERATORS_STORAGE_KEY);
       if (!storedOperators) {
         toast.error("Errore nel salvataggio dell'operatore");
         return;
@@ -156,7 +155,7 @@ export const useOperatorOperations = (
         op.id === updatedOperator.id ? updatedOperator : op
       );
       
-      localStorage.setItem(OPERATORS_STORAGE_KEY, JSON.stringify(updatedOperators));
+      safeLocalStorage.setItem(OPERATORS_STORAGE_KEY, JSON.stringify(updatedOperators));
       setOperator(updatedOperator);
       toast.success("Profilo operatore aggiornato con successo");
     } catch (error) {

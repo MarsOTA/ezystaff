@@ -37,6 +37,7 @@ import { Event } from "./Events";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
+import { safeLocalStorage } from "@/utils/fileUtils";
 
 interface Operator {
   id: number;
@@ -88,7 +89,7 @@ const Operators = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const storedOperators = localStorage.getItem(OPERATORS_STORAGE_KEY);
+    const storedOperators = safeLocalStorage.getItem(OPERATORS_STORAGE_KEY);
     if (storedOperators) {
       try {
         setOperators(JSON.parse(storedOperators));
@@ -96,10 +97,10 @@ const Operators = () => {
         console.error("Errore nel caricamento degli operatori:", error);
       }
     } else {
-      localStorage.setItem(OPERATORS_STORAGE_KEY, JSON.stringify(operators));
+      safeLocalStorage.setItem(OPERATORS_STORAGE_KEY, JSON.stringify(operators));
     }
     
-    const storedEvents = localStorage.getItem(EVENTS_STORAGE_KEY);
+    const storedEvents = safeLocalStorage.getItem(EVENTS_STORAGE_KEY);
     if (storedEvents) {
       try {
         const parsedEvents = JSON.parse(storedEvents);
@@ -119,7 +120,7 @@ const Operators = () => {
   }, []);
   
   useEffect(() => {
-    localStorage.setItem(OPERATORS_STORAGE_KEY, JSON.stringify(operators));
+    safeLocalStorage.setItem(OPERATORS_STORAGE_KEY, JSON.stringify(operators));
   }, [operators]);
 
   const handleStatusToggle = (id: number) => {
