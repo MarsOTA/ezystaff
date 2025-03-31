@@ -1,11 +1,9 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Client } from "@/pages/Clients";
 import { toast } from "sonner";
 import { safeLocalStorage } from "@/utils/fileUtils";
-
-const CLIENTS_STORAGE_KEY = "app_clients_data";
+import { CLIENTS_STORAGE_KEY } from "@/utils/client";
 
 export const useClientForm = () => {
   const navigate = useNavigate();

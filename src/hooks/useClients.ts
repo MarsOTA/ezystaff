@@ -1,13 +1,9 @@
-
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { safeLocalStorage } from "@/utils/fileUtils";
 import { Client } from "@/pages/Clients";
-
-// Constants
-const CLIENTS_STORAGE_KEY = "app_clients_data";
-const EVENTS_STORAGE_KEY = "app_events_data";
+import { CLIENTS_STORAGE_KEY, EVENTS_STORAGE_KEY } from "@/utils/client";
 
 export const useClients = () => {
   const navigate = useNavigate();

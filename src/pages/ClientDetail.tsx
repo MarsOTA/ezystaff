@@ -9,7 +9,7 @@ import { Client } from "./Clients";
 import { Event } from "./Events";
 import ClientInfo from "@/components/client/ClientInfo";
 import ClientEvents from "@/components/client/ClientEvents";
-import { loadClientById, loadClientEvents } from "@/utils/clientUtils";
+import { loadClientById, loadClientEvents } from "@/utils/client";
 
 const ClientDetail = () => {
   const { id } = useParams();
