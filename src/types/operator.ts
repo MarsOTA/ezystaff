@@ -97,6 +97,16 @@ export interface ExtendedOperator {
   };
 }
 
+// Basic Operator type used in Operators list
+export interface Operator {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  status: "active" | "inactive";
+  assignedEvents?: number[]; // IDs degli eventi assegnati
+}
+
 // Constants for multi-select fields
 export const SERVICES = [
   { value: "hostess", label: "Hostess" },
