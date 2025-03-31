@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Layout from "@/components/Layout";
@@ -9,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import EventTable from "@/components/events/EventTable";
 import EventDetailDialog from "@/components/events/EventDetailDialog";
 import EmptyEventCard from "@/components/events/EmptyEventCard";
+import { safeLocalStorage } from "@/utils/fileUtils";
 
 export interface Event {
   id: number;
@@ -39,7 +41,7 @@ const Events = () => {
   const [isClosingEvent, setIsClosingEvent] = useState(false);
   
   useEffect(() => {
-    const storedEvents = localStorage.getItem(EVENTS_STORAGE_KEY);
+    const storedEvents = safeLocalStorage.getItem(EVENTS_STORAGE_KEY);
     
     if (storedEvents) {
       try {
@@ -95,7 +97,7 @@ const Events = () => {
   
   useEffect(() => {
     if (events.length > 0) {
-      localStorage.setItem(EVENTS_STORAGE_KEY, JSON.stringify(events));
+      safeLocalStorage.setItem(EVENTS_STORAGE_KEY, JSON.stringify(events));
     }
   }, [events]);
 
@@ -112,7 +114,7 @@ const Events = () => {
     e.stopPropagation();
     const updatedEvents = events.filter(event => event.id !== eventId);
     setEvents(updatedEvents);
-    localStorage.setItem(EVENTS_STORAGE_KEY, JSON.stringify(updatedEvents));
+    safeLocalStorage.setItem(EVENTS_STORAGE_KEY, JSON.stringify(updatedEvents));
     toast.success("Evento eliminato con successo");
   };
   
@@ -132,7 +134,7 @@ const Events = () => {
         return event;
       });
       
-      localStorage.setItem(EVENTS_STORAGE_KEY, JSON.stringify(updatedEvents));
+      safeLocalStorage.setItem(EVENTS_STORAGE_KEY, JSON.stringify(updatedEvents));
       setEvents(updatedEvents);
       
       try {
@@ -152,7 +154,7 @@ const Events = () => {
       const eventToClose = updatedEvents.find(e => e.id === eventId);
       
       if (eventToClose) {
-        const storedOperators = localStorage.getItem(OPERATORS_STORAGE_KEY);
+        const storedOperators = safeLocalStorage.getItem(OPERATORS_STORAGE_KEY);
         if (storedOperators) {
           try {
             const operators = JSON.parse(storedOperators);
@@ -181,7 +183,7 @@ const Events = () => {
             }
             
             if (operatorsUpdated) {
-              localStorage.setItem(OPERATORS_STORAGE_KEY, JSON.stringify(operators));
+              safeLocalStorage.setItem(OPERATORS_STORAGE_KEY, JSON.stringify(operators));
             }
           } catch (error) {
             console.error("Errore nell'aggiornamento degli operatori:", error);
