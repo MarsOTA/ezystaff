@@ -15,6 +15,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { safeLocalStorage } from "@/utils/fileUtils";
 
 // Definizione dell'interfaccia Client
 export interface Client {
@@ -47,7 +48,7 @@ const Clients = () => {
   // Carica i clienti dal localStorage all'avvio
   useEffect(() => {
     const loadClients = () => {
-      const storedClients = localStorage.getItem(CLIENTS_STORAGE_KEY);
+      const storedClients = safeLocalStorage.getItem(CLIENTS_STORAGE_KEY);
       
       if (storedClients) {
         try {
@@ -87,7 +88,7 @@ const Clients = () => {
           ];
           
           setClients(defaultClients);
-          localStorage.setItem(CLIENTS_STORAGE_KEY, JSON.stringify(defaultClients));
+          safeLocalStorage.setItem(CLIENTS_STORAGE_KEY, JSON.stringify(defaultClients));
         }
       } else {
         // Nessun cliente nel localStorage, utilizziamo i dati di esempio
@@ -121,7 +122,7 @@ const Clients = () => {
         ];
         
         setClients(defaultClients);
-        localStorage.setItem(CLIENTS_STORAGE_KEY, JSON.stringify(defaultClients));
+        safeLocalStorage.setItem(CLIENTS_STORAGE_KEY, JSON.stringify(defaultClients));
       }
     };
     
@@ -131,7 +132,7 @@ const Clients = () => {
   // Carica il conteggio degli eventi per cliente
   useEffect(() => {
     const loadEventCounts = () => {
-      const storedEvents = localStorage.getItem(EVENTS_STORAGE_KEY);
+      const storedEvents = safeLocalStorage.getItem(EVENTS_STORAGE_KEY);
       
       if (storedEvents) {
         try {
@@ -193,7 +194,7 @@ const Clients = () => {
     const updatedClients = clients.filter(client => client.id !== clientId);
     setClients(updatedClients);
     
-    localStorage.setItem(CLIENTS_STORAGE_KEY, JSON.stringify(updatedClients));
+    safeLocalStorage.setItem(CLIENTS_STORAGE_KEY, JSON.stringify(updatedClients));
     
     toast.success("Cliente eliminato con successo");
   };

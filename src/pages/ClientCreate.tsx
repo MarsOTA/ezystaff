@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Layout from "@/components/Layout";
@@ -17,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ChevronLeft, Save } from "lucide-react";
 import { toast } from "sonner";
 import { Client } from "./Clients";
+import { safeLocalStorage } from "@/utils/fileUtils";
 
 const CLIENTS_STORAGE_KEY = "app_clients_data";
 
@@ -43,13 +43,12 @@ const ClientCreate = () => {
   const [isEdit, setIsEdit] = useState(false);
   const [loading, setLoading] = useState(clientId ? true : false);
   
-  // Carica i dati del cliente se in modalità modifica
   useEffect(() => {
     if (clientId) {
       setIsEdit(true);
       
       try {
-        const storedClients = localStorage.getItem(CLIENTS_STORAGE_KEY);
+        const storedClients = safeLocalStorage.getItem(CLIENTS_STORAGE_KEY);
         if (!storedClients) {
           toast.error("Errore nel caricamento dei dati del cliente");
           navigate("/clients");
@@ -65,7 +64,6 @@ const ClientCreate = () => {
           return;
         }
         
-        // Rimuovi l'ID dal formData
         const { id, ...clientData } = client;
         setFormData(clientData);
       } catch (error) {
@@ -77,15 +75,12 @@ const ClientCreate = () => {
     }
   }, [clientId, navigate]);
   
-  // Gestione del cambio dei valori nei campi del form
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
   
-  // Funzione per salvare il cliente
   const handleSave = () => {
-    // Validazione base
     if (!formData.companyName.trim()) {
       toast.error("La ragione sociale è obbligatoria");
       return;
@@ -107,7 +102,7 @@ const ClientCreate = () => {
     }
     
     try {
-      const storedClients = localStorage.getItem(CLIENTS_STORAGE_KEY);
+      const storedClients = safeLocalStorage.getItem(CLIENTS_STORAGE_KEY);
       let clients = [];
       
       if (storedClients) {
@@ -115,7 +110,6 @@ const ClientCreate = () => {
       }
       
       if (isEdit && clientId) {
-        // Modalità modifica
         clients = clients.map((client: Client) => {
           if (client.id.toString() === clientId) {
             return { ...formData, id: client.id };
@@ -125,7 +119,6 @@ const ClientCreate = () => {
         
         toast.success("Cliente aggiornato con successo");
       } else {
-        // Modalità creazione
         const newId = clients.length > 0 
           ? Math.max(...clients.map((c: Client) => c.id)) + 1 
           : 1;
@@ -134,7 +127,7 @@ const ClientCreate = () => {
         toast.success("Nuovo cliente creato con successo");
       }
       
-      localStorage.setItem(CLIENTS_STORAGE_KEY, JSON.stringify(clients));
+      safeLocalStorage.setItem(CLIENTS_STORAGE_KEY, JSON.stringify(clients));
       navigate("/clients");
     } catch (error) {
       console.error("Errore nel salvataggio del cliente:", error);

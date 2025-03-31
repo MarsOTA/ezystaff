@@ -35,6 +35,7 @@ import { it } from "date-fns/locale";
 import { toast } from "sonner";
 import { Client } from "./Clients";
 import { Event } from "./Events";
+import { safeLocalStorage } from "@/utils/fileUtils";
 
 const CLIENTS_STORAGE_KEY = "app_clients_data";
 const EVENTS_STORAGE_KEY = "app_events_data";
@@ -51,7 +52,7 @@ const ClientDetail = () => {
   useEffect(() => {
     const loadClient = () => {
       try {
-        const storedClients = localStorage.getItem(CLIENTS_STORAGE_KEY);
+        const storedClients = safeLocalStorage.getItem(CLIENTS_STORAGE_KEY);
         if (!storedClients) {
           toast.error("Nessun cliente trovato");
           navigate("/clients");
@@ -70,7 +71,7 @@ const ClientDetail = () => {
         setClient(foundClient);
         
         // Carica gli eventi associati al cliente
-        const storedEvents = localStorage.getItem(EVENTS_STORAGE_KEY);
+        const storedEvents = safeLocalStorage.getItem(EVENTS_STORAGE_KEY);
         if (storedEvents) {
           const events = JSON.parse(storedEvents);
           
