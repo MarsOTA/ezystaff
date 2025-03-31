@@ -11,28 +11,61 @@ export const fileToBase64 = (file: File): Promise<string> => {
   });
 };
 
-// Helper function to safely access localStorage
+// In-memory storage fallback when localStorage is unavailable
+const memoryStorage: Record<string, string> = {};
+
+// Helper function to check if localStorage is available
+const isLocalStorageAvailable = (): boolean => {
+  try {
+    const testKey = '__storage_test__';
+    localStorage.setItem(testKey, testKey);
+    localStorage.removeItem(testKey);
+    return true;
+  } catch (e) {
+    return false;
+  }
+};
+
+// Helper function to safely access localStorage with fallback to memory storage
 export const safeLocalStorage = {
   getItem: (key: string): string | null => {
     try {
-      return localStorage.getItem(key);
+      if (isLocalStorageAvailable()) {
+        return localStorage.getItem(key);
+      } else {
+        console.info("Using in-memory storage fallback (localStorage unavailable)");
+        return memoryStorage[key] || null;
+      }
     } catch (error) {
-      console.error("Failed to read from localStorage:", error);
-      return null;
+      console.error("Failed to read from storage:", error);
+      return memoryStorage[key] || null;
     }
   },
   setItem: (key: string, value: string): void => {
     try {
-      localStorage.setItem(key, value);
+      if (isLocalStorageAvailable()) {
+        localStorage.setItem(key, value);
+      } else {
+        console.info("Using in-memory storage fallback (localStorage unavailable)");
+        memoryStorage[key] = value;
+      }
     } catch (error) {
-      console.error("Failed to write to localStorage:", error);
+      console.error("Failed to write to storage:", error);
+      memoryStorage[key] = value;
     }
   },
   removeItem: (key: string): void => {
     try {
-      localStorage.removeItem(key);
+      if (isLocalStorageAvailable()) {
+        localStorage.removeItem(key);
+      } else {
+        console.info("Using in-memory storage fallback (localStorage unavailable)");
+        delete memoryStorage[key];
+      }
     } catch (error) {
-      console.error("Failed to remove from localStorage:", error);
+      console.error("Failed to remove from storage:", error);
+      delete memoryStorage[key];
     }
   }
 };
+
