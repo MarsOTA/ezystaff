@@ -20,6 +20,7 @@ import { Calendar as CalendarIcon, ArrowLeft, MapPin, Building, Clock, Euro } fr
 import { toast } from "sonner";
 import { Event } from "./Events";
 import { Client } from "./Clients";
+import { safeLocalStorage } from "@/utils/fileUtils";
 
 const personnelTypes = [
   { id: "security", label: "Security" },
@@ -98,7 +99,7 @@ const EventCreate = () => {
   const autocompleteService = useRef<any>(null);
   
   useEffect(() => {
-    const storedClients = localStorage.getItem(CLIENTS_STORAGE_KEY);
+    const storedClients = safeLocalStorage.getItem(CLIENTS_STORAGE_KEY);
     if (storedClients) {
       try {
         const parsedClients = JSON.parse(storedClients);
@@ -141,7 +142,7 @@ const EventCreate = () => {
   useEffect(() => {
     if (isEditMode) {
       try {
-        const storedEvents = localStorage.getItem(EVENTS_STORAGE_KEY);
+        const storedEvents = safeLocalStorage.getItem(EVENTS_STORAGE_KEY);
         if (storedEvents) {
           const events: Event[] = JSON.parse(storedEvents).map((event: any) => ({
             ...event,
@@ -308,7 +309,7 @@ const EventCreate = () => {
     }
 
     try {
-      const existingEventsJson = localStorage.getItem(EVENTS_STORAGE_KEY) || "[]";
+      const existingEventsJson = safeLocalStorage.getItem(EVENTS_STORAGE_KEY) || "[]";
       const existingEvents: Event[] = JSON.parse(existingEventsJson).map((event: any) => ({
         ...event,
         startDate: new Date(event.startDate),
@@ -344,7 +345,7 @@ const EventCreate = () => {
           return event;
         });
         
-        localStorage.setItem(EVENTS_STORAGE_KEY, JSON.stringify(updatedEvents));
+        safeLocalStorage.setItem(EVENTS_STORAGE_KEY, JSON.stringify(updatedEvents));
         toast.success("Evento aggiornato con successo!");
       } else {
         const maxId = existingEvents.reduce((max, event) => Math.max(max, event.id), 0);
@@ -362,7 +363,7 @@ const EventCreate = () => {
         };
         
         const updatedEvents = [...existingEvents, newEvent];
-        localStorage.setItem(EVENTS_STORAGE_KEY, JSON.stringify(updatedEvents));
+        safeLocalStorage.setItem(EVENTS_STORAGE_KEY, JSON.stringify(updatedEvents));
         
         toast.success("Evento creato con successo!");
       }
