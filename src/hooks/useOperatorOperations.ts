@@ -2,6 +2,9 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { ExtendedOperator, OPERATORS_STORAGE_KEY } from "@/types/operator";
 import { fileToBase64, safeLocalStorage } from "@/utils/fileUtils";
+import PizZip from 'pizzip';
+import Docxtemplater from 'docxtemplater';
+import { saveAs } from 'file-saver';
 
 export const useOperatorOperations = (
   operator: ExtendedOperator | null,
@@ -17,6 +20,7 @@ export const useOperatorOperations = (
   netSalary: string
 ) => {
   const [activeTab, setActiveTab] = useState("info");
+  const [templateFile, setTemplateFile] = useState<File | null>(null);
 
   const handleChange = (field: keyof ExtendedOperator, value: any) => {
     if (!operator) return;
@@ -164,26 +168,83 @@ export const useOperatorOperations = (
     }
   };
 
-  const generateContract = () => {
+  const handleContractTemplateUpload = (file: File | null) => {
+    setTemplateFile(file);
+    if (file) {
+      toast.success(`Template "${file.name}" caricato con successo`);
+    }
+  };
+
+  const generateContract = async () => {
     if (!operator) return;
 
     try {
-      const contractDate = new Date().toLocaleDateString('it-IT');
-      
-      let contractTypeText = "";
-      switch (contractType) {
-        case "full-time":
-          contractTypeText = "CONTRATTO DI LAVORO A TEMPO PIENO";
-          break;
-        case "part-time":
-          contractTypeText = "CONTRATTO DI LAVORO PART-TIME";
-          break;
-        case "a-chiamata":
-          contractTypeText = "CONTRATTO DI LAVORO A CHIAMATA";
-          break;
-      }
-      
-      const contractText = `
+      if (templateFile) {
+        const arrayBuffer = await templateFile.arrayBuffer();
+        
+        const data = {
+          Nome: operator.name ? operator.name.split(' ')[0] : '',
+          Cognome: operator.name ? operator.name.split(' ').slice(1).join(' ') : '',
+          NomeCompleto: operator.name,
+          CodiceFiscale: operator.fiscalCode,
+          DataNascita: operator.birthDate,
+          LuogoNascita: operator.birthCountry,
+          Indirizzo: operator.address,
+          CAP: operator.zipCode,
+          Città: operator.residenceCity,
+          Provincia: operator.province,
+          
+          TipoContratto: contractType === 'full-time' ? 'Tempo Pieno' : 
+                          contractType === 'part-time' ? 'Part-Time' : 
+                          'A Chiamata',
+          DataInizio: startDate ? startDate.toLocaleDateString('it-IT') : '',
+          DataFine: endDate ? endDate.toLocaleDateString('it-IT') : 'indeterminato',
+          CCNL: ccnl,
+          Livello: level,
+          RetribuzioneLorda: grossSalary,
+          RetribuzioneNetta: netSalary,
+          
+          IBAN: operator.iban,
+          Banca: operator.bankName,
+          
+          DataOdierna: new Date().toLocaleDateString('it-IT'),
+          
+          Servizi: operator.service?.join(", ")
+        };
+        
+        const zip = new PizZip(arrayBuffer);
+        const doc = new Docxtemplater();
+        doc.loadZip(zip);
+        doc.setData(data);
+        doc.render();
+        
+        const generatedDocument = doc.getZip().generate({
+          type: "blob",
+          mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        });
+        
+        const fileName = `Contratto_${operator.name.replace(/\s+/g, '_')}_${contractType}.docx`;
+        saveAs(generatedDocument, fileName);
+        
+        toast.success("Contratto generato con successo");
+        handleSave();
+      } else {
+        const contractDate = new Date().toLocaleDateString('it-IT');
+        
+        let contractTypeText = "";
+        switch (contractType) {
+          case "full-time":
+            contractTypeText = "CONTRATTO DI LAVORO A TEMPO PIENO";
+            break;
+          case "part-time":
+            contractTypeText = "CONTRATTO DI LAVORO PART-TIME";
+            break;
+          case "a-chiamata":
+            contractTypeText = "CONTRATTO DI LAVORO A CHIAMATA";
+            break;
+        }
+        
+        const contractText = `
 ${contractTypeText}
 
 Data: ${contractDate}
@@ -241,22 +302,23 @@ Il Datore di Lavoro                                   Il Lavoratore
 ___________________                                   ___________________
 `;
 
-      const blob = new Blob([contractText], { type: 'text/plain' });
-      const url = URL.createObjectURL(blob);
-      
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `Contratto_${operator.name.replace(/\s+/g, '_')}_${contractType}.txt`;
-      document.body.appendChild(a);
-      a.click();
-      
-      setTimeout(() => {
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      }, 0);
-      
-      toast.success("Contratto generato con successo");
-      handleSave();
+        const blob = new Blob([contractText], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Contratto_${operator.name.replace(/\s+/g, '_')}_${contractType}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        
+        setTimeout(() => {
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }, 0);
+        
+        toast.success("Contratto generato con successo (formato testo)");
+        handleSave();
+      }
     } catch (error) {
       console.error("Errore nella generazione del contratto:", error);
       toast.error("Errore nella generazione del contratto");
@@ -273,6 +335,8 @@ ___________________                                   ___________________
     handleSizeToggle,
     handleFileUpload,
     handleSave,
+    handleContractTemplateUpload,
+    templateFile,
     generateContract
   };
 };

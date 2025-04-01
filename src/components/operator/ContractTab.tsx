@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Download, CalendarIcon, Save } from "lucide-react";
+import { Download, CalendarIcon, Save, Upload } from "lucide-react";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -33,6 +33,8 @@ interface ContractTabProps {
   netSalary: string;
   setNetSalary: (value: string) => void;
   onSave: () => void;
+  onTemplateUpload?: (file: File | null) => void;
+  templateFile?: File | null;
 }
 
 const ContractTab: React.FC<ContractTabProps> = ({
@@ -54,8 +56,17 @@ const ContractTab: React.FC<ContractTabProps> = ({
   setGrossSalary,
   netSalary,
   setNetSalary,
-  onSave
+  onSave,
+  onTemplateUpload,
+  templateFile
 }) => {
+  const handleTemplateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    if (onTemplateUpload) {
+      onTemplateUpload(file);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -214,6 +225,30 @@ const ContractTab: React.FC<ContractTabProps> = ({
                   placeholder="€ 0.00"
                 />
               </div>
+            </div>
+
+            {/* Template di contratto */}
+            <div className="pt-4 space-y-2">
+              <Label htmlFor="contractTemplate">Template Contratto (DOCX)</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="contractTemplate"
+                  type="file"
+                  accept=".docx"
+                  onChange={handleTemplateChange}
+                  className="flex-1"
+                />
+                <div className="min-w-[160px]">
+                  {templateFile && (
+                    <p className="text-sm text-green-600 truncate">
+                      {templateFile.name}
+                    </p>
+                  )}
+                </div>
+              </div>
+              <p className="text-sm text-gray-500 mt-1">
+                Carica un template DOCX con campi come {"{Nome}"}, {"{Cognome}"}, {"{CodiceFiscale}"}, ecc.
+              </p>
             </div>
           </div>
         </CardContent>

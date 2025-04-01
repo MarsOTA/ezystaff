@@ -44,6 +44,8 @@ const OperatorProfile = () => {
     handleSizeToggle,
     handleFileUpload,
     handleSave,
+    handleContractTemplateUpload,
+    templateFile,
     generateContract
   } = useOperatorOperations(
     operator,
@@ -117,6 +119,8 @@ const OperatorProfile = () => {
           setGrossSalary={setGrossSalary}
           netSalary={netSalary}
           setNetSalary={setNetSalary}
+          onTemplateUpload={handleContractTemplateUpload}
+          templateFile={templateFile}
         />
       </div>
     </Layout>

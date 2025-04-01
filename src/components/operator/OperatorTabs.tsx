@@ -36,6 +36,8 @@ interface OperatorTabsProps {
   setGrossSalary: (value: string) => void;
   netSalary: string;
   setNetSalary: (value: string) => void;
+  onTemplateUpload?: (file: File | null) => void;
+  templateFile?: File | null;
 }
 
 const OperatorTabs: React.FC<OperatorTabsProps> = ({
@@ -66,7 +68,9 @@ const OperatorTabs: React.FC<OperatorTabsProps> = ({
   grossSalary,
   setGrossSalary,
   netSalary,
-  setNetSalary
+  setNetSalary,
+  onTemplateUpload,
+  templateFile
 }) => {
   return (
     <Tabs defaultValue="info" value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -119,6 +123,8 @@ const OperatorTabs: React.FC<OperatorTabsProps> = ({
           netSalary={netSalary}
           setNetSalary={setNetSalary}
           onSave={onSave}
+          onTemplateUpload={onTemplateUpload}
+          templateFile={templateFile}
         />
       </TabsContent>
 
