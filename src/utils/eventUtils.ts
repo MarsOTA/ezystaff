@@ -6,7 +6,28 @@ import { Client } from "@/pages/Clients";
 import { safeLocalStorage } from "@/utils/fileUtils";
 import { PlacePrediction, EVENTS_STORAGE_KEY } from "@/hooks/useEventForm";
 
-export const getAutocompleteService = (): google.maps.places.AutocompleteService | null => {
+// Define the missing Google Maps types to fix TypeScript errors
+declare global {
+  interface Window {
+    google: {
+      maps: {
+        places: {
+          AutocompleteService: new () => any;
+          PlacesServiceStatus: {
+            OK: string;
+            ZERO_RESULTS: string;
+            OVER_QUERY_LIMIT: string;
+            REQUEST_DENIED: string;
+            INVALID_REQUEST: string;
+            UNKNOWN_ERROR: string;
+          };
+        };
+      };
+    };
+  }
+}
+
+export const getAutocompleteService = (): any | null => {
   if (window.google && window.google.maps && window.google.maps.places) {
     return new window.google.maps.places.AutocompleteService();
   }
