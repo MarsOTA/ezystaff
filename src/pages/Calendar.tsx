@@ -18,6 +18,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Calendar as BigCalendar, dateFnsLocalizer, Views } from 'react-big-calendar';
 import { format as formatTz, parse, startOfWeek, getDay } from 'date-fns';
 import "react-big-calendar/lib/css/react-big-calendar.css";
+import { safeLocalStorage } from "@/utils/fileUtils";
 
 // Tipo Operatore
 interface Operator {
@@ -70,7 +71,7 @@ const Calendar = () => {
   // Caricamento dati
   useEffect(() => {
     // Carica eventi
-    const storedEvents = localStorage.getItem(EVENTS_STORAGE_KEY);
+    const storedEvents = safeLocalStorage.getItem(EVENTS_STORAGE_KEY);
     if (storedEvents) {
       try {
         const parsedEvents = JSON.parse(storedEvents);
@@ -87,7 +88,7 @@ const Calendar = () => {
     }
 
     // Carica operatori
-    const storedOperators = localStorage.getItem(OPERATORS_STORAGE_KEY);
+    const storedOperators = safeLocalStorage.getItem(OPERATORS_STORAGE_KEY);
     if (storedOperators) {
       try {
         setOperators(JSON.parse(storedOperators));
