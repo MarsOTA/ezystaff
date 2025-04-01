@@ -25,36 +25,7 @@ import EventPersonnelSelect from "@/components/event/EventPersonnelSelect";
 import EventDateTimeSelector from "@/components/event/EventDateTimeSelector";
 import EventHoursAndCosts from "@/components/event/EventHoursAndCosts";
 
-// Type declarations for Google Maps API
-declare global {
-  interface Window {
-    google: {
-      maps: {
-        places: {
-          AutocompleteService: new () => {
-            getPlacePredictions: (
-              request: { input: string; types?: string[] },
-              callback: (
-                predictions: any[] | null,
-                status: string
-              ) => void
-            ) => void;
-          };
-          PlacesServiceStatus: {
-            OK: string;
-            ZERO_RESULTS: string;
-            OVER_QUERY_LIMIT: string;
-            REQUEST_DENIED: string;
-            INVALID_REQUEST: string;
-            UNKNOWN_ERROR: string;
-          };
-        };
-      };
-    };
-    initGoogleMapsCallback: () => void;
-  }
-}
-
+// Use the type declaration from eventUtils.ts instead of defining it here again
 const EventCreate = () => {
   const navigate = useNavigate();
   const locationHook = useLocation();

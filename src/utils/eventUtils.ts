@@ -1,4 +1,3 @@
-
 import { format } from "date-fns";
 import { EventFormData } from "@/hooks/useEventForm";
 import { Event } from "@/pages/Events";
@@ -12,7 +11,15 @@ declare global {
     google: {
       maps: {
         places: {
-          AutocompleteService: new () => any;
+          AutocompleteService: new () => {
+            getPlacePredictions: (
+              request: { input: string; types?: string[] },
+              callback: (
+                predictions: PlacePrediction[] | null,
+                status: string
+              ) => void
+            ) => void;
+          };
           PlacesServiceStatus: {
             OK: string;
             ZERO_RESULTS: string;
@@ -24,6 +31,7 @@ declare global {
         };
       };
     };
+    initGoogleMapsCallback?: () => void;
   }
 }
 
