@@ -3,7 +3,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Users, Calendar, Briefcase, Building2, LogOut } from "lucide-react";
+import { Users, Calendar, Briefcase, Building2, LogOut, Clock } from "lucide-react";
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const { logout } = useAuth();
@@ -38,6 +38,12 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               <Button variant="outline">
                 <Calendar className="mr-2 h-4 w-4" />
                 Calendario
+              </Button>
+            </Link>
+            <Link to="/attendances">
+              <Button variant="outline">
+                <Clock className="mr-2 h-4 w-4" />
+                Presenze
               </Button>
             </Link>
             <Button variant="outline" onClick={logout}>

@@ -12,7 +12,12 @@ import ClientCreate from "./pages/ClientCreate";
 import ClientDetail from "./pages/ClientDetail";
 import Login from "./pages/Login";
 import ProtectedRoute from "./components/ProtectedRoute";
+import OperatorRoute from "./components/OperatorRoute";
 import EventCreate from "./pages/EventCreate";
+import TasksPage from "./pages/operator/TasksPage";
+import ProfilePage from "./pages/operator/ProfilePage";
+import AttendancePage from "./pages/operator/AttendancePage";
+import AdminAttendancePage from "./pages/AdminAttendancePage";
 
 function App() {
   return (
@@ -55,6 +60,24 @@ function App() {
       <Route
         path="/client-detail/:id"
         element={<ProtectedRoute component={ClientDetail} />}
+      />
+      <Route
+        path="/attendances"
+        element={<ProtectedRoute component={AdminAttendancePage} />}
+      />
+      
+      {/* Operator routes */}
+      <Route
+        path="/operator/tasks"
+        element={<OperatorRoute component={TasksPage} />}
+      />
+      <Route
+        path="/operator/profile"
+        element={<OperatorRoute component={ProfilePage} />}
+      />
+      <Route
+        path="/operator/attendance"
+        element={<OperatorRoute component={AttendancePage} />}
       />
     </Routes>
   );

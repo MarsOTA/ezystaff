@@ -3,23 +3,22 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
 import React from "react";
 
-interface ProtectedRouteProps {
+interface OperatorRouteProps {
   component: React.ComponentType;
-  children?: React.ReactNode;
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ component: Component }) => {
+const OperatorRoute: React.FC<OperatorRouteProps> = ({ component: Component }) => {
   const { isAuthenticated, user } = useAuth();
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
-  if (user?.role !== "admin") {
-    return <Navigate to="/operator/tasks" replace />;
+  if (user?.role !== "operator") {
+    return <Navigate to="/dashboard" replace />;
   }
 
   return <Component />;
 };
 
-export default ProtectedRoute;
+export default OperatorRoute;

@@ -7,6 +7,7 @@ import { safeLocalStorage } from "@/utils/fileUtils";
 interface User {
   email: string;
   name: string;
+  role: "admin" | "operator";
 }
 
 interface AuthContextType {
@@ -37,16 +38,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       // Mock login - replace with actual authentication
       if (email === "admin@example.com" && password === "password") {
-        const userData = { email, name: "Admin User" };
+        const userData = { email, name: "Admin User", role: "admin" as const };
         setUser(userData);
         if (remember) {
           safeLocalStorage.setItem("user", JSON.stringify(userData));
         }
         toast.success("Login effettuato con successo");
         navigate("/dashboard");
-      } else {
-        throw new Error("Credenziali non valide");
+        return;
+      } 
+      
+      // Mock operator login
+      if (email.endsWith("@operator.com") && password === "operator") {
+        const name = email.split("@")[0];
+        const userData = { email, name: `${name.charAt(0).toUpperCase()}${name.slice(1)}`, role: "operator" as const };
+        setUser(userData);
+        if (remember) {
+          safeLocalStorage.setItem("user", JSON.stringify(userData));
+        }
+        toast.success("Login effettuato con successo");
+        navigate("/operator/tasks");
+        return;
       }
+      
+      throw new Error("Credenziali non valide");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Errore durante il login");
       throw error;
