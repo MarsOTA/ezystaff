@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect } from "react";
 import OperatorLayout from "@/components/OperatorLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, MapPin, Users, Check, LogIn, LogOut } from "lucide-react";
+import { Calendar, Clock, MapPin, Users, Check, LogIn, LogOut, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { useAuth } from "@/contexts/AuthContext";
@@ -29,6 +28,8 @@ const TasksPage: React.FC = () => {
   const [locationStatus, setLocationStatus] = useState("");
   const [loadingLocation, setLoadingLocation] = useState(false);
   const [lastCheckTime, setLastCheckTime] = useState<Date | null>(null);
+  const [locationAccuracy, setLocationAccuracy] = useState<number | null>(null);
+  const [locationRetries, setLocationRetries] = useState(0);
   
   // Mock event data - in a real application, this would be loaded from a backend
   const mockEvent = {
@@ -69,44 +70,116 @@ const TasksPage: React.FC = () => {
     safeLocalStorage.setItem(ATTENDANCE_RECORDS_KEY, JSON.stringify(records));
   };
   
-  const handleCheckAction = () => {
+  const getHighAccuracyPosition = (): Promise<GeolocationPosition> => {
+    return new Promise((resolve, reject) => {
+      const options: PositionOptions = {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      };
+      
+      navigator.geolocation.getCurrentPosition(resolve, reject, options);
+    });
+  };
+  
+  const handleCheckAction = async () => {
     if (!user) return;
     
     setLoadingLocation(true);
-    setLocationStatus("Rilevamento posizione...");
+    setLocationStatus("Rilevamento posizione in corso...");
+    setLocationRetries(0);
     
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const type = isCheckingIn ? "check-in" : "check-out";
-        const timestamp = new Date().toISOString();
-        
-        const record: CheckRecord = {
-          operatorId: user.email,
-          timestamp,
-          type,
-          location: {
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-            accuracy: position.coords.accuracy
-          },
-          eventId: mockEvent.id
-        };
-        
-        saveAttendanceRecord(record);
-        setIsCheckingIn(!isCheckingIn);
-        setLastCheckTime(new Date(timestamp));
-        setLoadingLocation(false);
+    try {
+      // Try to get high accuracy position with retry mechanism
+      let position: GeolocationPosition;
+      let attempts = 0;
+      const maxAttempts = 3;
+      
+      while (attempts < maxAttempts) {
+        try {
+          position = await getHighAccuracyPosition();
+          
+          // If accuracy is good enough, break the loop
+          if (position.coords.accuracy < 50) {
+            break;
+          }
+          
+          // Otherwise, try again
+          attempts++;
+          setLocationRetries(attempts);
+          setLocationStatus(`Miglioramento precisione (tentativo ${attempts}/${maxAttempts})...`);
+          
+          // Wait briefly before trying again
+          await new Promise(resolve => setTimeout(resolve, 1500));
+        } catch (error) {
+          console.error("Error in location attempt:", error);
+          attempts++;
+          setLocationRetries(attempts);
+          setLocationStatus(`Tentativo di localizzazione ${attempts}/${maxAttempts}...`);
+        }
+      }
+      
+      // Get the position one more time for final attempt
+      position = await getHighAccuracyPosition();
+      setLocationAccuracy(position.coords.accuracy);
+      
+      const type = isCheckingIn ? "check-in" : "check-out";
+      const timestamp = new Date().toISOString();
+      
+      const record: CheckRecord = {
+        operatorId: user.email,
+        timestamp,
+        type,
+        location: {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          accuracy: position.coords.accuracy
+        },
+        eventId: mockEvent.id
+      };
+      
+      saveAttendanceRecord(record);
+      setIsCheckingIn(!isCheckingIn);
+      setLastCheckTime(new Date(timestamp));
+      setLoadingLocation(false);
+      
+      // Show accuracy information in the success message
+      const accuracyText = position.coords.accuracy <= 10 ? "Alta" : 
+                         position.coords.accuracy <= 50 ? "Media" : "Bassa";
+      
+      toast.success(`${type === "check-in" ? "Check-in" : "Check-out"} effettuato con successo (Precisione: ${accuracyText}, ${Math.round(position.coords.accuracy)}m)`);
+      
+      // Reset status and accuracy after a brief delay
+      setTimeout(() => {
         setLocationStatus("");
-        
-        toast.success(`${type === "check-in" ? "Check-in" : "Check-out"} effettuato con successo`);
-      },
-      (error) => {
-        setLoadingLocation(false);
-        setLocationStatus("");
-        console.error("Error getting location:", error);
-        toast.error("Errore nel rilevamento della posizione. Assicurati di aver concesso i permessi di geolocalizzazione.");
-      },
-      { enableHighAccuracy: true }
+        setLocationAccuracy(null);
+      }, 5000);
+      
+    } catch (error) {
+      setLoadingLocation(false);
+      console.error("Error getting location:", error);
+      toast.error("Errore nel rilevamento della posizione. Assicurati di aver concesso i permessi di geolocalizzazione.");
+      setLocationStatus("Errore nel rilevamento della posizione");
+    }
+  };
+
+  const renderLocationStatusIndicator = () => {
+    if (!locationStatus) return null;
+    
+    return (
+      <div className={`p-3 rounded-md text-sm flex items-center gap-2 ${
+        locationStatus.includes("Errore") 
+          ? "bg-red-50 text-red-800" 
+          : "bg-yellow-50 text-yellow-800"
+      }`}>
+        {loadingLocation && <Loader2 className="h-4 w-4 animate-spin" />}
+        <span>{locationStatus}</span>
+        {locationAccuracy !== null && (
+          <span className="ml-1">
+            (Precisione: {Math.round(locationAccuracy)}m)
+          </span>
+        )}
+      </div>
     );
   };
 
@@ -154,11 +227,7 @@ const TasksPage: React.FC = () => {
               </div>
             )}
             
-            {locationStatus && (
-              <div className="bg-yellow-50 text-yellow-800 p-3 rounded-md text-sm">
-                {locationStatus}
-              </div>
-            )}
+            {renderLocationStatusIndicator()}
           </CardContent>
           <CardFooter>
             <Button 
@@ -167,7 +236,12 @@ const TasksPage: React.FC = () => {
               onClick={handleCheckAction}
               disabled={loadingLocation}
             >
-              {isCheckingIn ? (
+              {loadingLocation ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Rilevamento posizione...
+                </>
+              ) : isCheckingIn ? (
                 <>
                   <LogIn className="mr-2 h-5 w-5" />
                   Check-in
