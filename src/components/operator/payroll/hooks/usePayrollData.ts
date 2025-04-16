@@ -28,9 +28,10 @@ export const usePayrollData = (operator: ExtendedOperator) => {
       // Update calculations with the new actual hours
       const updatedCalculations = calculations.map(calc => {
         if (calc.eventId === eventId) {
-          // Calculate compensation based on actual hours
-          const hourlyRate = calc.hourlyRate;
-          const newCompensation = actualHours * hourlyRate;
+          // Calculate compensation based on hourly rate (which needs to be determined from the event)
+          // Since hourlyRate doesn't exist, use the compensation divided by the current netHours or 1 if netHours is 0
+          const hourlyRateEstimate = calc.compensation / (calc.netHours || 1);
+          const newCompensation = actualHours * hourlyRateEstimate;
           
           return { 
             ...calc, 
