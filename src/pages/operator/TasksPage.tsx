@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import OperatorLayout from "@/components/OperatorLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -62,12 +63,6 @@ const TasksPage: React.FC = () => {
   const getAttendanceRecords = (): CheckRecord[] => {
     const records = safeLocalStorage.getItem(ATTENDANCE_RECORDS_KEY);
     return records ? JSON.parse(records) : [];
-  };
-  
-  const saveAttendanceRecord = (record: CheckRecord) => {
-    const records = getAttendanceRecords();
-    records.push(record);
-    safeLocalStorage.setItem(ATTENDANCE_RECORDS_KEY, JSON.stringify(records));
   };
   
   const getHighAccuracyPosition = (): Promise<GeolocationPosition> => {
@@ -161,6 +156,12 @@ const TasksPage: React.FC = () => {
       toast.error("Errore nel rilevamento della posizione. Assicurati di aver concesso i permessi di geolocalizzazione.");
       setLocationStatus("Errore nel rilevamento della posizione");
     }
+  };
+  
+  const saveAttendanceRecord = (record: CheckRecord) => {
+    const records = getAttendanceRecords();
+    records.push(record);
+    safeLocalStorage.setItem(ATTENDANCE_RECORDS_KEY, JSON.stringify(records));
   };
 
   const renderLocationStatusIndicator = () => {
