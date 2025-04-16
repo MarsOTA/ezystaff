@@ -100,23 +100,23 @@ export const fetchOperatorEvents = async (operatorId: number) => {
       }
       
       // Calculate compensation and other payroll data
-      const grossHours = event.grossHours || 0;
-      const netHours = event.netHours || 0;
-      const hourlyRate = event.hourlyRateCost || 0;
-      const hourlyRateSell = event.hourlyRateSell || 0;
+      const grossHours = event.estimated_hours || 0;
+      const netHours = event.actual_hours || 0;
+      const hourlyRate = event.hourly_rate || 0;
+      const hourlyRateSell = event.hourly_rate_sell || 0;
       
       const compensation = (actual_hours !== undefined ? actual_hours : netHours) * hourlyRate;
       const totalRevenue = (actual_hours !== undefined ? actual_hours : netHours) * hourlyRateSell;
       
       // Add meal and travel allowances (demo values)
-      const mealAllowance = event.grossHours >= 8 ? 10 : event.grossHours >= 4 ? 5 : 0;
+      const mealAllowance = grossHours >= 8 ? 10 : grossHours >= 4 ? 5 : 0;
       const travelAllowance = 5; // Default travel allowance
       
       return {
         eventId: event.id,
         eventTitle: event.title,
         client: event.client || "Cliente non specificato",
-        date: `${event.startDate.toLocaleDateString()} - ${event.endDate.toLocaleDateString()}`,
+        date: `${event.start_date ? new Date(event.start_date).toLocaleDateString() : ''} - ${event.end_date ? new Date(event.end_date).toLocaleDateString() : ''}`,
         grossHours,
         netHours,
         actual_hours,
