@@ -5,6 +5,7 @@ import { differenceInMinutes } from "date-fns";
 
 const ATTENDANCE_RECORDS_KEY = "attendance_records";
 const EVENTS_STORAGE_KEY = "app_events_data";
+const OPERATORS_STORAGE_KEY = "app_operators_data";
 
 interface CheckRecord {
   operatorId: string;
@@ -32,7 +33,7 @@ export const fetchOperatorEvents = async (operatorId: number) => {
     }));
     
     // Get operators data to find which events are assigned to this operator
-    const operatorsData = safeLocalStorage.getItem("app_operators_data");
+    const operatorsData = safeLocalStorage.getItem(OPERATORS_STORAGE_KEY);
     if (!operatorsData) return { events: [], calculations: [] };
     
     const operators = JSON.parse(operatorsData);
@@ -43,7 +44,7 @@ export const fetchOperatorEvents = async (operatorId: number) => {
     }
     
     // Filter events assigned to this operator
-    const operatorEvents = events.filter((event: Event) => 
+    const operatorEvents = events.filter((event: any) => 
       currentOperator.assignedEvents.includes(event.id)
     );
     
@@ -54,7 +55,7 @@ export const fetchOperatorEvents = async (operatorId: number) => {
     );
     
     // Process events to calculate payroll
-    const calculations: PayrollCalculation[] = operatorEvents.map((event: Event) => {
+    const calculations: PayrollCalculation[] = operatorEvents.map((event: any) => {
       // Find attendance records for this event
       const eventRecords = operatorAttendance.filter(record => 
         record.eventId === event.id
@@ -99,14 +100,13 @@ export const fetchOperatorEvents = async (operatorId: number) => {
         actual_hours = parseFloat((totalMinutes / 60).toFixed(2));
       }
       
-      // Calculate compensation and other payroll data
-      const grossHours = event.estimated_hours || 0;
-      const netHours = event.actual_hours || 0;
-      const hourlyRate = event.hourly_rate || 0;
-      const hourlyRateSell = event.hourly_rate_sell || 0;
+      // Use netHours from event for estimated hours (not grossHours)
+      const grossHours = event.grossHours || 0; // Keep for reference
+      const netHours = event.netHours || 0; // This is what we'll use for estimated hours
+      const hourlyRate = event.hourlyRateCost || 0;
+      const hourlyRateSell = event.hourlyRateSell || 0;
       
       const compensation = (actual_hours !== undefined ? actual_hours : netHours) * hourlyRate;
-      const totalRevenue = (actual_hours !== undefined ? actual_hours : netHours) * hourlyRateSell;
       
       // Add meal and travel allowances (demo values)
       const mealAllowance = grossHours >= 8 ? 10 : grossHours >= 4 ? 5 : 0;
@@ -116,7 +116,7 @@ export const fetchOperatorEvents = async (operatorId: number) => {
         eventId: event.id,
         eventTitle: event.title,
         client: event.client || "Cliente non specificato",
-        date: `${event.start_date ? new Date(event.start_date).toLocaleDateString() : ''} - ${event.end_date ? new Date(event.end_date).toLocaleDateString() : ''}`,
+        date: `${event.startDate.toLocaleDateString()} - ${event.endDate.toLocaleDateString()}`,
         grossHours,
         netHours,
         actual_hours,
@@ -125,7 +125,7 @@ export const fetchOperatorEvents = async (operatorId: number) => {
         compensation,
         mealAllowance,
         travelAllowance,
-        totalRevenue
+        totalRevenue: (actual_hours !== undefined ? actual_hours : netHours) * hourlyRateSell
       };
     });
     
@@ -140,7 +140,7 @@ export const fetchOperatorEvents = async (operatorId: number) => {
 };
 
 // Get attendance records from localStorage
-const getAttendanceRecords = (): CheckRecord[] => {
+export const getAttendanceRecords = (): CheckRecord[] => {
   const records = safeLocalStorage.getItem(ATTENDANCE_RECORDS_KEY);
   return records ? JSON.parse(records) : [];
 };

@@ -38,19 +38,18 @@ const PayrollTable: React.FC<PayrollTableProps> = ({
             <TableHead className="text-right">Ore Effettive</TableHead>
             <TableHead className="text-right">Compenso</TableHead>
             <TableHead className="text-right">Rimborsi</TableHead>
-            <TableHead className="text-right">Fatturato</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {loading ? (
             <TableRow>
-              <TableCell colSpan={8} className="h-24 text-center">
+              <TableCell colSpan={7} className="h-24 text-center">
                 Caricamento dati...
               </TableCell>
             </TableRow>
           ) : calculations.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={8} className="h-24 text-center">
+              <TableCell colSpan={7} className="h-24 text-center">
                 Nessun dato disponibile
               </TableCell>
             </TableRow>
@@ -69,7 +68,7 @@ const PayrollTable: React.FC<PayrollTableProps> = ({
                     </Button>
                   </TableCell>
                   <TableCell>{calc.date}</TableCell>
-                  <TableCell className="text-right">{calc.grossHours.toFixed(2)}</TableCell>
+                  <TableCell className="text-right">{calc.netHours.toFixed(2)}</TableCell>
                   <TableCell className="text-right">
                     {calc.actual_hours !== undefined ? calc.actual_hours.toFixed(2) : "-"}
                   </TableCell>
@@ -80,18 +79,16 @@ const PayrollTable: React.FC<PayrollTableProps> = ({
                       Pasti: {formatCurrency(calc.mealAllowance)} / Viaggio: {formatCurrency(calc.travelAllowance)}
                     </div>
                   </TableCell>
-                  <TableCell className="text-right">{formatCurrency(calc.totalRevenue)}</TableCell>
                 </TableRow>
               ))}
               
               {/* Summary Row */}
               <TableRow className="font-medium bg-muted/50">
                 <TableCell colSpan={3}>TOTALE</TableCell>
-                <TableCell className="text-right">{summaryData.totalGrossHours.toFixed(2)}</TableCell>
+                <TableCell className="text-right">{summaryData.totalNetHours.toFixed(2)}</TableCell>
                 <TableCell className="text-right"></TableCell>
                 <TableCell className="text-right">{formatCurrency(summaryData.totalCompensation)}</TableCell>
                 <TableCell className="text-right">{formatCurrency(summaryData.totalAllowances)}</TableCell>
-                <TableCell className="text-right">{formatCurrency(summaryData.totalRevenue)}</TableCell>
               </TableRow>
             </>
           )}
