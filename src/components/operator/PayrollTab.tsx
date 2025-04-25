@@ -26,15 +26,30 @@ const PayrollTab: React.FC<{ operator: ExtendedOperator }> = ({ operator }) => {
     summaryData,
     loading,
     updateActualHours,
+    updateMealAllowance,
+    updateTravelAllowance,
     refresh
   } = usePayrollData(operator);
   
   // Load attendance records
-  useEffect(() => {
+  const loadAttendanceRecords = useCallback(() => {
     const records = getAttendanceRecords();
     const operatorRecords = records.filter(record => record.operatorId === operator.email);
     setAttendanceRecords(operatorRecords);
   }, [operator.email]);
+  
+  // Load attendance records on mount and when active tab changes to attendance
+  useEffect(() => {
+    loadAttendanceRecords();
+    
+    // Set up interval to refresh data periodically
+    const intervalId = setInterval(() => {
+      refresh();
+      loadAttendanceRecords();
+    }, 60000); // Refresh every minute
+    
+    return () => clearInterval(intervalId);
+  }, [operator.email, loadAttendanceRecords, refresh]);
   
   const handleExportCSV = () => {
     exportToCSV(calculations, summaryData, operator.name);
@@ -63,6 +78,7 @@ const PayrollTab: React.FC<{ operator: ExtendedOperator }> = ({ operator }) => {
       <PayrollHeader 
         operatorName={operator.name}
         onExportCSV={handleExportCSV}
+        onRefresh={refresh}
       />
       
       {/* Tabs for Payroll and Attendance */}
@@ -91,6 +107,8 @@ const PayrollTab: React.FC<{ operator: ExtendedOperator }> = ({ operator }) => {
             summaryData={summaryData} 
             loading={loading} 
             onClientClick={openHoursDialog}
+            onMealAllowanceChange={updateMealAllowance}
+            onTravelAllowanceChange={updateTravelAllowance}
           />
         </TabsContent>
         
@@ -98,7 +116,7 @@ const PayrollTab: React.FC<{ operator: ExtendedOperator }> = ({ operator }) => {
           <AttendanceTable 
             records={attendanceRecords} 
             events={events} 
-            onRefresh={() => refresh()}
+            onRefresh={refresh}
           />
         </TabsContent>
       </Tabs>

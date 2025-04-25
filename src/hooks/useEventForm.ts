@@ -1,9 +1,8 @@
-
 import { useState, useEffect } from "react";
 import { Event } from "@/pages/Events";
 import { Client } from "@/pages/Clients";
 import { safeLocalStorage } from "@/utils/fileUtils";
-import { differenceInHours, addDays, isSameDay } from "date-fns";
+import { differenceInHours, addDays, isSameDay, differenceInDays } from "date-fns";
 
 export const EVENTS_STORAGE_KEY = "app_events_data";
 export const CLIENTS_STORAGE_KEY = "app_clients_data";
@@ -66,7 +65,6 @@ export function useEventForm(eventId: string | null) {
   const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
   const [showAddressSuggestions, setShowAddressSuggestions] = useState(false);
   
-  // Load clients
   useEffect(() => {
     const storedClients = safeLocalStorage.getItem(CLIENTS_STORAGE_KEY);
     if (storedClients) {
@@ -82,7 +80,6 @@ export function useEventForm(eventId: string | null) {
     }
   }, []);
   
-  // Load event data in edit mode
   useEffect(() => {
     if (isEditMode) {
       try {
@@ -124,25 +121,20 @@ export function useEventForm(eventId: string | null) {
     }
   }, [eventId, isEditMode, clients]);
   
-  // Calculate gross and net hours when dates or times change
   useEffect(() => {
     if (formData.startDate && formData.endDate && formData.startTime && formData.endTime) {
       try {
-        // Parse start and end times
         const [startHours, startMinutes] = formData.startTime.split(':').map(Number);
         const [endHours, endMinutes] = formData.endTime.split(':').map(Number);
         
-        // Create complete start and end DateTime objects
         const startDateTime = new Date(formData.startDate);
         startDateTime.setHours(startHours, startMinutes, 0, 0);
         
         const endDateTime = new Date(formData.endDate);
         endDateTime.setHours(endHours, endMinutes, 0, 0);
         
-        // Calculate days difference
         const daysDiff = Math.ceil((endDateTime.getTime() - startDateTime.getTime()) / (1000 * 60 * 60 * 24));
         
-        // Calculate hours per day
         let hoursPerDay = 0;
         if (startHours <= endHours) {
           hoursPerDay = endHours - startHours + (endMinutes - startMinutes) / 60;
@@ -150,18 +142,14 @@ export function useEventForm(eventId: string | null) {
           hoursPerDay = 24 - startHours + endHours + (endMinutes - startMinutes) / 60;
         }
         
-        // Calculate gross hours based on number of days and hours per day
         let totalGrossHours = 0;
         
         if (isSameDay(startDateTime, endDateTime)) {
-          // Single day event
           totalGrossHours = hoursPerDay;
         } else {
-          // Multi-day event
           totalGrossHours = daysDiff * hoursPerDay;
         }
         
-        // Update gross hours
         setFormData(prev => ({
           ...prev,
           grossHours: totalGrossHours.toFixed(2)
@@ -172,7 +160,6 @@ export function useEventForm(eventId: string | null) {
     }
   }, [formData.startDate, formData.endDate, formData.startTime, formData.endTime]);
   
-  // Calculate net hours
   useEffect(() => {
     if (formData.grossHours) {
       const breakStart = formData.breakStartTime.split(':').map(Number);
@@ -183,14 +170,21 @@ export function useEventForm(eventId: string | null) {
       
       const breakDurationHours = (breakEndMinutes - breakStartMinutes) / 60;
       
-      const netHoursValue = Math.max(0, Number(formData.grossHours) - breakDurationHours);
+      let numberOfDays = 1;
+      if (formData.startDate && formData.endDate) {
+        numberOfDays = Math.max(1, differenceInDays(formData.endDate, formData.startDate) + 1);
+      }
+      
+      const totalBreakTime = breakDurationHours * numberOfDays;
+      
+      const netHoursValue = Math.max(0, Number(formData.grossHours) - totalBreakTime);
       
       setFormData(prev => ({
         ...prev,
         netHours: netHoursValue.toFixed(2)
       }));
     }
-  }, [formData.grossHours, formData.breakStartTime, formData.breakEndTime]);
+  }, [formData.grossHours, formData.breakStartTime, formData.breakEndTime, formData.startDate, formData.endDate]);
   
   const handlePersonnelChange = (personnelId: string) => {
     setFormData(prev => {

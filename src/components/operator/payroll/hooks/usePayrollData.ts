@@ -57,6 +57,62 @@ export const usePayrollData = (operator: ExtendedOperator) => {
     }
   };
 
+  // Update meal allowance
+  const updateMealAllowance = (eventId: number, value: number) => {
+    try {
+      const updatedCalculations = calculations.map(calc => {
+        if (calc.eventId === eventId) {
+          return {
+            ...calc,
+            mealAllowance: value
+          };
+        }
+        return calc;
+      });
+      
+      setCalculations(updatedCalculations);
+      
+      // Calculate new summary
+      const newSummary = calculateSummary(updatedCalculations);
+      setSummaryData(newSummary);
+      
+      toast.success("Rimborso pasto aggiornato");
+      return true;
+    } catch (error) {
+      console.error("Errore nell'aggiornamento del rimborso pasto:", error);
+      toast.error("Errore nell'aggiornamento del rimborso pasto");
+      return false;
+    }
+  };
+
+  // Update travel allowance
+  const updateTravelAllowance = (eventId: number, value: number) => {
+    try {
+      const updatedCalculations = calculations.map(calc => {
+        if (calc.eventId === eventId) {
+          return {
+            ...calc,
+            travelAllowance: value
+          };
+        }
+        return calc;
+      });
+      
+      setCalculations(updatedCalculations);
+      
+      // Calculate new summary
+      const newSummary = calculateSummary(updatedCalculations);
+      setSummaryData(newSummary);
+      
+      toast.success("Rimborso viaggio aggiornato");
+      return true;
+    } catch (error) {
+      console.error("Errore nell'aggiornamento del rimborso viaggio:", error);
+      toast.error("Errore nell'aggiornamento del rimborso viaggio");
+      return false;
+    }
+  };
+
   // Load events and calculate payroll
   const loadEvents = useCallback(async () => {
     try {
@@ -118,6 +174,8 @@ export const usePayrollData = (operator: ExtendedOperator) => {
     summaryData,
     loading,
     updateActualHours,
+    updateMealAllowance,
+    updateTravelAllowance,
     refresh: loadEvents
   };
 };

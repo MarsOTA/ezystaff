@@ -9,6 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { PayrollCalculation, PayrollSummary } from "./types";
 
 interface PayrollTableProps {
@@ -16,6 +17,8 @@ interface PayrollTableProps {
   summaryData: PayrollSummary;
   loading: boolean;
   onClientClick: (event: PayrollCalculation) => void;
+  onMealAllowanceChange?: (eventId: number, value: number) => void;
+  onTravelAllowanceChange?: (eventId: number, value: number) => void;
 }
 
 const PayrollTable: React.FC<PayrollTableProps> = ({ 
@@ -23,8 +26,22 @@ const PayrollTable: React.FC<PayrollTableProps> = ({
   summaryData, 
   loading,
   onClientClick,
+  onMealAllowanceChange,
+  onTravelAllowanceChange
 }) => {
   const formatCurrency = (value: number) => `€ ${value.toFixed(2)}`;
+  
+  const handleMealAllowanceChange = (eventId: number, value: string) => {
+    if (onMealAllowanceChange) {
+      onMealAllowanceChange(eventId, parseFloat(value) || 0);
+    }
+  };
+
+  const handleTravelAllowanceChange = (eventId: number, value: string) => {
+    if (onTravelAllowanceChange) {
+      onTravelAllowanceChange(eventId, parseFloat(value) || 0);
+    }
+  };
   
   return (
     <div className="rounded-md border">
@@ -75,8 +92,29 @@ const PayrollTable: React.FC<PayrollTableProps> = ({
                   <TableCell className="text-right">{formatCurrency(calc.compensation)}</TableCell>
                   <TableCell className="text-right">
                     {formatCurrency(calc.mealAllowance + calc.travelAllowance)}
-                    <div className="text-xs text-muted-foreground">
-                      Pasti: {formatCurrency(calc.mealAllowance)} / Viaggio: {formatCurrency(calc.travelAllowance)}
+                    <div className="text-xs text-muted-foreground space-y-1 mt-1">
+                      <div className="flex items-center gap-1">
+                        <span>Pasti:</span>
+                        <Input
+                          type="number"
+                          min="0"
+                          step="0.5"
+                          className="h-6 w-20 text-xs"
+                          value={calc.mealAllowance}
+                          onChange={(e) => handleMealAllowanceChange(calc.eventId, e.target.value)}
+                        />
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span>Viaggio:</span>
+                        <Input
+                          type="number"
+                          min="0"
+                          step="0.5"
+                          className="h-6 w-20 text-xs"
+                          value={calc.travelAllowance}
+                          onChange={(e) => handleTravelAllowanceChange(calc.eventId, e.target.value)}
+                        />
+                      </div>
                     </div>
                   </TableCell>
                 </TableRow>
