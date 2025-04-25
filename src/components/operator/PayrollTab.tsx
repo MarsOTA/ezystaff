@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { ExtendedOperator } from "@/types/operator";
 import { CheckRecord, PayrollCalculation } from "./payroll/types";
 import { exportToCSV } from "./payroll/payrollUtils";
