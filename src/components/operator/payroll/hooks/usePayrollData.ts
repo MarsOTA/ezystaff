@@ -4,11 +4,9 @@ import { toast } from "sonner";
 import { Event, PayrollCalculation, PayrollSummary } from "../types";
 import { ExtendedOperator } from "@/types/operator";
 import { fetchOperatorEvents } from "../api/payrollApi";
-import { 
-  calculateSummary, 
-  processPayrollCalculations, 
-  validateAttendance 
-} from "../utils/payrollCalculations";
+import { calculateSummary } from "../utils/payrollCalculations";
+import { useAllowances } from "./useAllowances";
+import { useActualHours } from "./useActualHours";
 
 export const usePayrollData = (operator: ExtendedOperator) => {
   const [events, setEvents] = useState<Event[]>([]);
@@ -22,96 +20,17 @@ export const usePayrollData = (operator: ExtendedOperator) => {
   });
   const [loading, setLoading] = useState(true);
 
-  // Update actual hours for an event
-  const updateActualHours = (eventId: number, actualHours: number) => {
-    try {
-      // Update calculations with the new actual hours
-      const updatedCalculations = calculations.map(calc => {
-        if (calc.eventId === eventId) {
-          // Calculate compensation based on hourly rate (which needs to be determined from the event)
-          // Since hourlyRate doesn't exist, use the compensation divided by the current netHours or 1 if netHours is 0
-          const hourlyRateEstimate = calc.compensation / (calc.netHours || 1);
-          const newCompensation = actualHours * hourlyRateEstimate;
-          
-          return { 
-            ...calc, 
-            actual_hours: actualHours,
-            compensation: newCompensation
-          };
-        }
-        return calc;
-      });
-      
-      setCalculations(updatedCalculations);
-      
-      // Calculate new summary
-      const newSummary = calculateSummary(updatedCalculations);
-      setSummaryData(newSummary);
-      
-      toast.success("Ore effettive aggiornate con successo");
-      return true;
-    } catch (error) {
-      console.error("Errore nell'aggiornamento delle ore effettive:", error);
-      toast.error("Errore nell'aggiornamento delle ore effettive");
-      return false;
-    }
-  };
+  const { updateMealAllowance, updateTravelAllowance } = useAllowances(
+    calculations,
+    setCalculations,
+    setSummaryData
+  );
 
-  // Update meal allowance
-  const updateMealAllowance = (eventId: number, value: number) => {
-    try {
-      const updatedCalculations = calculations.map(calc => {
-        if (calc.eventId === eventId) {
-          return {
-            ...calc,
-            mealAllowance: value
-          };
-        }
-        return calc;
-      });
-      
-      setCalculations(updatedCalculations);
-      
-      // Calculate new summary
-      const newSummary = calculateSummary(updatedCalculations);
-      setSummaryData(newSummary);
-      
-      toast.success("Rimborso pasto aggiornato");
-      return true;
-    } catch (error) {
-      console.error("Errore nell'aggiornamento del rimborso pasto:", error);
-      toast.error("Errore nell'aggiornamento del rimborso pasto");
-      return false;
-    }
-  };
-
-  // Update travel allowance
-  const updateTravelAllowance = (eventId: number, value: number) => {
-    try {
-      const updatedCalculations = calculations.map(calc => {
-        if (calc.eventId === eventId) {
-          return {
-            ...calc,
-            travelAllowance: value
-          };
-        }
-        return calc;
-      });
-      
-      setCalculations(updatedCalculations);
-      
-      // Calculate new summary
-      const newSummary = calculateSummary(updatedCalculations);
-      setSummaryData(newSummary);
-      
-      toast.success("Rimborso viaggio aggiornato");
-      return true;
-    } catch (error) {
-      console.error("Errore nell'aggiornamento del rimborso viaggio:", error);
-      toast.error("Errore nell'aggiornamento del rimborso viaggio");
-      return false;
-    }
-  };
+  const { updateActualHours } = useActualHours(
+    calculations,
+    setCalculations,
+    setSummaryData
+  );
 
   // Load events and calculate payroll
   const loadEvents = useCallback(async () => {
