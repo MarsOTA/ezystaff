@@ -14,11 +14,12 @@ interface EventPersonnelSelectProps {
 
 const EventPersonnelSelect: React.FC<EventPersonnelSelectProps> = ({
   selectedPersonnel,
-  staffCount,
+  staffCount = {}, // Provide default empty object
   onPersonnelChange,
   onStaffCountChange
 }) => {
-  const totalStaff = Object.values(staffCount).reduce((sum, count) => sum + count, 0);
+  // Use safe check with nullish coalescing to ensure staffCount is an object
+  const totalStaff = Object.values(staffCount || {}).reduce((sum, count) => sum + count, 0);
 
   return (
     <div className="space-y-4">

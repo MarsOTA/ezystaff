@@ -1,3 +1,4 @@
+
 import React, { useRef, useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -191,7 +192,7 @@ const EventCreate = () => {
             
             <EventPersonnelSelect 
               selectedPersonnel={formData.selectedPersonnel}
-              staffCount={formData.staffCount}
+              staffCount={formData.staffCount || {}}
               onPersonnelChange={handlePersonnelChange}
               onStaffCountChange={handleStaffCountChange}
             />
