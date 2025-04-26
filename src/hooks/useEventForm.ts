@@ -1,5 +1,6 @@
+
 import { useState, useEffect } from "react";
-import { Event } from "@/pages/Events";
+import { Event } from "@/types/event";
 import { Client } from "@/pages/Clients";
 import { safeLocalStorage } from "@/utils/fileUtils";
 import { differenceInHours, addDays, isSameDay, differenceInDays } from "date-fns";

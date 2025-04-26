@@ -13,7 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Event } from "@/pages/Events";
+import { Event } from "@/types/event";
 import { CardFooter } from "@/components/ui/card";
 
 interface ClientEventsProps {

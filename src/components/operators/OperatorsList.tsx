@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Pencil, Trash2, UserCheck, UserX, CalendarClock } from "lucide-react";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
-import { Event } from "@/pages/Events";
+import { Event } from "@/types/event";
 import { Operator } from "@/types/operator";
 
 interface OperatorsListProps {

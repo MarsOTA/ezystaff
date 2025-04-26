@@ -1,10 +1,9 @@
-
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { safeLocalStorage } from "@/utils/fileUtils";
 import { Operator } from "@/types/operator";
-import { Event } from "@/pages/Events";
+import { Event } from "@/types/event";
 
 export const EVENTS_STORAGE_KEY = "app_events_data";
 export const OPERATORS_STORAGE_KEY = "app_operators_data";

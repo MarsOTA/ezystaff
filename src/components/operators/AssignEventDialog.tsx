@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/select";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
-import { Event } from "@/pages/Events";
+import { Event } from "@/types/event";
 import { Operator } from "@/types/operator";
 
 interface AssignEventDialogProps {
