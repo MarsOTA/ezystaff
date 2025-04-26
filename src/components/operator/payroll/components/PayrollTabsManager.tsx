@@ -44,7 +44,6 @@ const PayrollTabsManager: React.FC<PayrollTabsManagerProps> = ({
 
       <TabsContent value="payroll" className="space-y-6">
         <PayrollSummary summaryData={summaryData} eventCount={calculations.length} />
-        <PayrollCharts calculations={calculations} totalCompensation={summaryData.totalCompensation} />
         <PayrollTable 
           calculations={calculations}
           summaryData={summaryData}

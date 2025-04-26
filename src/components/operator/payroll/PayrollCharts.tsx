@@ -1,8 +1,14 @@
 
-// This component has been removed as per requirements
 import React from 'react';
+import { PayrollCalculation } from "../types";
 
-const PayrollCharts: React.FC = () => {
+interface PayrollChartsProps {
+  calculations: PayrollCalculation[];
+  totalCompensation: number;
+}
+
+const PayrollCharts: React.FC<PayrollChartsProps> = () => {
+  // Empty component as requested - charts have been removed
   return null;
 };
 
