@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { PayrollCalculation } from "../types";
+import { PayrollCalculation } from "./types";
 
 interface PayrollChartsProps {
   calculations: PayrollCalculation[];
