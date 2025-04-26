@@ -67,14 +67,24 @@ export const useEventOperations = () => {
               operator.eventPayments = [];
             }
             
+            // Get hourly rate from contract if available
+            let hourlyRate = eventToClose.hourlyRateCost || 15;
+            if (operator.contractData && operator.contractData.grossSalary) {
+              hourlyRate = parseFloat(operator.contractData.grossSalary) || hourlyRate;
+            }
+            
+            // Use gross hours for estimated hours
+            const grossHours = eventToClose.grossHours || calculateHours(eventToClose.startDate, eventToClose.endDate);
+            const netHours = eventToClose.netHours || calculateNetHours(eventToClose.startDate, eventToClose.endDate);
+            
             operator.eventPayments.push({
               eventId: eventToClose.id,
               eventTitle: eventToClose.title,
               date: new Date().toISOString(),
-              grossHours: eventToClose.grossHours || calculateHours(eventToClose.startDate, eventToClose.endDate),
-              netHours: eventToClose.netHours || calculateNetHours(eventToClose.startDate, eventToClose.endDate),
-              hourlyRate: eventToClose.hourlyRateCost || 15,
-              mealAllowance: (eventToClose.grossHours || calculateHours(eventToClose.startDate, eventToClose.endDate)) > 5 ? 10 : 0,
+              grossHours: grossHours,
+              netHours: netHours,
+              hourlyRate: hourlyRate,
+              mealAllowance: grossHours > 5 ? 10 : 0,
               travelAllowance: 15,
               status: 'paid'
             });
@@ -98,15 +108,21 @@ export const useEventOperations = () => {
     try {
       const { data: eventOperators, error: eventOperatorsError } = await supabase
         .from('event_operators')
-        .select('*')
+        .select('*, operator:operator_id(*)') // Join with operators to get contract data
         .eq('event_id', eventToClose.id);
         
       if (eventOperatorsError) {
         console.error("Errore durante il recupero degli operatori per l'evento:", eventOperatorsError);
       } else if (eventOperators && eventOperators.length > 0) {
-        for (const operator of eventOperators) {
-          const netHours = eventToClose.netHours || operator.net_hours || calculateNetHours(eventToClose.startDate, eventToClose.endDate);
-          const hourlyRate = eventToClose.hourlyRateCost || operator.hourly_rate || 15;
+        for (const operatorRecord of eventOperators) {
+          // Get contract data if available
+          const operatorContractData = operatorRecord.operator?.contractData;
+          const hourlyRate = operatorContractData?.grossSalary 
+            ? parseFloat(operatorContractData.grossSalary) 
+            : (eventToClose.hourlyRateCost || operatorRecord.hourly_rate || 15);
+          
+          const netHours = eventToClose.netHours || operatorRecord.net_hours || calculateNetHours(eventToClose.startDate, eventToClose.endDate);
+          const grossHours = eventToClose.grossHours || operatorRecord.total_hours || calculateHours(eventToClose.startDate, eventToClose.endDate);
           const totalCompensation = netHours * hourlyRate;
           
           try {
@@ -114,20 +130,20 @@ export const useEventOperations = () => {
               .from('event_operators')
               .update({
                 net_hours: netHours,
-                total_hours: eventToClose.grossHours || operator.total_hours || calculateHours(eventToClose.startDate, eventToClose.endDate),
+                total_hours: grossHours,
                 hourly_rate: hourlyRate,
                 total_compensation: totalCompensation,
-                meal_allowance: operator.meal_allowance || ((netHours > 5) ? 10 : 0),
-                travel_allowance: operator.travel_allowance || 15,
+                meal_allowance: operatorRecord.meal_allowance || ((grossHours > 5) ? 10 : 0),
+                travel_allowance: operatorRecord.travel_allowance || 15,
                 revenue_generated: (eventToClose.hourlyRateSell || 25) * netHours
               })
-              .eq('id', operator.id);
+              .eq('id', operatorRecord.id);
               
             if (updateOperatorError) {
-              console.error(`Errore durante l'aggiornamento dell'operatore ${operator.id}:`, updateOperatorError);
+              console.error(`Errore durante l'aggiornamento dell'operatore ${operatorRecord.id}:`, updateOperatorError);
             }
           } catch (error) {
-            console.error(`Errore nella comunicazione con il database per l'operatore ${operator.id}:`, error);
+            console.error(`Errore nella comunicazione con il database per l'operatore ${operatorRecord.id}:`, error);
           }
         }
       }

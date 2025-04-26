@@ -32,11 +32,23 @@ export const usePayrollData = (operator: ExtendedOperator) => {
     setSummaryData
   );
 
+  // Get hourly rate from contract data or use default
+  const getOperatorHourlyRate = useCallback(() => {
+    if (operator.contractData?.grossSalary) {
+      return parseFloat(operator.contractData.grossSalary) || 15;
+    }
+    return 15;
+  }, [operator.contractData]);
+
   // Load events and calculate payroll
   const loadEvents = useCallback(async () => {
     try {
       setLoading(true);
       console.log("Loading events for operator ID:", operator.id);
+      
+      // Get hourly rate from contract
+      const operatorHourlyRate = getOperatorHourlyRate();
+      console.log("Operator hourly rate:", operatorHourlyRate);
       
       // Fetch events for this operator
       const { events: eventsData, calculations: calculationsData } = await fetchOperatorEvents(operator.id);
@@ -56,12 +68,27 @@ export const usePayrollData = (operator: ExtendedOperator) => {
         return;
       }
 
-      // Process events and calculations
-      setEvents(eventsData);
-      setCalculations(calculationsData);
+      // Add operator hourly rate to events data for calculations
+      const eventsWithRate = eventsData.map(event => ({
+        ...event,
+        operatorHourlyRate
+      }));
+      
+      // Process events and calculations with the contract rate
+      const calculationsWithRate = calculationsData.map(calc => {
+        // Recalculate compensation based on contract rate
+        const hoursToUse = calc.actual_hours !== undefined ? calc.actual_hours : calc.netHours;
+        return {
+          ...calc,
+          compensation: hoursToUse * operatorHourlyRate
+        };
+      });
+      
+      setEvents(eventsWithRate);
+      setCalculations(calculationsWithRate);
       
       // Calculate summary
-      const summary = calculateSummary(calculationsData);
+      const summary = calculateSummary(calculationsWithRate);
       setSummaryData(summary);
       
     } catch (error) {
@@ -80,7 +107,7 @@ export const usePayrollData = (operator: ExtendedOperator) => {
     } finally {
       setLoading(false);
     }
-  }, [operator.id]);
+  }, [operator.id, getOperatorHourlyRate]);
 
   // Initial load
   useEffect(() => {

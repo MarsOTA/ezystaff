@@ -45,12 +45,18 @@ export const calculateEventPayroll = (
     actual_hours = parseFloat((totalMinutes / 60).toFixed(2));
   }
   
+  // Use gross hours for estimated hours
+  const grossHours = parseFloat(event.grossHours) || 0;
   const netHours = parseFloat(event.netHours) || 0;
   const hourlyRate = parseFloat(event.hourlyRateCost) || 15;
   const hourlyRateSell = parseFloat(event.hourlyRateSell) || 25;
   
+  // Use hourly rate from contract if available
+  const operatorHourlyRate = event.operatorHourlyRate || hourlyRate;
+  
+  // Calculate compensation based on actual hours if available, otherwise net hours
   const hoursToUse = actual_hours !== undefined ? actual_hours : netHours;
-  const compensation = hoursToUse * hourlyRate;
+  const compensation = hoursToUse * operatorHourlyRate;
   
   const mealAllowance = parseFloat(event.grossHours) >= 8 ? 10 : parseFloat(event.grossHours) >= 4 ? 5 : 0;
   const travelAllowance = 5;
@@ -62,7 +68,7 @@ export const calculateEventPayroll = (
     date: `${event.startDate.toLocaleDateString()} - ${event.endDate.toLocaleDateString()}`,
     start_date: event.startDate.toISOString(),
     end_date: event.endDate.toISOString(),
-    grossHours: parseFloat(event.grossHours) || 0,
+    grossHours: grossHours,  // Use gross hours as estimated hours
     netHours: netHours,
     actual_hours,
     compensation,
@@ -82,7 +88,6 @@ export const mapEventToPayrollEvent = (event: any): Event => ({
   status: event.status || 'upcoming',
   hourly_rate: event.hourlyRateCost || 15,
   hourly_rate_sell: event.hourlyRateSell || 25,
-  estimated_hours: event.netHours || 0,
+  estimated_hours: event.grossHours || 0,  // Update to use grossHours instead of netHours
   personnel_types: event.personnelTypes || []
 });
-

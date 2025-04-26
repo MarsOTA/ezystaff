@@ -9,3 +9,18 @@ export const getAttendanceRecords = (): CheckRecord[] => {
   return records ? JSON.parse(records) : [];
 };
 
+// Add listener to localStorage changes for real-time updates
+export const setupAttendanceListener = (callback: () => void) => {
+  const handleStorageChange = (event: StorageEvent) => {
+    if (event.key === ATTENDANCE_RECORDS_KEY) {
+      callback();
+    }
+  };
+  
+  window.addEventListener('storage', handleStorageChange);
+  
+  // Return cleanup function
+  return () => {
+    window.removeEventListener('storage', handleStorageChange);
+  };
+};

@@ -60,7 +60,13 @@ const EventTable = ({ events, onShowDetails, onEditEvent, onDeleteEvent }: Event
     
     const totalAssigned = event.assignedOperators?.length || 0;
     
-    return `${totalAssigned}/${totalRequired}`;
+    // Calculate percentage for color coding
+    const percentage = totalRequired > 0 ? (totalAssigned / totalRequired) * 100 : 0;
+    
+    return {
+      value: `${totalAssigned}/${totalRequired}`,
+      isComplete: percentage >= 100
+    };
   };
 
   return (
@@ -76,46 +82,56 @@ const EventTable = ({ events, onShowDetails, onEditEvent, onDeleteEvent }: Event
         </TableRow>
       </TableHeader>
       <TableBody>
-        {events.map((event) => (
-          <TableRow 
-            key={event.id} 
-            className="cursor-pointer hover:bg-muted/50" 
-            onClick={() => onShowDetails(event)}
-          >
-            <TableCell className="font-medium">{event.title}</TableCell>
-            <TableCell>{event.client}</TableCell>
-            <TableCell>{formatDateRange(event.startDate, event.endDate)}</TableCell>
-            <TableCell>
-              <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusClass(event.status)}`}>
-                {event.status ? (
-                  event.status === 'completed' ? 'Completato' :
-                  event.status === 'cancelled' ? 'Annullato' :
-                  event.status === 'in-progress' ? 'In corso' : 'Programmato'
-                ) : 'Programmato'}
-              </span>
-            </TableCell>
-            <TableCell>{calculateStaffKPI(event)}</TableCell>
-            <TableCell className="text-right">
-              <div className="flex justify-end gap-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={(e) => onEditEvent(e, event.id)}
-                >
-                  <Edit className="h-4 w-4" />
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="text-red-500 hover:text-red-600" 
-                  onClick={(e) => onDeleteEvent(e, event.id)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </TableCell>
-          </TableRow>
-        ))}
+        {events.map((event) => {
+          const staffKPI = calculateStaffKPI(event);
+          
+          return (
+            <TableRow 
+              key={event.id} 
+              className="cursor-pointer hover:bg-muted/50" 
+              onClick={() => onShowDetails(event)}
+            >
+              <TableCell className="font-medium">{event.title}</TableCell>
+              <TableCell>{event.client}</TableCell>
+              <TableCell>{formatDateRange(event.startDate, event.endDate)}</TableCell>
+              <TableCell>
+                <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusClass(event.status)}`}>
+                  {event.status ? (
+                    event.status === 'completed' ? 'Completato' :
+                    event.status === 'cancelled' ? 'Annullato' :
+                    event.status === 'in-progress' ? 'In corso' : 'Programmato'
+                  ) : 'Programmato'}
+                </span>
+              </TableCell>
+              <TableCell>
+                <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                  staffKPI.isComplete ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'
+                }`}>
+                  {staffKPI.value}
+                </span>
+              </TableCell>
+              <TableCell className="text-right">
+                <div className="flex justify-end gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={(e) => onEditEvent(e, event.id)}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="text-red-500 hover:text-red-600" 
+                    onClick={(e) => onDeleteEvent(e, event.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </TableCell>
+            </TableRow>
+          );
+        })}
       </TableBody>
     </Table>
   );

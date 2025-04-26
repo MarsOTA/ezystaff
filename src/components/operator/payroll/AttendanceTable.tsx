@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -14,6 +14,7 @@ import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RefreshCw } from "lucide-react";
+import { setupAttendanceListener } from "./api/attendanceApi";
 
 interface AttendanceTableProps {
   records: CheckRecord[];
@@ -23,6 +24,25 @@ interface AttendanceTableProps {
 
 const AttendanceTable: React.FC<AttendanceTableProps> = ({ records, events, onRefresh }) => {
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Set up attendance listener for real-time updates
+  useEffect(() => {
+    const cleanup = setupAttendanceListener(() => {
+      console.log("Attendance records updated from another window");
+      onRefresh();
+    });
+    
+    return cleanup;
+  }, [onRefresh]);
+  
+  // Auto-refresh every 30 seconds
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      onRefresh();
+    }, 30000);
+    
+    return () => clearInterval(intervalId);
+  }, [onRefresh]);
 
   // Group records by event and date
   const groupedRecords: Record<string, CheckRecord[]> = {};
