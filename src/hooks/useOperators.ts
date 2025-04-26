@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -179,36 +178,35 @@ export const useOperators = () => {
     );
     
     // Also update events to include the assigned operator in assignedOperators array
-    setEvents((prev) => 
-      prev.map((event) => {
-        if (event.id === eventId) {
-          const currentAssignedOperators = event.assignedOperators || [];
-          const operatorAlreadyAssigned = currentAssignedOperators.some(
-            (op) => op.id === assigningOperator.id
-          );
-          
-          if (!operatorAlreadyAssigned) {
-            // Add operator to assignedOperators
-            return {
-              ...event,
-              assignedOperators: [
-                ...currentAssignedOperators, 
-                {
-                  id: assigningOperator.id,
-                  name: assigningOperator.name,
-                  email: assigningOperator.email,
-                }
-              ]
-            };
-          }
+    const updatedEvents = events.map((event) => {
+      if (event.id === eventId) {
+        const currentAssignedOperators = event.assignedOperators || [];
+        const operatorAlreadyAssigned = currentAssignedOperators.some(
+          (op) => op.id === assigningOperator.id
+        );
+        
+        if (!operatorAlreadyAssigned) {
+          return {
+            ...event,
+            assignedOperators: [
+              ...currentAssignedOperators,
+              {
+                id: assigningOperator.id,
+                name: assigningOperator.name,
+                email: assigningOperator.email,
+              }
+            ]
+          };
         }
-        return event;
-      })
-    );
+      }
+      return event;
+    });
+    
+    setEvents(updatedEvents);
     
     // Save updated events to localStorage
     safeLocalStorage.setItem(EVENTS_STORAGE_KEY, JSON.stringify(
-      events.map(event => ({
+      updatedEvents.map(event => ({
         ...event,
         startDate: event.startDate.toISOString(),
         endDate: event.endDate.toISOString()

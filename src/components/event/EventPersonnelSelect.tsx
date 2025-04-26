@@ -45,7 +45,11 @@ const EventPersonnelSelect: React.FC<EventPersonnelSelectProps> = ({
                   type="number"
                   min="1"
                   value={staffCount[type.id] || ""}
-                  onChange={(e) => onStaffCountChange(type.id, parseInt(e.target.value) || 0)}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    const count = parseInt(value) || 0;
+                    onStaffCountChange(type.id, count);
+                  }}
                   className="w-20"
                 />
               </div>

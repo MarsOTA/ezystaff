@@ -13,8 +13,7 @@ export const mapEventToPayrollEvent = (event: any): Event => {
     status: event.status || "upcoming",
     hourly_rate: event.hourlyRateCost || 15,
     hourly_rate_sell: event.hourlyRateSell || 25,
-    // Use gross hours from event for estimated hours
-    estimated_hours: event.grossHours || calculateHoursFromDates(event.startDate, event.endDate),
+    estimated_hours: event.grossHours ? Number(event.grossHours) : calculateHoursFromDates(event.startDate, event.endDate),
     attendance: null
   };
 };
@@ -25,12 +24,12 @@ export const calculateEventPayroll = (event: any, attendanceRecords: CheckRecord
   const endDate = new Date(event.endDate);
   
   // Calculate hours - prefer event values if they exist
-  const grossHours = event.grossHours || calculateHoursFromDates(startDate, endDate);
-  const netHours = event.netHours || (grossHours > 5 ? grossHours - 1 : grossHours); // 1hr break if > 5hrs
+  const grossHours = event.grossHours ? Number(event.grossHours) : calculateHoursFromDates(startDate, endDate);
+  const netHours = event.netHours ? Number(event.netHours) : (grossHours > 5 ? grossHours - 1 : grossHours); // 1hr break if > 5hrs
   
   // Use event hourlyRateCost if available, default to 15
-  const hourlyRate = event.hourlyRateCost || 15;
-  const hourlyRateSell = event.hourlyRateSell || 25;
+  const hourlyRate = event.hourlyRateCost ? Number(event.hourlyRateCost) : 15;
+  const hourlyRateSell = event.hourlyRateSell ? Number(event.hourlyRateSell) : 25;
   
   // Calculate allowances
   const mealAllowance = grossHours > 5 ? 10 : 0;
@@ -47,9 +46,21 @@ export const calculateEventPayroll = (event: any, attendanceRecords: CheckRecord
   
   // Determine attendance status based on check-in/out records
   let attendance = null;
+  let actual_hours = null;
+  
   if (eventAttendance.length > 0) {
     if (eventAttendance.some(r => r.type === "check-in")) {
       attendance = "present";
+      
+      // If there's check-in and check-out, calculate actual hours
+      const checkIn = eventAttendance.find(r => r.type === "check-in");
+      const checkOut = eventAttendance.find(r => r.type === "check-out");
+      
+      if (checkIn && checkOut) {
+        const checkInTime = new Date(checkIn.timestamp);
+        const checkOutTime = new Date(checkOut.timestamp);
+        actual_hours = calculateHoursFromDates(checkInTime, checkOutTime);
+      }
     }
   }
   
@@ -67,8 +78,8 @@ export const calculateEventPayroll = (event: any, attendanceRecords: CheckRecord
     travelAllowance: travelAllowance,
     totalRevenue: revenue,
     attendance: attendance,
-    // Use gross hours from event for estimated hours
-    estimated_hours: grossHours
+    estimated_hours: grossHours,
+    actual_hours: actual_hours
   };
 };
 
