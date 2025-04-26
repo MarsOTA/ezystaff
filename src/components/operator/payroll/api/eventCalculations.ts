@@ -1,93 +1,82 @@
 
-import { differenceInMinutes } from "date-fns";
+import { format } from "date-fns";
 import { Event, PayrollCalculation, CheckRecord } from "../types";
 
-export const calculateEventPayroll = (
-  event: any,
-  operatorAttendance: CheckRecord[]
-): PayrollCalculation => {
-  const eventRecords = operatorAttendance.filter(record => 
+export const mapEventToPayrollEvent = (event: any): Event => {
+  return {
+    id: event.id,
+    title: event.title,
+    client: event.client,
+    start_date: event.startDate,
+    end_date: event.endDate,
+    location: event.location || "",
+    status: event.status || "upcoming",
+    hourly_rate: event.hourlyRateCost || 15,
+    hourly_rate_sell: event.hourlyRateSell || 25,
+    // Use gross hours from event for estimated hours
+    estimated_hours: event.grossHours || calculateHoursFromDates(event.startDate, event.endDate),
+    attendance: null
+  };
+};
+
+export const calculateEventPayroll = (event: any, attendanceRecords: CheckRecord[]): PayrollCalculation => {
+  // Get event start and end dates
+  const startDate = new Date(event.startDate);
+  const endDate = new Date(event.endDate);
+  
+  // Calculate hours - prefer event values if they exist
+  const grossHours = event.grossHours || calculateHoursFromDates(startDate, endDate);
+  const netHours = event.netHours || (grossHours > 5 ? grossHours - 1 : grossHours); // 1hr break if > 5hrs
+  
+  // Use event hourlyRateCost if available, default to 15
+  const hourlyRate = event.hourlyRateCost || 15;
+  const hourlyRateSell = event.hourlyRateSell || 25;
+  
+  // Calculate allowances
+  const mealAllowance = grossHours > 5 ? 10 : 0;
+  const travelAllowance = 15;
+  
+  // Calculate compensation and revenue
+  const compensation = netHours * hourlyRate;
+  const revenue = netHours * hourlyRateSell;
+  
+  // Get event attendance records
+  const eventAttendance = attendanceRecords.filter(record => 
     record.eventId === event.id
   );
   
-  // Set actual hours to net hours by default
-  let actual_hours = event.netHours || undefined;
-  
-  if (eventRecords.length >= 2) {
-    const recordsByDate: Record<string, CheckRecord[]> = {};
-    
-    eventRecords.forEach(record => {
-      const recordDate = new Date(record.timestamp).toDateString();
-      if (!recordsByDate[recordDate]) recordsByDate[recordDate] = [];
-      recordsByDate[recordDate].push(record);
-    });
-    
-    let totalMinutes = 0;
-    
-    Object.values(recordsByDate).forEach(dayRecords => {
-      dayRecords.sort((a, b) => 
-        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-      );
-      
-      for (let i = 0; i < dayRecords.length - 1; i++) {
-        if (dayRecords[i].type === "check-in" && dayRecords[i+1].type === "check-out") {
-          const checkInTime = new Date(dayRecords[i].timestamp);
-          const checkOutTime = new Date(dayRecords[i+1].timestamp);
-          
-          const minutesWorked = differenceInMinutes(checkOutTime, checkInTime);
-          totalMinutes += minutesWorked;
-          
-          i++;
-        }
-      }
-    });
-    
-    actual_hours = parseFloat((totalMinutes / 60).toFixed(2));
+  // Determine attendance status based on check-in/out records
+  let attendance = null;
+  if (eventAttendance.length > 0) {
+    if (eventAttendance.some(r => r.type === "check-in")) {
+      attendance = "present";
+    }
   }
-  
-  // Use gross hours for estimated hours
-  const grossHours = parseFloat(event.grossHours) || 0;
-  const netHours = parseFloat(event.netHours) || 0;
-  const hourlyRate = parseFloat(event.hourlyRateCost) || 15;
-  const hourlyRateSell = parseFloat(event.hourlyRateSell) || 25;
-  
-  // Use hourly rate from contract if available
-  const operatorHourlyRate = event.operatorHourlyRate || hourlyRate;
-  
-  // Calculate compensation based on actual hours if available, otherwise net hours
-  const hoursToUse = actual_hours !== undefined ? actual_hours : netHours;
-  const compensation = hoursToUse * operatorHourlyRate;
-  
-  const mealAllowance = parseFloat(event.grossHours) >= 8 ? 10 : parseFloat(event.grossHours) >= 4 ? 5 : 0;
-  const travelAllowance = 5;
   
   return {
     eventId: event.id,
     eventTitle: event.title,
-    client: event.client || "Cliente non specificato",
-    date: `${event.startDate.toLocaleDateString()} - ${event.endDate.toLocaleDateString()}`,
-    start_date: event.startDate.toISOString(),
-    end_date: event.endDate.toISOString(),
-    grossHours: grossHours,  // Use gross hours as estimated hours
+    client: event.client,
+    date: format(startDate, "dd/MM/yyyy"),
+    start_date: event.startDate,
+    end_date: event.endDate,
+    grossHours: grossHours,
     netHours: netHours,
-    actual_hours,
-    compensation,
-    mealAllowance,
-    travelAllowance,
-    totalRevenue: hoursToUse * hourlyRateSell
+    compensation: compensation,
+    mealAllowance: mealAllowance,
+    travelAllowance: travelAllowance,
+    totalRevenue: revenue,
+    attendance: attendance,
+    // Use gross hours from event for estimated hours
+    estimated_hours: grossHours
   };
 };
 
-export const mapEventToPayrollEvent = (event: any): Event => ({
-  id: event.id,
-  title: event.title,
-  client: event.client,
-  start_date: event.startDate.toISOString(),
-  end_date: event.endDate.toISOString(),
-  location: event.location || '',
-  status: event.status || 'upcoming',
-  hourly_rate: event.hourlyRateCost || 15,
-  hourly_rate_sell: event.hourlyRateSell || 25,
-  estimated_hours: event.grossHours || 0,  // Update to use grossHours instead of netHours
-  personnel_types: event.personnelTypes || []
-});
+// Helper function to calculate hours between two dates
+const calculateHoursFromDates = (start: Date, end: Date): number => {
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+  const diffMs = endDate.getTime() - startDate.getTime();
+  const diffHours = diffMs / (1000 * 60 * 60);
+  return Math.round(diffHours * 10) / 10; // Round to 1 decimal place
+};

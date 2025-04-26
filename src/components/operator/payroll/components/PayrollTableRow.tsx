@@ -1,8 +1,8 @@
 
 import React from "react";
-import { TableRow, TableCell } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
+import { TableCell, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
+import { format } from "date-fns";
 import { PayrollCalculation } from "../types";
 
 interface PayrollTableRowProps {
@@ -20,48 +20,71 @@ export const PayrollTableRow: React.FC<PayrollTableRowProps> = ({
   onMealAllowanceChange,
   onTravelAllowanceChange
 }) => {
+  const isPastEvent = new Date(calc.end_date) < new Date();
+  
+  // Calculate total allowances
+  const totalAllowances = calc.mealAllowance + calc.travelAllowance;
+  
+  // Determine which hours to use for display
+  const displayHours = calc.actual_hours !== undefined ? calc.actual_hours : calc.netHours;
+  
   return (
-    <TableRow>
-      <TableCell className="font-medium">{calc.eventTitle}</TableCell>
+    <TableRow key={calc.eventId}>
+      <TableCell>{calc.eventTitle}</TableCell>
       <TableCell>
-        <Button
-          variant="link"
+        <button
           onClick={() => onClientClick(calc)}
-          className="p-0 h-auto font-normal text-blue-600 hover:text-blue-800 underline"
+          className="text-blue-600 hover:underline text-left"
         >
           {calc.client}
-        </Button>
+        </button>
       </TableCell>
-      <TableCell>{calc.date}</TableCell>
-      <TableCell className="text-right">{calc.netHours.toFixed(2)}</TableCell>
-      <TableCell className="text-right">
-        {calc.actual_hours !== undefined ? calc.actual_hours.toFixed(2) : "-"}
+      <TableCell>
+        {typeof calc.date === "string" ? calc.date : format(calc.date, "dd/MM/yyyy")}
       </TableCell>
-      <TableCell className="text-right">{formatCurrency(calc.compensation)}</TableCell>
       <TableCell className="text-right">
-        {formatCurrency(calc.mealAllowance + calc.travelAllowance)}
-        <div className="text-xs text-muted-foreground space-y-1 mt-1">
-          <div className="flex items-center gap-1">
-            <span>Pasti:</span>
+        {calc.estimated_hours.toFixed(1)}
+      </TableCell>
+      <TableCell className="text-right">
+        {isPastEvent ? (
+          <span 
+            className={`px-2 py-1 rounded ${
+              calc.actual_hours !== undefined ? "bg-green-100" : ""
+            }`}
+          >
+            {displayHours.toFixed(1)}
+          </span>
+        ) : (
+          "N/A"
+        )}
+      </TableCell>
+      <TableCell className="text-right">
+        {formatCurrency(calc.compensation)}
+      </TableCell>
+      <TableCell>
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <span className="text-sm">Diaria:</span>
             <Input
               type="number"
               min="0"
-              step="0.5"
-              className="h-6 w-20 text-xs"
               value={calc.mealAllowance}
               onChange={(e) => onMealAllowanceChange?.(calc.eventId, e.target.value)}
+              className="w-20 h-8 text-right"
             />
           </div>
-          <div className="flex items-center gap-1">
-            <span>Viaggio:</span>
+          <div className="flex items-center justify-between">
+            <span className="text-sm">Trasferta:</span>
             <Input
               type="number"
               min="0"
-              step="0.5"
-              className="h-6 w-20 text-xs"
               value={calc.travelAllowance}
               onChange={(e) => onTravelAllowanceChange?.(calc.eventId, e.target.value)}
+              className="w-20 h-8 text-right"
             />
+          </div>
+          <div className="text-right text-sm font-medium pt-1">
+            Tot: {formatCurrency(totalAllowances)}
           </div>
         </div>
       </TableCell>

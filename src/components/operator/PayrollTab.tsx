@@ -5,7 +5,7 @@ import { CheckRecord } from "./payroll/types";
 import { exportToCSV } from "./payroll/payrollUtils";
 import { usePayrollData } from "./payroll/hooks/usePayrollData";
 import { useHoursAdjustment } from "./payroll/hooks/useHoursAdjustment";
-import { getAttendanceRecords } from "./payroll/api/payrollApi";
+import { getAttendanceRecords, setupAttendanceListener } from "./payroll/api/attendanceApi";
 import PayrollHeader from "./payroll/PayrollHeader";
 import HoursAdjustmentDialog from "./payroll/HoursAdjustmentDialog";
 import PayrollTabsManager from "./payroll/components/PayrollTabsManager";
@@ -42,13 +42,41 @@ const PayrollTab: React.FC<{ operator: ExtendedOperator }> = ({ operator }) => {
 
   useEffect(() => {
     loadAttendanceRecords();
+    
+    // Set up listener for attendance changes (when operators check in/out)
+    const removeListener = setupAttendanceListener(() => {
+      console.log("Attendance records updated, refreshing data...");
+      loadAttendanceRecords();
+      refresh();
+    });
+    
+    // Set up interval for periodic refreshes
     const intervalId = setInterval(() => {
       refresh();
       loadAttendanceRecords();
     }, 60000);
     
-    return () => clearInterval(intervalId);
+    // Clean up
+    return () => {
+      removeListener();
+      clearInterval(intervalId);
+    };
   }, [operator.email, loadAttendanceRecords, refresh]);
+
+  // Listen for storage events (when another tab updates attendance)
+  useEffect(() => {
+    const handleStorageEvent = () => {
+      console.log("Storage event detected, refreshing attendance data...");
+      loadAttendanceRecords();
+      refresh();
+    };
+    
+    window.addEventListener('storage', handleStorageEvent);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageEvent);
+    };
+  }, [loadAttendanceRecords, refresh]);
 
   const handleExportCSV = () => {
     exportToCSV(calculations, summaryData, operator.name);

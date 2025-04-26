@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -158,6 +159,7 @@ export const useOperators = () => {
     
     const eventId = parseInt(selectedEventId);
     
+    // Update operators with new assignment
     setOperators((prev) =>
       prev.map((op) => {
         if (op.id === assigningOperator.id) {
@@ -175,6 +177,43 @@ export const useOperators = () => {
         return op;
       })
     );
+    
+    // Also update events to include the assigned operator in assignedOperators array
+    setEvents((prev) => 
+      prev.map((event) => {
+        if (event.id === eventId) {
+          const currentAssignedOperators = event.assignedOperators || [];
+          const operatorAlreadyAssigned = currentAssignedOperators.some(
+            (op) => op.id === assigningOperator.id
+          );
+          
+          if (!operatorAlreadyAssigned) {
+            // Add operator to assignedOperators
+            return {
+              ...event,
+              assignedOperators: [
+                ...currentAssignedOperators, 
+                {
+                  id: assigningOperator.id,
+                  name: assigningOperator.name,
+                  email: assigningOperator.email,
+                }
+              ]
+            };
+          }
+        }
+        return event;
+      })
+    );
+    
+    // Save updated events to localStorage
+    safeLocalStorage.setItem(EVENTS_STORAGE_KEY, JSON.stringify(
+      events.map(event => ({
+        ...event,
+        startDate: event.startDate.toISOString(),
+        endDate: event.endDate.toISOString()
+      }))
+    ));
     
     const eventName = events.find(e => e.id === eventId)?.title || "Evento selezionato";
     

@@ -54,11 +54,13 @@ const EventTable = ({ events, onShowDetails, onEditEvent, onDeleteEvent }: Event
   };
 
   const calculateStaffKPI = (event: Event) => {
+    // Calculate total required staff across all personnel types
     const totalRequired = event.personnelTypes.reduce((acc, type) => {
       return acc + (event.requiredStaffCount?.[type] || 0);
     }, 0);
     
-    const totalAssigned = event.assignedOperators?.length || 0;
+    // Get total assigned staff count
+    const totalAssigned = Array.isArray(event.assignedOperators) ? event.assignedOperators.length : 0;
     
     // Calculate percentage for color coding
     const percentage = totalRequired > 0 ? (totalAssigned / totalRequired) * 100 : 0;

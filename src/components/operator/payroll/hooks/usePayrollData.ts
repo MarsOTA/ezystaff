@@ -71,7 +71,9 @@ export const usePayrollData = (operator: ExtendedOperator) => {
       // Add operator hourly rate to events data for calculations
       const eventsWithRate = eventsData.map(event => ({
         ...event,
-        operatorHourlyRate
+        operatorHourlyRate,
+        // Ensure estimated hours are set correctly
+        estimated_hours: event.estimated_hours || 0
       }));
       
       // Process events and calculations with the contract rate
@@ -80,7 +82,9 @@ export const usePayrollData = (operator: ExtendedOperator) => {
         const hoursToUse = calc.actual_hours !== undefined ? calc.actual_hours : calc.netHours;
         return {
           ...calc,
-          compensation: hoursToUse * operatorHourlyRate
+          compensation: hoursToUse * operatorHourlyRate,
+          // Ensure estimated hours are set correctly
+          estimated_hours: calc.estimated_hours || calc.grossHours || 0
         };
       });
       
