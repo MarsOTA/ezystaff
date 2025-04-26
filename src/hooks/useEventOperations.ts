@@ -69,6 +69,7 @@ export const useEventOperations = () => {
             
             // Get hourly rate from contract if available
             let hourlyRate = eventToClose.hourlyRateCost || 15;
+            // Check if contractData exists before accessing properties
             if (operator.contractData && operator.contractData.grossSalary) {
               hourlyRate = parseFloat(operator.contractData.grossSalary) || hourlyRate;
             }
@@ -115,8 +116,13 @@ export const useEventOperations = () => {
         console.error("Errore durante il recupero degli operatori per l'evento:", eventOperatorsError);
       } else if (eventOperators && eventOperators.length > 0) {
         for (const operatorRecord of eventOperators) {
-          // Get contract data if available
-          const operatorContractData = operatorRecord.operator?.contractData;
+          // Check if operator exists and has contractData property
+          const operatorContractData = operatorRecord.operator && 
+                                      typeof operatorRecord.operator === 'object' &&
+                                      'contractData' in operatorRecord.operator ? 
+                                      operatorRecord.operator.contractData : null;
+          
+          // Safety check for contractData and grossSalary
           const hourlyRate = operatorContractData?.grossSalary 
             ? parseFloat(operatorContractData.grossSalary) 
             : (eventToClose.hourlyRateCost || operatorRecord.hourly_rate || 15);
