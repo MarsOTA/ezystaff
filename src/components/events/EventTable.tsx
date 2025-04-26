@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
@@ -39,7 +38,6 @@ const EventTable = ({ events, onShowDetails, onEditEvent, onDeleteEvent }: Event
     }
   };
 
-  // Function to get status class
   const getStatusClass = (status?: string) => {
     switch(status) {
       case 'completed':
@@ -54,6 +52,16 @@ const EventTable = ({ events, onShowDetails, onEditEvent, onDeleteEvent }: Event
     }
   };
 
+  const calculateStaffKPI = (event: Event) => {
+    const totalRequired = event.personnelTypes.reduce((acc, type) => {
+      return acc + (event.requiredStaffCount?.[type] || 0);
+    }, 0);
+    
+    const totalAssigned = event.assignedOperators?.length || 0;
+    
+    return `${totalAssigned}/${totalRequired}`;
+  };
+
   return (
     <Table>
       <TableHeader>
@@ -62,7 +70,7 @@ const EventTable = ({ events, onShowDetails, onEditEvent, onDeleteEvent }: Event
           <TableHead>Cliente</TableHead>
           <TableHead>Data e Ora</TableHead>
           <TableHead>Stato</TableHead>
-          <TableHead>Personale Richiesto</TableHead>
+          <TableHead>Staff KPI</TableHead>
           <TableHead className="text-right">Azioni</TableHead>
         </TableRow>
       </TableHeader>
@@ -85,18 +93,7 @@ const EventTable = ({ events, onShowDetails, onEditEvent, onDeleteEvent }: Event
                 ) : 'Programmato'}
               </span>
             </TableCell>
-            <TableCell>
-              <div className="flex flex-wrap gap-1">
-                {event.personnelTypes.map((type) => (
-                  <span 
-                    key={type}
-                    className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-blue-100 text-blue-800"
-                  >
-                    {type}
-                  </span>
-                ))}
-              </div>
-            </TableCell>
+            <TableCell>{calculateStaffKPI(event)}</TableCell>
             <TableCell className="text-right">
               <div className="flex justify-end gap-2">
                 <Button 

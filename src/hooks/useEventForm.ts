@@ -24,6 +24,7 @@ export interface EventFormData {
   title: string;
   client: string;
   selectedPersonnel: string[];
+  staffCount: Record<string, number>;
   startDate: Date | undefined;
   endDate: Date | undefined;
   startTime: string;
@@ -45,6 +46,7 @@ export function useEventForm(eventId: string | null) {
     title: "",
     client: "",
     selectedPersonnel: [],
+    staffCount: {},
     startDate: new Date(),
     endDate: new Date(),
     startTime: "09:00",
@@ -100,6 +102,7 @@ export function useEventForm(eventId: string | null) {
               title: eventToEdit.title,
               client: clientObject ? clientObject.id.toString() : "",
               selectedPersonnel: eventToEdit.personnelTypes,
+              staffCount: eventToEdit.staffCount,
               startDate: eventToEdit.startDate,
               endDate: eventToEdit.endDate,
               startTime: eventToEdit.startDate ? new Date(eventToEdit.startDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) : "09:00",
@@ -189,20 +192,36 @@ export function useEventForm(eventId: string | null) {
   const handlePersonnelChange = (personnelId: string) => {
     setFormData(prev => {
       const current = [...prev.selectedPersonnel];
+      const newStaffCount = { ...prev.staffCount };
+      
       if (current.includes(personnelId)) {
+        delete newStaffCount[personnelId];
         return {
           ...prev,
-          selectedPersonnel: current.filter((id) => id !== personnelId)
+          selectedPersonnel: current.filter((id) => id !== personnelId),
+          staffCount: newStaffCount
         };
       } else {
+        newStaffCount[personnelId] = 1;
         return {
           ...prev,
-          selectedPersonnel: [...current, personnelId]
+          selectedPersonnel: [...current, personnelId],
+          staffCount: newStaffCount
         };
       }
     });
   };
-  
+
+  const handleStaffCountChange = (personnelId: string, count: number) => {
+    setFormData(prev => ({
+      ...prev,
+      staffCount: {
+        ...prev.staffCount,
+        [personnelId]: count
+      }
+    }));
+  };
+
   const updateFormField = (field: keyof EventFormData, value: any) => {
     setFormData(prev => ({
       ...prev,
@@ -216,6 +235,7 @@ export function useEventForm(eventId: string | null) {
     clients,
     isEditMode,
     handlePersonnelChange,
+    handleStaffCountChange,
     locationSuggestions,
     setLocationSuggestions,
     addressSuggestions,

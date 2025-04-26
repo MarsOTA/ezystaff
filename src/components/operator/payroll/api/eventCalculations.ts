@@ -10,7 +10,8 @@ export const calculateEventPayroll = (
     record.eventId === event.id
   );
   
-  let actual_hours = undefined;
+  // Set actual hours to net hours by default
+  let actual_hours = event.netHours || undefined;
   
   if (eventRecords.length >= 2) {
     const recordsByDate: Record<string, CheckRecord[]> = {};
