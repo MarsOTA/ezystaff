@@ -8,6 +8,12 @@ import { Event } from "@/types/event";
 const EVENTS_STORAGE_KEY = "app_events_data";
 const OPERATORS_STORAGE_KEY = "app_operators_data";
 
+// Define a contractData interface to help TypeScript understand the structure
+interface ContractData {
+  grossSalary?: string;
+  [key: string]: any; // For other properties that might be in contractData
+}
+
 export const useEventOperations = () => {
   const [isClosingEvent, setIsClosingEvent] = useState(false);
 
@@ -117,10 +123,14 @@ export const useEventOperations = () => {
       } else if (eventOperators && eventOperators.length > 0) {
         for (const operatorRecord of eventOperators) {
           // Check if operator exists and has contractData property
-          const operatorContractData = operatorRecord.operator && 
-                                      typeof operatorRecord.operator === 'object' &&
-                                      'contractData' in operatorRecord.operator ? 
-                                      operatorRecord.operator.contractData : null;
+          // We need to explicitly type the operator contractData to fix the TypeScript error
+          let operatorContractData: ContractData | null = null;
+          
+          if (operatorRecord.operator && 
+              typeof operatorRecord.operator === 'object' &&
+              'contractData' in operatorRecord.operator) {
+            operatorContractData = operatorRecord.operator.contractData as ContractData;
+          }
           
           // Safety check for contractData and grossSalary
           const hourlyRate = operatorContractData?.grossSalary 
