@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import OperatorLayout from "@/components/OperatorLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -83,43 +82,31 @@ const TasksPage: React.FC = () => {
         return;
       }
       
+      // Parse all events and ensure dates are properly converted to Date objects
       const events = JSON.parse(eventsData);
-      // Ensure date objects are properly parsed from strings
-      const parsedEvents = events.map((event: any) => ({
-        ...event,
-        startDate: new Date(event.startDate),
-        endDate: new Date(event.endDate)
-      }));
       
-      console.log("All events:", parsedEvents);
+      console.log("All events raw:", events);
       console.log("Assigned event IDs:", currentOperator.assignedEvents);
       
-      // Filter events assigned to the operator and happening today or in the future
-      const today = new Date();
-      today.setHours(0, 0, 0, 0); // Set to beginning of the day for proper comparison
+      // Filter events assigned to the operator
+      const assignedEvents = events.filter((event: any) => 
+        currentOperator.assignedEvents.includes(event.id)
+      );
       
-      const assignedEvents = parsedEvents.filter((event: any) => {
-        const eventEndDate = new Date(event.endDate);
-        const isAssigned = currentOperator.assignedEvents.includes(event.id);
-        const isNotFinished = eventEndDate >= today;
-        const isValidStatus = event.status === "upcoming" || event.status === "in-progress" || !event.status;
-        
-        console.log(
-          `Event ID ${event.id}, Title: ${event.title}, Assigned: ${isAssigned}, 
-           Status: ${event.status || "none"}, 
-           End date >= today: ${isNotFinished}, 
-           Valid status: ${isValidStatus}`
-        );
-        
-        return isAssigned && isNotFinished && isValidStatus;
-      });
+      if (assignedEvents.length === 0) {
+        console.log("No matching events found for assigned IDs");
+        setLoading(false);
+        return;
+      }
       
-      console.log("Assigned events after filtering:", assignedEvents);
+      console.log("Found assigned events:", assignedEvents);
       
       // Sort by start date (closest first)
-      assignedEvents.sort((a: any, b: any) => 
-        new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
-      );
+      assignedEvents.sort((a: any, b: any) => {
+        const dateA = new Date(a.startDate).getTime();
+        const dateB = new Date(b.startDate).getTime();
+        return dateA - dateB;
+      });
       
       if (assignedEvents.length > 0) {
         const nextEvent = assignedEvents[0];
@@ -150,6 +137,12 @@ const TasksPage: React.FC = () => {
           address: nextEvent.address || "",
           client: nextEvent.client || "Cliente non specificato",
           shifts: shifts
+        });
+        
+        console.log("Event data set:", {
+          id: nextEvent.id,
+          title: nextEvent.title,
+          dates: `${new Date(nextEvent.startDate).toISOString()} - ${new Date(nextEvent.endDate).toISOString()}`
         });
       } else {
         setEventData(null);
@@ -391,7 +384,7 @@ const TasksPage: React.FC = () => {
               </div>
             )}
             <div className="flex items-start space-x-2">
-              <Users className="h-5 w-5 text-muted-foreground mt-0.5" />
+              <Users className="h-5 w-5 text-muted-foreground" />
               <div className="flex flex-col">
                 <span className="font-medium">Cliente:</span>
                 <span>{eventData.client}</span>
