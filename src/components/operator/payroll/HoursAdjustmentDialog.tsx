@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -19,9 +19,9 @@ const HoursAdjustmentDialog: React.FC<HoursAdjustmentDialogProps> = ({
   selectedEvent,
   onSubmit,
 }) => {
-  const [actualHours, setActualHours] = useState<string>("");
+  const [actualHours, setActualHours] = useState<string>("0");
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (selectedEvent) {
       // If actual_hours is defined, use it; otherwise use the netHours (estimated - break)
       if (selectedEvent.actual_hours !== undefined && selectedEvent.actual_hours !== null) {
@@ -42,14 +42,19 @@ const HoursAdjustmentDialog: React.FC<HoursAdjustmentDialogProps> = ({
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return "";
-    const date = new Date(dateString);
-    return date.toLocaleString('it-IT', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleString('it-IT', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return "";
+    }
   };
 
   return (

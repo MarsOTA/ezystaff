@@ -53,10 +53,12 @@ const TasksPage: React.FC = () => {
     
     try {
       setLoading(true);
+      console.log("Loading tasks for user:", user.email);
       
       // Get operators data
       const operatorsData = safeLocalStorage.getItem(OPERATORS_STORAGE_KEY);
       if (!operatorsData) {
+        console.log("No operators data found");
         setLoading(false);
         return;
       }
@@ -64,7 +66,10 @@ const TasksPage: React.FC = () => {
       const operators = JSON.parse(operatorsData);
       const currentOperator = operators.find((op: any) => op.email === user.email);
       
+      console.log("Current operator:", currentOperator);
+      
       if (!currentOperator || !currentOperator.assignedEvents || currentOperator.assignedEvents.length === 0) {
+        console.log("No assigned events found for operator");
         setLoading(false);
         return;
       }
@@ -72,6 +77,7 @@ const TasksPage: React.FC = () => {
       // Get events data
       const eventsData = safeLocalStorage.getItem(EVENTS_STORAGE_KEY);
       if (!eventsData) {
+        console.log("No events data found");
         setLoading(false);
         return;
       }
@@ -82,14 +88,23 @@ const TasksPage: React.FC = () => {
         endDate: new Date(event.endDate)
       }));
       
-      // Filter upcoming or in-progress events assigned to the operator
-      const today = new Date();
+      console.log("All events:", events);
+      console.log("Assigned event IDs:", currentOperator.assignedEvents);
+      
+      // Filter events assigned to the operator
       const assignedEvents = events.filter((event: any) => {
+        console.log(
+          `Event ID ${event.id}, Assigned: ${currentOperator.assignedEvents.includes(event.id)}, 
+           Status: ${event.status || "none"}, 
+           End date >= today: ${new Date(event.endDate) >= new Date()}`
+        );
+        
         return currentOperator.assignedEvents.includes(event.id) && 
                (event.status === "upcoming" || event.status === "in-progress" || !event.status) &&
-               (new Date(event.endDate) >= today || 
-                (new Date(event.startDate).toDateString() === today.toDateString()));
+               new Date(event.endDate) >= new Date();
       });
+      
+      console.log("Assigned events after filtering:", assignedEvents);
       
       // Sort by start date (closest first)
       assignedEvents.sort((a: any, b: any) => 
@@ -98,6 +113,7 @@ const TasksPage: React.FC = () => {
       
       if (assignedEvents.length > 0) {
         const nextEvent = assignedEvents[0];
+        console.log("Next event:", nextEvent);
         
         // Create shifts based on start and end times
         const startTime = nextEvent.startTime || format(new Date(nextEvent.startDate), "HH:mm");
