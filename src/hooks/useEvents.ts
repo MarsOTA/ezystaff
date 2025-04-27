@@ -40,6 +40,11 @@ export const useEvents = () => {
         startDate: new Date(2023, 6, 15, 18, 0),
         endDate: new Date(2023, 6, 15, 23, 30),
         personnelTypes: ["security", "doorman", "hostess/steward"],
+        staffCount: {
+          "security": 5,
+          "doorman": 3,
+          "hostess/steward": 8
+        }
       },
       {
         id: 2,
@@ -48,6 +53,10 @@ export const useEvents = () => {
         startDate: new Date(2023, 7, 10, 9, 0),
         endDate: new Date(2023, 7, 12, 19, 0),
         personnelTypes: ["security", "hostess/steward"],
+        staffCount: {
+          "security": 4,
+          "hostess/steward": 6
+        }
       },
     ]);
   };
