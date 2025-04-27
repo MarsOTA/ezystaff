@@ -21,6 +21,11 @@ const EventPersonnelSelect: React.FC<EventPersonnelSelectProps> = ({
   // Use safe check with nullish coalescing to ensure staffCount is an object
   const totalStaff = Object.values(staffCount || {}).reduce((sum, count) => sum + count, 0);
 
+  const handleStaffCountChange = (personnelId: string, value: string) => {
+    const count = parseInt(value, 10) || 0;
+    onStaffCountChange(personnelId, count);
+  };
+
   return (
     <div className="space-y-4">
       <Label>Tipologia di personale richiesto *</Label>
@@ -45,11 +50,7 @@ const EventPersonnelSelect: React.FC<EventPersonnelSelectProps> = ({
                   type="number"
                   min="1"
                   value={staffCount[type.id] || ""}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    const count = parseInt(value) || 0;
-                    onStaffCountChange(type.id, count);
-                  }}
+                  onChange={(e) => handleStaffCountChange(type.id, e.target.value)}
                   className="w-20"
                 />
               </div>

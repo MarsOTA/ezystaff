@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import OperatorLayout from "@/components/OperatorLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -49,94 +48,111 @@ const TasksPage: React.FC = () => {
   const [eventData, setEventData] = useState<EventData | null>(null);
   const [loading, setLoading] = useState(true);
   
-  // Load assigned events for the current user
-  useEffect(() => {
-    const loadUserEvents = () => {
-      if (!user) return;
+  const loadUserEvents = () => {
+    if (!user) return;
+    
+    try {
+      setLoading(true);
       
-      try {
-        setLoading(true);
-        
-        // Get operators data
-        const operatorsData = safeLocalStorage.getItem(OPERATORS_STORAGE_KEY);
-        if (!operatorsData) {
-          setLoading(false);
-          return;
-        }
-        
-        const operators = JSON.parse(operatorsData);
-        const currentOperator = operators.find((op: any) => op.email === user.email);
-        
-        if (!currentOperator || !currentOperator.assignedEvents || currentOperator.assignedEvents.length === 0) {
-          setLoading(false);
-          return;
-        }
-        
-        // Get events data
-        const eventsData = safeLocalStorage.getItem(EVENTS_STORAGE_KEY);
-        if (!eventsData) {
-          setLoading(false);
-          return;
-        }
-        
-        const events = JSON.parse(eventsData).map((event: any) => ({
-          ...event,
-          startDate: new Date(event.startDate),
-          endDate: new Date(event.endDate)
-        }));
-        
-        // Filter upcoming or in-progress events assigned to the operator
-        const today = new Date();
-        const assignedEvents = events.filter((event: any) => {
-          return currentOperator.assignedEvents.includes(event.id) && 
-                 (event.status === "upcoming" || event.status === "in-progress") &&
-                 new Date(event.endDate) >= today;
-        });
-        
-        // Sort by start date (closest first)
-        assignedEvents.sort((a: any, b: any) => 
-          new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
-        );
-        
-        if (assignedEvents.length > 0) {
-          const nextEvent = assignedEvents[0];
-          
-          // Create shifts based on start and end times
-          const startTime = nextEvent.startTime || format(new Date(nextEvent.startDate), "HH:mm");
-          const endTime = nextEvent.endTime || format(new Date(nextEvent.endDate), "HH:mm");
-          
-          let shifts = [`${startTime} - ${endTime}`];
-          
-          // If the event has break times, add an additional shift
-          if (nextEvent.breakStartTime && nextEvent.breakEndTime) {
-            shifts = [
-              `${startTime} - ${nextEvent.breakStartTime}`,
-              `${nextEvent.breakEndTime} - ${endTime}`
-            ];
-          }
-          
-          setEventData({
-            id: nextEvent.id,
-            title: nextEvent.title,
-            startDate: new Date(nextEvent.startDate),
-            endDate: new Date(nextEvent.endDate),
-            startTime: startTime,
-            endTime: endTime,
-            location: nextEvent.location || "",
-            address: nextEvent.address || "",
-            client: nextEvent.client || "Cliente non specificato",
-            shifts: shifts
-          });
-        }
-        
-      } catch (error) {
-        console.error("Error loading user events:", error);
-      } finally {
+      // Get operators data
+      const operatorsData = safeLocalStorage.getItem(OPERATORS_STORAGE_KEY);
+      if (!operatorsData) {
         setLoading(false);
+        return;
       }
+      
+      const operators = JSON.parse(operatorsData);
+      const currentOperator = operators.find((op: any) => op.email === user.email);
+      
+      if (!currentOperator || !currentOperator.assignedEvents || currentOperator.assignedEvents.length === 0) {
+        setLoading(false);
+        return;
+      }
+      
+      // Get events data
+      const eventsData = safeLocalStorage.getItem(EVENTS_STORAGE_KEY);
+      if (!eventsData) {
+        setLoading(false);
+        return;
+      }
+      
+      const events = JSON.parse(eventsData).map((event: any) => ({
+        ...event,
+        startDate: new Date(event.startDate),
+        endDate: new Date(event.endDate)
+      }));
+      
+      // Filter upcoming or in-progress events assigned to the operator
+      const today = new Date();
+      const assignedEvents = events.filter((event: any) => {
+        return currentOperator.assignedEvents.includes(event.id) && 
+               (event.status === "upcoming" || event.status === "in-progress" || !event.status) &&
+               (new Date(event.endDate) >= today || 
+                (new Date(event.startDate).toDateString() === today.toDateString()));
+      });
+      
+      // Sort by start date (closest first)
+      assignedEvents.sort((a: any, b: any) => 
+        new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
+      );
+      
+      if (assignedEvents.length > 0) {
+        const nextEvent = assignedEvents[0];
+        
+        // Create shifts based on start and end times
+        const startTime = nextEvent.startTime || format(new Date(nextEvent.startDate), "HH:mm");
+        const endTime = nextEvent.endTime || format(new Date(nextEvent.endDate), "HH:mm");
+        
+        let shifts = [`${startTime} - ${endTime}`];
+        
+        // If the event has break times, add an additional shift
+        if (nextEvent.breakStartTime && nextEvent.breakEndTime) {
+          shifts = [
+            `${startTime} - ${nextEvent.breakStartTime}`,
+            `${nextEvent.breakEndTime} - ${endTime}`
+          ];
+        }
+        
+        setEventData({
+          id: nextEvent.id,
+          title: nextEvent.title,
+          startDate: new Date(nextEvent.startDate),
+          endDate: new Date(nextEvent.endDate),
+          startTime: startTime,
+          endTime: endTime,
+          location: nextEvent.location || "",
+          address: nextEvent.address || "",
+          client: nextEvent.client || "Cliente non specificato",
+          shifts: shifts
+        });
+      } else {
+        setEventData(null);
+      }
+      
+    } catch (error) {
+      console.error("Error loading user events:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  useEffect(() => {
+    loadUserEvents();
+    
+    // Set up storage event listener to detect changes from other tabs
+    const handleStorageChange = () => {
+      loadUserEvents();
     };
     
-    loadUserEvents();
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Set up a periodic refresh every minute
+    const intervalId = setInterval(loadUserEvents, 60000);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(intervalId);
+    };
   }, [user]);
   
   useEffect(() => {

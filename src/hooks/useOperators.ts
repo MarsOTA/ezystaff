@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -7,6 +8,7 @@ import { Event } from "@/types/event";
 
 export const EVENTS_STORAGE_KEY = "app_events_data";
 export const OPERATORS_STORAGE_KEY = "app_operators_data";
+export const ATTENDANCE_RECORDS_KEY = "attendance_records";
 
 export const useOperators = () => {
   const [operators, setOperators] = useState<Operator[]>([
@@ -159,23 +161,23 @@ export const useOperators = () => {
     const eventId = parseInt(selectedEventId);
     
     // Update operators with new assignment
-    setOperators((prev) =>
-      prev.map((op) => {
-        if (op.id === assigningOperator.id) {
-          const currentAssignedEvents = op.assignedEvents || [];
-          if (currentAssignedEvents.includes(eventId)) {
-            toast.info("Operatore già assegnato a questo evento");
-            return op;
-          }
-          
-          return {
-            ...op,
-            assignedEvents: [...currentAssignedEvents, eventId]
-          };
+    const updatedOperators = operators.map((op) => {
+      if (op.id === assigningOperator.id) {
+        const currentAssignedEvents = op.assignedEvents || [];
+        if (currentAssignedEvents.includes(eventId)) {
+          toast.info("Operatore già assegnato a questo evento");
+          return op;
         }
-        return op;
-      })
-    );
+        
+        return {
+          ...op,
+          assignedEvents: [...currentAssignedEvents, eventId]
+        };
+      }
+      return op;
+    });
+    
+    setOperators(updatedOperators);
     
     // Also update events to include the assigned operator in assignedOperators array
     const updatedEvents = events.map((event) => {
@@ -208,10 +210,16 @@ export const useOperators = () => {
     safeLocalStorage.setItem(EVENTS_STORAGE_KEY, JSON.stringify(
       updatedEvents.map(event => ({
         ...event,
-        startDate: event.startDate.toISOString(),
-        endDate: event.endDate.toISOString()
+        startDate: event.startDate instanceof Date ? event.startDate.toISOString() : event.startDate,
+        endDate: event.endDate instanceof Date ? event.endDate.toISOString() : event.endDate
       }))
     ));
+    
+    // Ensure the attendance records are initialized
+    const attendanceRecords = safeLocalStorage.getItem(ATTENDANCE_RECORDS_KEY);
+    if (!attendanceRecords) {
+      safeLocalStorage.setItem(ATTENDANCE_RECORDS_KEY, JSON.stringify([]));
+    }
     
     const eventName = events.find(e => e.id === eventId)?.title || "Evento selezionato";
     

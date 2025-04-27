@@ -67,7 +67,8 @@ const EventTable = ({ events, onShowDetails, onEditEvent, onDeleteEvent }: Event
     
     return {
       value: `${totalAssigned}/${totalRequired}`,
-      isComplete: percentage >= 100
+      isComplete: percentage >= 100,
+      isEmpty: totalRequired === 0
     };
   };
 
@@ -107,6 +108,7 @@ const EventTable = ({ events, onShowDetails, onEditEvent, onDeleteEvent }: Event
               </TableCell>
               <TableCell>
                 <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                  staffKPI.isEmpty ? 'bg-gray-100 text-gray-800' :
                   staffKPI.isComplete ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'
                 }`}>
                   {staffKPI.value}
