@@ -22,11 +22,13 @@ export const PayrollTableRow: React.FC<PayrollTableRowProps> = ({
 }) => {
   const isPastEvent = new Date(calc.end_date) < new Date();
   
-  // Calculate total allowances
-  const totalAllowances = calc.mealAllowance + calc.travelAllowance;
+  // Calculate total allowances with null safety
+  const totalAllowances = (calc.mealAllowance || 0) + (calc.travelAllowance || 0);
   
-  // Determine which hours to use for display
-  const displayHours = calc.actual_hours !== undefined ? calc.actual_hours : calc.netHours;
+  // Determine which hours to use for display with null safety
+  const displayHours = calc.actual_hours !== undefined && calc.actual_hours !== null
+    ? calc.actual_hours
+    : calc.netHours;
   
   return (
     <TableRow key={calc.eventId}>
@@ -43,7 +45,9 @@ export const PayrollTableRow: React.FC<PayrollTableRowProps> = ({
         {typeof calc.date === "string" ? calc.date : format(calc.date, "dd/MM/yyyy")}
       </TableCell>
       <TableCell className="text-right">
-        {calc.estimated_hours.toFixed(1)}
+        {calc.estimated_hours !== undefined && calc.estimated_hours !== null 
+          ? calc.estimated_hours.toFixed(1) 
+          : "0.0"}
       </TableCell>
       <TableCell className="text-right">
         {isPastEvent ? (
@@ -52,14 +56,16 @@ export const PayrollTableRow: React.FC<PayrollTableRowProps> = ({
               calc.actual_hours !== undefined ? "bg-green-100" : ""
             }`}
           >
-            {displayHours.toFixed(1)}
+            {displayHours !== undefined && displayHours !== null 
+              ? displayHours.toFixed(1) 
+              : "0.0"}
           </span>
         ) : (
           "N/A"
         )}
       </TableCell>
       <TableCell className="text-right">
-        {formatCurrency(calc.compensation)}
+        {formatCurrency(calc.compensation || 0)}
       </TableCell>
       <TableCell>
         <div className="flex flex-col gap-2">
@@ -68,7 +74,7 @@ export const PayrollTableRow: React.FC<PayrollTableRowProps> = ({
             <Input
               type="number"
               min="0"
-              value={calc.mealAllowance}
+              value={calc.mealAllowance || 0}
               onChange={(e) => onMealAllowanceChange?.(calc.eventId, e.target.value)}
               className="w-20 h-8 text-right"
             />
@@ -78,7 +84,7 @@ export const PayrollTableRow: React.FC<PayrollTableRowProps> = ({
             <Input
               type="number"
               min="0"
-              value={calc.travelAllowance}
+              value={calc.travelAllowance || 0}
               onChange={(e) => onTravelAllowanceChange?.(calc.eventId, e.target.value)}
               className="w-20 h-8 text-right"
             />
