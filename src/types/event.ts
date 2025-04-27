@@ -15,7 +15,6 @@ export interface Event {
   hourlyRateCost?: number;
   hourlyRateSell?: number;
   status?: string;
-  requiredStaffCount?: Record<string, number>;
-  staffCount?: Record<string, number>;
+  staffCount: Record<string, number>;
   assignedOperators?: any[];
 }

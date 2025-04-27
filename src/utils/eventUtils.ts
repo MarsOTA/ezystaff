@@ -1,4 +1,3 @@
-
 import { format } from "date-fns";
 import { EventFormData } from "@/hooks/useEventForm";
 import { Event } from "@/types/event";
@@ -6,7 +5,6 @@ import { Client } from "@/pages/Clients";
 import { safeLocalStorage } from "@/utils/fileUtils";
 import { PlacePrediction, EVENTS_STORAGE_KEY } from "@/hooks/useEventForm";
 
-// Define the missing Google Maps types to fix TypeScript errors
 declare global {
   interface Window {
     google: {
@@ -111,6 +109,14 @@ export const validateEventForm = (formData: EventFormData): string | null => {
     return "Compila tutti i campi obbligatori";
   }
   
+  const hasInvalidStaffCount = formData.selectedPersonnel.some(
+    personnelId => !formData.staffCount[personnelId] || formData.staffCount[personnelId] <= 0
+  );
+
+  if (hasInvalidStaffCount) {
+    return "Inserisci un numero valido di personale per ogni tipologia selezionata";
+  }
+  
   const fullStartDate = combineDateTime(formData.startDate, formData.startTime);
   const fullEndDate = combineDateTime(formData.endDate, formData.endTime);
   
@@ -135,13 +141,16 @@ export const saveEvent = (formData: EventFormData, eventId: string | null, clien
     const fullStartDate = combineDateTime(formData.startDate, formData.startTime);
     const fullEndDate = combineDateTime(formData.endDate, formData.endTime);
     
+    const staffCount = formData.staffCount || {};
+    
     const additionalData = {
       grossHours: formData.grossHours ? Number(formData.grossHours) : undefined,
       breakStartTime: formData.breakStartTime || undefined,
       breakEndTime: formData.breakEndTime || undefined,
       netHours: formData.netHours ? Number(formData.netHours) : undefined,
       hourlyRateCost: formData.hourlyRateCost ? Number(formData.hourlyRateCost) : undefined,
-      hourlyRateSell: formData.hourlyRateSell ? Number(formData.hourlyRateSell) : undefined
+      hourlyRateSell: formData.hourlyRateSell ? Number(formData.hourlyRateSell) : undefined,
+      staffCount: staffCount
     };
     
     const isEditMode = !!eventId;
@@ -158,6 +167,7 @@ export const saveEvent = (formData: EventFormData, eventId: string | null, clien
             personnelTypes: formData.selectedPersonnel,
             location: formData.eventLocation,
             address: formData.eventAddress,
+            staffCount: staffCount,
             ...additionalData
           };
         }
@@ -178,6 +188,7 @@ export const saveEvent = (formData: EventFormData, eventId: string | null, clien
         personnelTypes: formData.selectedPersonnel,
         location: formData.eventLocation,
         address: formData.eventAddress,
+        staffCount: staffCount,
         ...additionalData
       };
       

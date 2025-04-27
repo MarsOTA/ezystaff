@@ -56,7 +56,7 @@ const EventTable = ({ events, onShowDetails, onEditEvent, onDeleteEvent }: Event
   const calculateStaffKPI = (event: Event) => {
     // Calculate total required staff across all personnel types
     const totalRequired = event.staffCount 
-      ? Object.values(event.staffCount).reduce((acc, count) => acc + count, 0)
+      ? Object.values(event.staffCount).reduce((acc, count) => acc + (count || 0), 0)
       : 0;
     
     // Get total assigned staff count

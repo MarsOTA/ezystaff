@@ -19,7 +19,8 @@ const EventPersonnelSelect: React.FC<EventPersonnelSelectProps> = ({
   onStaffCountChange
 }) => {
   // Use safe check with nullish coalescing to ensure staffCount is an object
-  const totalStaff = Object.values(staffCount || {}).reduce((sum, count) => sum + count, 0);
+  const safeStaffCount = staffCount || {};
+  const totalStaff = Object.values(safeStaffCount).reduce((sum, count) => sum + count, 0);
 
   const handleStaffCountChange = (personnelId: string, value: string) => {
     const count = parseInt(value, 10) || 0;
@@ -49,7 +50,7 @@ const EventPersonnelSelect: React.FC<EventPersonnelSelectProps> = ({
                   id={`count-${type.id}`}
                   type="number"
                   min="1"
-                  value={staffCount[type.id] || ""}
+                  value={safeStaffCount[type.id] || ""}
                   onChange={(e) => handleStaffCountChange(type.id, e.target.value)}
                   className="w-20"
                 />
