@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import OperatorLayout from "@/components/OperatorLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -82,26 +83,35 @@ const TasksPage: React.FC = () => {
         return;
       }
       
-      const events = JSON.parse(eventsData).map((event: any) => ({
+      const events = JSON.parse(eventsData);
+      // Ensure date objects are properly parsed from strings
+      const parsedEvents = events.map((event: any) => ({
         ...event,
         startDate: new Date(event.startDate),
         endDate: new Date(event.endDate)
       }));
       
-      console.log("All events:", events);
+      console.log("All events:", parsedEvents);
       console.log("Assigned event IDs:", currentOperator.assignedEvents);
       
-      // Filter events assigned to the operator
-      const assignedEvents = events.filter((event: any) => {
+      // Filter events assigned to the operator and happening today or in the future
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Set to beginning of the day for proper comparison
+      
+      const assignedEvents = parsedEvents.filter((event: any) => {
+        const eventEndDate = new Date(event.endDate);
+        const isAssigned = currentOperator.assignedEvents.includes(event.id);
+        const isNotFinished = eventEndDate >= today;
+        const isValidStatus = event.status === "upcoming" || event.status === "in-progress" || !event.status;
+        
         console.log(
-          `Event ID ${event.id}, Assigned: ${currentOperator.assignedEvents.includes(event.id)}, 
+          `Event ID ${event.id}, Title: ${event.title}, Assigned: ${isAssigned}, 
            Status: ${event.status || "none"}, 
-           End date >= today: ${new Date(event.endDate) >= new Date()}`
+           End date >= today: ${isNotFinished}, 
+           Valid status: ${isValidStatus}`
         );
         
-        return currentOperator.assignedEvents.includes(event.id) && 
-               (event.status === "upcoming" || event.status === "in-progress" || !event.status) &&
-               new Date(event.endDate) >= new Date();
+        return isAssigned && isNotFinished && isValidStatus;
       });
       
       console.log("Assigned events after filtering:", assignedEvents);

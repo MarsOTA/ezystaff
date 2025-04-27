@@ -25,10 +25,9 @@ export const PayrollTableRow: React.FC<PayrollTableRowProps> = ({
   // Calculate total allowances with null safety
   const totalAllowances = (calc.mealAllowance || 0) + (calc.travelAllowance || 0);
   
-  // Determine which hours to use for display with null safety
-  const displayHours = calc.actual_hours !== undefined && calc.actual_hours !== null
-    ? calc.actual_hours
-    : calc.netHours || 0;
+  // Use the netHours value when available as the display hours
+  // This ensures we show the "Ore nette previste" as requested
+  const displayHours = calc.netHours || 0;
   
   const handleMealAllowanceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (onMealAllowanceChange) {
