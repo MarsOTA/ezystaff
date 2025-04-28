@@ -64,14 +64,25 @@ export const calculateEventPayroll = (event: any, attendanceRecords: CheckRecord
     }
   }
   
-  // Set the actual_hours to the netHours by default if attendance is present but no check-in/out records
-  if (!actual_hours && attendance === "present") {
-    actual_hours = netHours;
+  // If the event has already set actual_hours, use that value
+  if (event.actual_hours !== undefined && event.actual_hours !== null) {
+    actual_hours = Number(event.actual_hours);
+    console.log(`Using event's actual_hours: ${actual_hours}`);
   }
-  
-  // For completed events, always set actual_hours to netHours if not already set
-  if (event.status === "completed" && actual_hours === null) {
+  // Set the actual_hours to the netHours by default if attendance is present but no check-in/out records
+  else if (!actual_hours && attendance === "present") {
     actual_hours = netHours;
+    console.log(`Setting actual_hours to netHours: ${netHours}`);
+  }
+  // For completed events, always set actual_hours to netHours if not already set
+  else if (event.status === "completed" && actual_hours === null) {
+    actual_hours = netHours;
+    console.log(`Setting actual_hours to netHours for completed event: ${netHours}`);
+  }
+  // For any other event, default to netHours
+  else if (actual_hours === null) {
+    actual_hours = netHours;
+    console.log(`Defaulting actual_hours to netHours: ${netHours}`);
   }
   
   return {
@@ -83,7 +94,7 @@ export const calculateEventPayroll = (event: any, attendanceRecords: CheckRecord
     end_date: event.endDate,
     grossHours: grossHours,
     netHours: netHours,
-    compensation: compensation,
+    compensation: actual_hours !== null ? actual_hours * hourlyRate : compensation,
     mealAllowance: mealAllowance,
     travelAllowance: travelAllowance,
     totalRevenue: revenue,

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import OperatorLayout from "@/components/OperatorLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -48,12 +48,16 @@ const TasksPage: React.FC = () => {
   const [eventData, setEventData] = useState<EventData | null>(null);
   const [loading, setLoading] = useState(true);
   
-  const loadUserEvents = () => {
-    if (!user) return;
+  const loadUserEvents = useCallback(() => {
+    if (!user) {
+      console.log("No user found, cannot load events");
+      setLoading(false);
+      return;
+    }
     
     try {
       setLoading(true);
-      console.log("Loading tasks for user:", user.email);
+      console.log("Loading tasks for user:", user);
       
       // Get all events first
       const eventsData = safeLocalStorage.getItem(EVENTS_STORAGE_KEY);
@@ -65,7 +69,7 @@ const TasksPage: React.FC = () => {
       
       // Parse all events 
       const events = JSON.parse(eventsData);
-      console.log("All events raw:", events);
+      console.log("All events found:", events.length);
       
       // Get operators data
       const operatorsData = safeLocalStorage.getItem(OPERATORS_STORAGE_KEY);
@@ -76,21 +80,24 @@ const TasksPage: React.FC = () => {
       }
       
       const operators = JSON.parse(operatorsData);
-      
-      // Find operator by email - IMPORTANT: Check both email and display name fields
-      const currentOperator = operators.find((op: any) => 
-        op.email === user.email || 
-        (op.assignedEvents && op.name === user.name)
-      );
-      
-      console.log("Current operator:", currentOperator);
+      console.log("All operators found:", operators.length);
       console.log("Current user:", user);
       
+      // Find operator by matching either email or name from user object
+      const currentOperator = operators.find((op: any) => {
+        const emailMatch = op.email === user.email;
+        const nameMatch = op.name === user.name;
+        console.log(`Checking operator ${op.name} (${op.email}): emailMatch=${emailMatch}, nameMatch=${nameMatch}`);
+        return emailMatch || nameMatch;
+      });
+      
       if (!currentOperator) {
-        console.log("Current operator not found for email:", user.email);
+        console.log("Current operator not found for user:", user);
         setLoading(false);
         return;
       }
+      
+      console.log("Found current operator:", currentOperator);
       
       if (!currentOperator.assignedEvents || currentOperator.assignedEvents.length === 0) {
         console.log("No assigned events found for operator");
@@ -110,7 +117,9 @@ const TasksPage: React.FC = () => {
       // Filter events assigned to the operator
       const assignedEvents = events.filter((event: any) => {
         const eventId = typeof event.id === 'string' ? parseInt(event.id, 10) : event.id;
-        return assignedEventIds.includes(eventId);
+        const isAssigned = assignedEventIds.includes(eventId);
+        console.log(`Checking event ${event.id} (${event.title}): assigned = ${isAssigned}`);
+        return isAssigned;
       });
       
       console.log("Found assigned events:", assignedEvents);
@@ -132,14 +141,27 @@ const TasksPage: React.FC = () => {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       
+      // First check for today's events
+      console.log("Today's date:", today);
       const todayEvents = eventsWithDates.filter((event: any) => {
         const eventStartDate = new Date(event.startDate);
         eventStartDate.setHours(0, 0, 0, 0);
-        return eventStartDate.getTime() === today.getTime();
+        const isToday = eventStartDate.getTime() === today.getTime();
+        console.log(`Event ${event.title} date: ${eventStartDate}, isToday: ${isToday}`);
+        return isToday;
       });
       
-      // If no events today, get next upcoming event
-      const relevantEvents = todayEvents.length > 0 ? todayEvents : eventsWithDates;
+      console.log("Today's events:", todayEvents.length);
+      
+      // If no events today, get upcoming events
+      const upcomingEvents = eventsWithDates.filter((event: any) => {
+        return new Date(event.startDate) >= today;
+      });
+      
+      console.log("Upcoming events:", upcomingEvents.length);
+      
+      // Use today's events if available, otherwise use upcoming events
+      const relevantEvents = todayEvents.length > 0 ? todayEvents : upcomingEvents;
       
       // Sort by start date (closest first)
       relevantEvents.sort((a: any, b: any) => {
@@ -177,12 +199,13 @@ const TasksPage: React.FC = () => {
           shifts: shifts
         });
         
-        console.log("Event data set:", {
+        console.log("Set event data:", {
           id: nextEvent.id,
           title: nextEvent.title,
-          dates: `${new Date(nextEvent.startDate).toISOString()} - ${new Date(nextEvent.endDate).toISOString()}`
+          dates: `${format(new Date(nextEvent.startDate), "dd/MM/yyyy")} - ${format(new Date(nextEvent.endDate), "dd/MM/yyyy")}`
         });
       } else {
+        console.log("No relevant events found");
         setEventData(null);
       }
       
@@ -191,7 +214,7 @@ const TasksPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
   
   useEffect(() => {
     loadUserEvents();
@@ -210,7 +233,7 @@ const TasksPage: React.FC = () => {
       window.removeEventListener('storage', handleStorageChange);
       clearInterval(intervalId);
     };
-  }, [user]);
+  }, [user, loadUserEvents]);
   
   useEffect(() => {
     // Check if there was a recent check-in to determine button state
@@ -337,24 +360,6 @@ const TasksPage: React.FC = () => {
     records.push(record);
     safeLocalStorage.setItem(ATTENDANCE_RECORDS_KEY, JSON.stringify(records));
   };
-
-  useEffect(() => {
-    // Check if there was a recent check-in to determine button state
-    const attendanceRecords = getAttendanceRecords();
-    if (!user || !eventData) return;
-    
-    const userRecords = attendanceRecords.filter(record => 
-      record.operatorId === user.email && 
-      record.eventId === eventData.id &&
-      new Date(record.timestamp).toDateString() === new Date().toDateString()
-    );
-    
-    if (userRecords.length > 0) {
-      const lastRecord = userRecords[userRecords.length - 1];
-      setIsCheckingIn(lastRecord.type === "check-out");
-      setLastCheckTime(new Date(lastRecord.timestamp));
-    }
-  }, [user, eventData]);
 
   const renderLocationStatusIndicator = () => {
     if (!locationStatus) return null;

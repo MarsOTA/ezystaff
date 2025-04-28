@@ -43,6 +43,11 @@ export const PayrollTableRow: React.FC<PayrollTableRowProps> = ({
     }
   };
   
+  const handleHoursClick = () => {
+    console.log("Opening hours adjustment dialog for event:", calc);
+    onClientClick(calc);
+  };
+  
   return (
     <TableRow key={calc.eventId}>
       <TableCell>{calc.eventTitle}</TableCell>
@@ -63,19 +68,14 @@ export const PayrollTableRow: React.FC<PayrollTableRowProps> = ({
           : (calc.grossHours || 0).toFixed(1)}
       </TableCell>
       <TableCell className="text-right">
-        {isPastEvent ? (
-          <span 
-            className={`px-2 py-1 rounded ${
-              (calc.actual_hours !== undefined && calc.actual_hours !== null) ? "bg-green-100" : ""
-            }`}
-            onClick={() => onClientClick(calc)}
-            style={{ cursor: "pointer" }}
-          >
-            {displayHours.toFixed(1)}
-          </span>
-        ) : (
-          "N/A"
-        )}
+        <span 
+          className={`px-2 py-1 rounded cursor-pointer ${
+            (calc.actual_hours !== undefined && calc.actual_hours !== null) ? "bg-green-100 hover:bg-green-200" : "hover:bg-gray-100"
+          }`}
+          onClick={handleHoursClick}
+        >
+          {displayHours.toFixed(1)}
+        </span>
       </TableCell>
       <TableCell className="text-right">
         {formatCurrency(calc.compensation || 0)}
