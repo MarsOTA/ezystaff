@@ -9,7 +9,116 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      event_operators: {
+        Row: {
+          created_at: string | null
+          event_id: number | null
+          hourly_rate: number | null
+          id: number
+          meal_allowance: number | null
+          net_hours: number | null
+          operator_id: string
+          revenue_generated: number | null
+          total_compensation: number | null
+          total_hours: number | null
+          travel_allowance: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          event_id?: number | null
+          hourly_rate?: number | null
+          id?: number
+          meal_allowance?: number | null
+          net_hours?: number | null
+          operator_id: string
+          revenue_generated?: number | null
+          total_compensation?: number | null
+          total_hours?: number | null
+          travel_allowance?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          event_id?: number | null
+          hourly_rate?: number | null
+          id?: number
+          meal_allowance?: number | null
+          net_hours?: number | null
+          operator_id?: string
+          revenue_generated?: number | null
+          total_compensation?: number | null
+          total_hours?: number | null
+          travel_allowance?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_operators_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      events: {
+        Row: {
+          address: string | null
+          break_end_time: string | null
+          break_start_time: string | null
+          client: string
+          created_at: string | null
+          end_date: string
+          gross_hours: number | null
+          hourly_rate_cost: number | null
+          hourly_rate_sell: number | null
+          id: number
+          location: string | null
+          net_hours: number | null
+          start_date: string
+          status: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          address?: string | null
+          break_end_time?: string | null
+          break_start_time?: string | null
+          client: string
+          created_at?: string | null
+          end_date: string
+          gross_hours?: number | null
+          hourly_rate_cost?: number | null
+          hourly_rate_sell?: number | null
+          id?: number
+          location?: string | null
+          net_hours?: number | null
+          start_date: string
+          status?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string | null
+          break_end_time?: string | null
+          break_start_time?: string | null
+          client?: string
+          created_at?: string | null
+          end_date?: string
+          gross_hours?: number | null
+          hourly_rate_cost?: number | null
+          hourly_rate_sell?: number | null
+          id?: number
+          location?: string | null
+          net_hours?: number | null
+          start_date?: string
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

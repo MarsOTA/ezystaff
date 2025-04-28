@@ -8,10 +8,22 @@ import { Event } from "@/types/event";
 const EVENTS_STORAGE_KEY = "app_events_data";
 const OPERATORS_STORAGE_KEY = "app_operators_data";
 
-// Define a contractData interface to help TypeScript understand the structure
+interface EventOperator {
+  id: number;
+  event_id: number;
+  operator_id: string;
+  net_hours: number | null;
+  total_hours: number | null;
+  hourly_rate: number | null;
+  total_compensation: number | null;
+  meal_allowance: number | null;
+  travel_allowance: number | null;
+  revenue_generated: number | null;
+}
+
 interface ContractData {
   grossSalary?: string;
-  [key: string]: any; // For other properties that might be in contractData
+  [key: string]: any;
 }
 
 export const useEventOperations = () => {
@@ -37,23 +49,23 @@ export const useEventOperations = () => {
           .eq('id', eventId);
           
         if (updateError) {
-          console.error("Errore durante l'aggiornamento dell'evento nel database:", updateError);
+          console.error("Error updating event in database:", updateError);
         }
       } catch (dbError) {
-        console.error("Errore nella comunicazione con il database:", dbError);
+        console.error("Error communicating with database:", dbError);
       }
       
       const eventToClose = updatedEvents.find(e => e.id === eventId);
       
       if (eventToClose) {
         await handleOperatorPayments(eventToClose);
-        toast.success("Evento chiuso e paghe aggiornate con successo!");
+        toast.success("Event closed and payments updated successfully!");
       }
       
       return updatedEvents;
     } catch (error) {
-      console.error("Errore durante la chiusura dell'evento:", error);
-      toast.error("Si è verificato un errore durante la chiusura dell'evento");
+      console.error("Error during event closure:", error);
+      toast.error("An error occurred while closing the event");
       return null;
     } finally {
       setIsClosingEvent(false);
@@ -73,14 +85,11 @@ export const useEventOperations = () => {
               operator.eventPayments = [];
             }
             
-            // Get hourly rate from contract if available
             let hourlyRate = eventToClose.hourlyRateCost || 15;
-            // Check if contractData exists before accessing properties
             if (operator.contractData && operator.contractData.grossSalary) {
               hourlyRate = parseFloat(operator.contractData.grossSalary) || hourlyRate;
             }
             
-            // Use gross hours for estimated hours
             const grossHours = eventToClose.grossHours || calculateHours(eventToClose.startDate, eventToClose.endDate);
             const netHours = eventToClose.netHours || calculateNetHours(eventToClose.startDate, eventToClose.endDate);
             
@@ -104,7 +113,7 @@ export const useEventOperations = () => {
           safeLocalStorage.setItem(OPERATORS_STORAGE_KEY, JSON.stringify(operators));
         }
       } catch (error) {
-        console.error("Errore nell'aggiornamento degli operatori:", error);
+        console.error("Error updating operators:", error);
       }
     }
     
@@ -115,15 +124,13 @@ export const useEventOperations = () => {
     try {
       const { data: eventOperators, error: eventOperatorsError } = await supabase
         .from('event_operators')
-        .select('*, operator:operator_id(*)') // Join with operators to get contract data
+        .select('*, operator:operator_id(*)')
         .eq('event_id', eventToClose.id);
         
       if (eventOperatorsError) {
-        console.error("Errore durante il recupero degli operatori per l'evento:", eventOperatorsError);
+        console.error("Error retrieving event operators:", eventOperatorsError);
       } else if (eventOperators && eventOperators.length > 0) {
         for (const operatorRecord of eventOperators) {
-          // Check if operator exists and has contractData property
-          // We need to explicitly type the operator contractData to fix the TypeScript error
           let operatorContractData: ContractData | null = null;
           
           if (operatorRecord.operator && 
@@ -132,7 +139,6 @@ export const useEventOperations = () => {
             operatorContractData = operatorRecord.operator.contractData as ContractData;
           }
           
-          // Safety check for contractData and grossSalary
           const hourlyRate = operatorContractData?.grossSalary 
             ? parseFloat(operatorContractData.grossSalary) 
             : (eventToClose.hourlyRateCost || operatorRecord.hourly_rate || 15);
@@ -156,15 +162,15 @@ export const useEventOperations = () => {
               .eq('id', operatorRecord.id);
               
             if (updateOperatorError) {
-              console.error(`Errore durante l'aggiornamento dell'operatore ${operatorRecord.id}:`, updateOperatorError);
+              console.error(`Error updating operator ${operatorRecord.id}:`, updateOperatorError);
             }
           } catch (error) {
-            console.error(`Errore nella comunicazione con il database per l'operatore ${operatorRecord.id}:`, error);
+            console.error(`Error communicating with database for operator ${operatorRecord.id}:`, error);
           }
         }
       }
     } catch (error) {
-      console.error("Errore durante l'accesso al database per gli operatori:", error);
+      console.error("Error accessing database for operators:", error);
     }
   };
 
