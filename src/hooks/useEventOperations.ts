@@ -19,6 +19,9 @@ interface EventOperator {
   meal_allowance: number | null;
   travel_allowance: number | null;
   revenue_generated: number | null;
+  operator: {
+    contractData?: ContractData;
+  } | null;
 }
 
 interface ContractData {
@@ -130,11 +133,13 @@ export const useEventOperations = () => {
       if (eventOperatorsError) {
         console.error("Error retrieving event operators:", eventOperatorsError);
       } else if (eventOperators && eventOperators.length > 0) {
-        for (const operatorRecord of eventOperators) {
+        for (const operatorRecord of eventOperators as EventOperator[]) {
           let operatorContractData: ContractData | null = null;
           
+          // Add null check for operator before accessing contractData
           if (operatorRecord.operator && 
               typeof operatorRecord.operator === 'object' &&
+              operatorRecord.operator !== null &&
               'contractData' in operatorRecord.operator) {
             operatorContractData = operatorRecord.operator.contractData as ContractData;
           }
