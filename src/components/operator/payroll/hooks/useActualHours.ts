@@ -28,7 +28,7 @@ export const useActualHours = (
       
       setCalculations(updatedCalculations);
       
-      // Calculate new summary
+      // Calculate new summary based on updated actual hours
       const newSummary = calculateSummary(updatedCalculations);
       setSummaryData(newSummary);
       

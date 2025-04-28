@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import OperatorLayout from "@/components/OperatorLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -299,6 +300,24 @@ const TasksPage: React.FC = () => {
     records.push(record);
     safeLocalStorage.setItem(ATTENDANCE_RECORDS_KEY, JSON.stringify(records));
   };
+
+  useEffect(() => {
+    // Check if there was a recent check-in to determine button state
+    const attendanceRecords = getAttendanceRecords();
+    if (!user || !eventData) return;
+    
+    const userRecords = attendanceRecords.filter(record => 
+      record.operatorId === user.email && 
+      record.eventId === eventData.id &&
+      new Date(record.timestamp).toDateString() === new Date().toDateString()
+    );
+    
+    if (userRecords.length > 0) {
+      const lastRecord = userRecords[userRecords.length - 1];
+      setIsCheckingIn(lastRecord.type === "check-out");
+      setLastCheckTime(new Date(lastRecord.timestamp));
+    }
+  }, [user, eventData]);
 
   const renderLocationStatusIndicator = () => {
     if (!locationStatus) return null;
