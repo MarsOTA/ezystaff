@@ -108,14 +108,16 @@ export const validateAttendance = (value: any): "present" | "absent" | "late" | 
 export const calculateSummary = (calculationsData: PayrollCalculation[]): PayrollSummary => {
   return calculationsData.reduce((acc, curr) => {
     // Use actual_hours if available, otherwise use netHours
-    const hoursToUse = curr.actual_hours !== undefined ? curr.actual_hours : curr.netHours;
+    const hoursToUse = curr.actual_hours !== undefined && curr.actual_hours !== null 
+      ? curr.actual_hours 
+      : curr.netHours;
     
     return {
-      totalGrossHours: acc.totalGrossHours + curr.grossHours,
-      totalNetHours: acc.totalNetHours + hoursToUse,
-      totalCompensation: acc.totalCompensation + curr.compensation,
-      totalAllowances: acc.totalAllowances + (curr.mealAllowance + curr.travelAllowance),
-      totalRevenue: acc.totalRevenue + curr.totalRevenue
+      totalGrossHours: acc.totalGrossHours + (curr.grossHours || 0),
+      totalNetHours: acc.totalNetHours + (hoursToUse || 0),
+      totalCompensation: acc.totalCompensation + (curr.compensation || 0),
+      totalAllowances: acc.totalAllowances + ((curr.mealAllowance || 0) + (curr.travelAllowance || 0)),
+      totalRevenue: acc.totalRevenue + (curr.totalRevenue || 0)
     };
   }, {
     totalGrossHours: 0,

@@ -68,6 +68,8 @@ export const PayrollTableRow: React.FC<PayrollTableRowProps> = ({
             className={`px-2 py-1 rounded ${
               (calc.actual_hours !== undefined && calc.actual_hours !== null) ? "bg-green-100" : ""
             }`}
+            onClick={() => onClientClick(calc)}
+            style={{ cursor: "pointer" }}
           >
             {displayHours.toFixed(1)}
           </span>

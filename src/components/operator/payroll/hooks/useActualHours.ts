@@ -10,12 +10,21 @@ export const useActualHours = (
 ) => {
   const updateActualHours = (eventId: number, actualHours: number) => {
     try {
+      // Find the existing calculation to get the hourly rate
+      const calculation = calculations.find(calc => calc.eventId === eventId);
+      if (!calculation) {
+        toast.error("Evento non trovato");
+        return false;
+      }
+      
+      // Calculate hourly rate based on existing compensation and net hours
+      const hourlyRate = calculation.compensation / (calculation.netHours || 1);
+      
       // Update calculations with the new actual hours
       const updatedCalculations = calculations.map(calc => {
         if (calc.eventId === eventId) {
-          // Calculate compensation based on hourly rate
-          const hourlyRateEstimate = calc.compensation / (calc.netHours || 1);
-          const newCompensation = actualHours * hourlyRateEstimate;
+          // Calculate new compensation based on actual hours and the hourly rate
+          const newCompensation = actualHours * hourlyRate;
           
           return { 
             ...calc, 

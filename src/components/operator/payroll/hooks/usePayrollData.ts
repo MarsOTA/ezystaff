@@ -78,8 +78,10 @@ export const usePayrollData = (operator: ExtendedOperator) => {
       
       // Process events and calculations with the contract rate
       const calculationsWithRate = calculationsData.map(calc => {
-        // Recalculate compensation based on contract rate
+        // Use actual_hours if available, otherwise use netHours
         const hoursToUse = calc.actual_hours !== undefined ? calc.actual_hours : calc.netHours;
+        
+        // Recalculate compensation based on contract rate and hours
         return {
           ...calc,
           compensation: hoursToUse * operatorHourlyRate,

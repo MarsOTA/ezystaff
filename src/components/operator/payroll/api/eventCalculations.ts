@@ -64,6 +64,16 @@ export const calculateEventPayroll = (event: any, attendanceRecords: CheckRecord
     }
   }
   
+  // Set the actual_hours to the netHours by default if attendance is present but no check-in/out records
+  if (!actual_hours && attendance === "present") {
+    actual_hours = netHours;
+  }
+  
+  // For completed events, always set actual_hours to netHours if not already set
+  if (event.status === "completed" && actual_hours === null) {
+    actual_hours = netHours;
+  }
+  
   return {
     eventId: event.id,
     eventTitle: event.title,

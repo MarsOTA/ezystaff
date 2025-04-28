@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import OperatorLayout from "@/components/OperatorLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -78,9 +77,14 @@ const TasksPage: React.FC = () => {
       
       const operators = JSON.parse(operatorsData);
       
-      // Find operator by email
-      const currentOperator = operators.find((op: any) => op.email === user.email);
+      // Find operator by email - IMPORTANT: Check both email and display name fields
+      const currentOperator = operators.find((op: any) => 
+        op.email === user.email || 
+        (op.assignedEvents && op.name === user.name)
+      );
+      
       console.log("Current operator:", currentOperator);
+      console.log("Current user:", user);
       
       if (!currentOperator) {
         console.log("Current operator not found for email:", user.email);
