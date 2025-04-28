@@ -56,6 +56,18 @@ const TasksPage: React.FC = () => {
       setLoading(true);
       console.log("Loading tasks for user:", user.email);
       
+      // Get all events first
+      const eventsData = safeLocalStorage.getItem(EVENTS_STORAGE_KEY);
+      if (!eventsData) {
+        console.log("No events data found");
+        setLoading(false);
+        return;
+      }
+      
+      // Parse all events 
+      const events = JSON.parse(eventsData);
+      console.log("All events raw:", events);
+      
       // Get operators data
       const operatorsData = safeLocalStorage.getItem(OPERATORS_STORAGE_KEY);
       if (!operatorsData) {
@@ -65,34 +77,39 @@ const TasksPage: React.FC = () => {
       }
       
       const operators = JSON.parse(operatorsData);
-      const currentOperator = operators.find((op: any) => op.email === user.email);
       
+      // Find operator by email
+      const currentOperator = operators.find((op: any) => op.email === user.email);
       console.log("Current operator:", currentOperator);
       
-      if (!currentOperator || !currentOperator.assignedEvents || currentOperator.assignedEvents.length === 0) {
+      if (!currentOperator) {
+        console.log("Current operator not found for email:", user.email);
+        setLoading(false);
+        return;
+      }
+      
+      if (!currentOperator.assignedEvents || currentOperator.assignedEvents.length === 0) {
         console.log("No assigned events found for operator");
         setLoading(false);
         return;
       }
       
-      // Get events data
-      const eventsData = safeLocalStorage.getItem(EVENTS_STORAGE_KEY);
-      if (!eventsData) {
-        console.log("No events data found");
-        setLoading(false);
-        return;
-      }
-      
-      // Parse all events and ensure dates are properly converted to Date objects
-      const events = JSON.parse(eventsData);
-      
-      console.log("All events raw:", events);
       console.log("Assigned event IDs:", currentOperator.assignedEvents);
       
-      // Filter events assigned to the operator
-      const assignedEvents = events.filter((event: any) => 
-        currentOperator.assignedEvents.includes(event.id)
+      // Convert event IDs to numbers for proper comparison
+      const assignedEventIds = currentOperator.assignedEvents.map((id: any) => 
+        typeof id === 'string' ? parseInt(id, 10) : id
       );
+      
+      console.log("Normalized assigned event IDs:", assignedEventIds);
+      
+      // Filter events assigned to the operator
+      const assignedEvents = events.filter((event: any) => {
+        const eventId = typeof event.id === 'string' ? parseInt(event.id, 10) : event.id;
+        return assignedEventIds.includes(eventId);
+      });
+      
+      console.log("Found assigned events:", assignedEvents);
       
       if (assignedEvents.length === 0) {
         console.log("No matching events found for assigned IDs");
@@ -100,17 +117,33 @@ const TasksPage: React.FC = () => {
         return;
       }
       
-      console.log("Found assigned events:", assignedEvents);
+      // Convert dates to Date objects for all events
+      const eventsWithDates = assignedEvents.map((event: any) => ({
+        ...event,
+        startDate: new Date(event.startDate),
+        endDate: new Date(event.endDate)
+      }));
       
-      // Sort by start date (closest first)
-      assignedEvents.sort((a: any, b: any) => {
-        const dateA = new Date(a.startDate).getTime();
-        const dateB = new Date(b.startDate).getTime();
-        return dateA - dateB;
+      // Filter for today's events or upcoming events
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const todayEvents = eventsWithDates.filter((event: any) => {
+        const eventStartDate = new Date(event.startDate);
+        eventStartDate.setHours(0, 0, 0, 0);
+        return eventStartDate.getTime() === today.getTime();
       });
       
-      if (assignedEvents.length > 0) {
-        const nextEvent = assignedEvents[0];
+      // If no events today, get next upcoming event
+      const relevantEvents = todayEvents.length > 0 ? todayEvents : eventsWithDates;
+      
+      // Sort by start date (closest first)
+      relevantEvents.sort((a: any, b: any) => {
+        return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
+      });
+      
+      if (relevantEvents.length > 0) {
+        const nextEvent = relevantEvents[0];
         console.log("Next event:", nextEvent);
         
         // Create shifts based on start and end times
