@@ -11,12 +11,14 @@ interface OperatorHeaderProps {
   operator: ExtendedOperator;
   onRatingChange: (rating: number) => void;
   onSave: () => void;
+  assignedEventsCount?: number;
 }
 
 const OperatorHeader: React.FC<OperatorHeaderProps> = ({ 
   operator, 
   onRatingChange,
-  onSave
+  onSave,
+  assignedEventsCount = 0
 }) => {
   const navigate = useNavigate();
 
@@ -55,6 +57,11 @@ const OperatorHeader: React.FC<OperatorHeaderProps> = ({
                 </span>
               </div>
             </div>
+            {assignedEventsCount > 0 && (
+              <div className="mt-1 text-sm">
+                Eventi assegnati: <span className="font-medium">{assignedEventsCount}</span>
+              </div>
+            )}
           </CardDescription>
         </CardHeader>
       </Card>
