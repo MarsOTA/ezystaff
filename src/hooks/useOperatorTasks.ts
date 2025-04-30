@@ -5,6 +5,7 @@ import { safeLocalStorage } from "@/utils/fileUtils";
 import { Event } from "@/types/event";
 import { Operator } from "@/types/operator";
 import { toast } from "sonner";
+import { format } from "date-fns";
 
 export const EVENTS_STORAGE_KEY = "app_events_data";
 export const OPERATORS_STORAGE_KEY = "app_operators_data";
@@ -84,11 +85,17 @@ export const useOperatorTasks = (): UseOperatorTasksResult => {
       console.log("All operators found:", operators.length);
       console.log("Current user:", user);
       
-      // Find operator by matching either email or name from user object
-      const currentOperator = operators.find((op: any) => {
-        const emailMatch = op.email === user.email;
-        const nameMatch = op.name === user.name;
-        return emailMatch || nameMatch;
+      // Improved operator matching strategy - first try exact email match, then try name match
+      let currentOperator = operators.find((op: any) => op.email && op.email.toLowerCase() === user.email.toLowerCase());
+      
+      // If no match by email, try by name
+      if (!currentOperator) {
+        currentOperator = operators.find((op: any) => op.name === user.name);
+      }
+      
+      // Debug each operator we're checking
+      operators.forEach((op: any) => {
+        console.log(`Operator: ${op.name}, email: ${op.email}`);
       });
       
       if (!currentOperator) {
@@ -121,7 +128,9 @@ export const useOperatorTasks = (): UseOperatorTasksResult => {
       // Filter events assigned to the operator
       const assignedEvents = events.filter((event: any) => {
         const eventId = typeof event.id === 'string' ? parseInt(event.id, 10) : event.id;
-        return assignedEventIds.includes(eventId);
+        const isIncluded = assignedEventIds.includes(eventId);
+        console.log(`Event ${event.id} (${event.title}) included: ${isIncluded}`);
+        return isIncluded;
       });
       
       console.log("Found assigned events:", assignedEvents.length);
@@ -172,6 +181,8 @@ export const useOperatorTasks = (): UseOperatorTasksResult => {
         return taskDate.getTime() === today.getTime();
       });
       
+      console.log(`Today's date: ${today.toISOString()}, found ${todayTasks.length} tasks for today`);
+      
       // Find upcoming tasks (future but not today)
       const upcoming = operatorTasks.filter(task => {
         const taskDate = new Date(task.startDate);
@@ -204,15 +215,6 @@ export const useOperatorTasks = (): UseOperatorTasksResult => {
       setLoading(false);
     }
   }, [user]);
-
-  // Function to format date in HH:mm format
-  const format = (date: Date, formatStr: string): string => {
-    return new Intl.DateTimeFormat('it-IT', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
-    }).format(date);
-  };
 
   // Load tasks on mount and when user changes
   useEffect(() => {

@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import OperatorLayout from "@/components/OperatorLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, MapPin, Users, Check, LogIn, LogOut, Loader2 } from "lucide-react";
+import { Calendar, Clock, MapPin, Users, LogIn, LogOut, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { useAuth } from "@/contexts/AuthContext";
+import { useOperatorTasks } from "@/hooks/useOperatorTasks";
 import { safeLocalStorage } from "@/utils/fileUtils";
 
 interface CheckRecord {
@@ -20,238 +20,33 @@ interface CheckRecord {
   eventId: number;
 }
 
-interface EventData {
-  id: number;
-  title: string;
-  startDate: Date;
-  endDate: Date;
-  startTime: string;
-  endTime: string;
-  location: string;
-  address?: string;
-  client: string;
-  shifts: string[];
-}
-
 const ATTENDANCE_RECORDS_KEY = "attendance_records";
-const EVENTS_STORAGE_KEY = "app_events_data";
-const OPERATORS_STORAGE_KEY = "app_operators_data";
 
 const TasksPage: React.FC = () => {
-  const { user } = useAuth();
+  const { todayTask, loading, error, refreshTasks } = useOperatorTasks();
   const [isCheckingIn, setIsCheckingIn] = useState(true);
   const [locationStatus, setLocationStatus] = useState("");
   const [loadingLocation, setLoadingLocation] = useState(false);
   const [lastCheckTime, setLastCheckTime] = useState<Date | null>(null);
   const [locationAccuracy, setLocationAccuracy] = useState<number | null>(null);
   const [locationRetries, setLocationRetries] = useState(0);
-  const [eventData, setEventData] = useState<EventData | null>(null);
-  const [loading, setLoading] = useState(true);
-  
-  const loadUserEvents = useCallback(() => {
-    if (!user) {
-      console.log("No user found, cannot load events");
-      setLoading(false);
-      return;
-    }
-    
-    try {
-      setLoading(true);
-      console.log("Loading tasks for user:", user);
-      
-      // Get all events first
-      const eventsData = safeLocalStorage.getItem(EVENTS_STORAGE_KEY);
-      if (!eventsData) {
-        console.log("No events data found");
-        setLoading(false);
-        return;
-      }
-      
-      // Parse all events 
-      const events = JSON.parse(eventsData);
-      console.log("All events found:", events.length);
-      
-      // Get operators data
-      const operatorsData = safeLocalStorage.getItem(OPERATORS_STORAGE_KEY);
-      if (!operatorsData) {
-        console.log("No operators data found");
-        setLoading(false);
-        return;
-      }
-      
-      const operators = JSON.parse(operatorsData);
-      console.log("All operators found:", operators.length);
-      console.log("Current user:", user);
-      
-      // Find operator by matching either email or name from user object
-      const currentOperator = operators.find((op: any) => {
-        const emailMatch = op.email === user.email;
-        const nameMatch = op.name === user.name;
-        console.log(`Checking operator ${op.name} (${op.email}): emailMatch=${emailMatch}, nameMatch=${nameMatch}`);
-        return emailMatch || nameMatch;
-      });
-      
-      if (!currentOperator) {
-        console.log("Current operator not found for user:", user);
-        setLoading(false);
-        return;
-      }
-      
-      console.log("Found current operator:", currentOperator);
-      
-      if (!currentOperator.assignedEvents || currentOperator.assignedEvents.length === 0) {
-        console.log("No assigned events found for operator");
-        setLoading(false);
-        return;
-      }
-      
-      console.log("Assigned event IDs:", currentOperator.assignedEvents);
-      
-      // Convert event IDs to numbers for proper comparison
-      const assignedEventIds = currentOperator.assignedEvents.map((id: any) => 
-        typeof id === 'string' ? parseInt(id, 10) : id
-      );
-      
-      console.log("Normalized assigned event IDs:", assignedEventIds);
-      
-      // Filter events assigned to the operator
-      const assignedEvents = events.filter((event: any) => {
-        const eventId = typeof event.id === 'string' ? parseInt(event.id, 10) : event.id;
-        const isAssigned = assignedEventIds.includes(eventId);
-        console.log(`Checking event ${event.id} (${event.title}): assigned = ${isAssigned}`);
-        return isAssigned;
-      });
-      
-      console.log("Found assigned events:", assignedEvents);
-      
-      if (assignedEvents.length === 0) {
-        console.log("No matching events found for assigned IDs");
-        setLoading(false);
-        return;
-      }
-      
-      // Convert dates to Date objects for all events
-      const eventsWithDates = assignedEvents.map((event: any) => ({
-        ...event,
-        startDate: new Date(event.startDate),
-        endDate: new Date(event.endDate)
-      }));
-      
-      // Filter for today's events or upcoming events
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      
-      // First check for today's events
-      console.log("Today's date:", today);
-      const todayEvents = eventsWithDates.filter((event: any) => {
-        const eventStartDate = new Date(event.startDate);
-        eventStartDate.setHours(0, 0, 0, 0);
-        const isToday = eventStartDate.getTime() === today.getTime();
-        console.log(`Event ${event.title} date: ${eventStartDate}, isToday: ${isToday}`);
-        return isToday;
-      });
-      
-      console.log("Today's events:", todayEvents.length);
-      
-      // If no events today, get upcoming events
-      const upcomingEvents = eventsWithDates.filter((event: any) => {
-        return new Date(event.startDate) >= today;
-      });
-      
-      console.log("Upcoming events:", upcomingEvents.length);
-      
-      // Use today's events if available, otherwise use upcoming events
-      const relevantEvents = todayEvents.length > 0 ? todayEvents : upcomingEvents;
-      
-      // Sort by start date (closest first)
-      relevantEvents.sort((a: any, b: any) => {
-        return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
-      });
-      
-      if (relevantEvents.length > 0) {
-        const nextEvent = relevantEvents[0];
-        console.log("Next event:", nextEvent);
-        
-        // Create shifts based on start and end times
-        const startTime = nextEvent.startTime || format(new Date(nextEvent.startDate), "HH:mm");
-        const endTime = nextEvent.endTime || format(new Date(nextEvent.endDate), "HH:mm");
-        
-        let shifts = [`${startTime} - ${endTime}`];
-        
-        // If the event has break times, add an additional shift
-        if (nextEvent.breakStartTime && nextEvent.breakEndTime) {
-          shifts = [
-            `${startTime} - ${nextEvent.breakStartTime}`,
-            `${nextEvent.breakEndTime} - ${endTime}`
-          ];
-        }
-        
-        setEventData({
-          id: nextEvent.id,
-          title: nextEvent.title,
-          startDate: new Date(nextEvent.startDate),
-          endDate: new Date(nextEvent.endDate),
-          startTime: startTime,
-          endTime: endTime,
-          location: nextEvent.location || "",
-          address: nextEvent.address || "",
-          client: nextEvent.client || "Cliente non specificato",
-          shifts: shifts
-        });
-        
-        console.log("Set event data:", {
-          id: nextEvent.id,
-          title: nextEvent.title,
-          dates: `${format(new Date(nextEvent.startDate), "dd/MM/yyyy")} - ${format(new Date(nextEvent.endDate), "dd/MM/yyyy")}`
-        });
-      } else {
-        console.log("No relevant events found");
-        setEventData(null);
-      }
-      
-    } catch (error) {
-      console.error("Error loading user events:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [user]);
-  
-  useEffect(() => {
-    loadUserEvents();
-    
-    // Set up storage event listener to detect changes from other tabs
-    const handleStorageChange = () => {
-      loadUserEvents();
-    };
-    
-    window.addEventListener('storage', handleStorageChange);
-    
-    // Set up a periodic refresh every minute
-    const intervalId = setInterval(loadUserEvents, 60000);
-    
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      clearInterval(intervalId);
-    };
-  }, [user, loadUserEvents]);
   
   useEffect(() => {
     // Check if there was a recent check-in to determine button state
     const attendanceRecords = getAttendanceRecords();
-    if (!user || !eventData) return;
-    
-    const userRecords = attendanceRecords.filter(record => 
-      record.operatorId === user.email && 
-      record.eventId === eventData.id &&
-      new Date(record.timestamp).toDateString() === new Date().toDateString()
-    );
-    
-    if (userRecords.length > 0) {
-      const lastRecord = userRecords[userRecords.length - 1];
-      setIsCheckingIn(lastRecord.type === "check-out");
-      setLastCheckTime(new Date(lastRecord.timestamp));
+    if (todayTask) {
+      const userRecords = attendanceRecords.filter(record => 
+        record.eventId === todayTask.eventId &&
+        new Date(record.timestamp).toDateString() === new Date().toDateString()
+      );
+      
+      if (userRecords.length > 0) {
+        const lastRecord = userRecords[userRecords.length - 1];
+        setIsCheckingIn(lastRecord.type === "check-out");
+        setLastCheckTime(new Date(lastRecord.timestamp));
+      }
     }
-  }, [user, eventData]);
+  }, [todayTask]);
   
   const getAttendanceRecords = (): CheckRecord[] => {
     const records = safeLocalStorage.getItem(ATTENDANCE_RECORDS_KEY);
@@ -271,7 +66,7 @@ const TasksPage: React.FC = () => {
   };
   
   const handleCheckAction = async () => {
-    if (!user || !eventData) return;
+    if (!todayTask) return;
     
     setLoadingLocation(true);
     setLocationStatus("Rilevamento posizione in corso...");
@@ -314,8 +109,13 @@ const TasksPage: React.FC = () => {
       const type = isCheckingIn ? "check-in" : "check-out";
       const timestamp = new Date().toISOString();
       
+      // Get the user email from local storage if not available directly
+      const currentUserJson = safeLocalStorage.getItem("app_user");
+      const currentUser = currentUserJson ? JSON.parse(currentUserJson) : null;
+      const userEmail = currentUser?.email || "unknown@user.com";
+      
       const record: CheckRecord = {
-        operatorId: user.email,
+        operatorId: userEmail,
         timestamp,
         type,
         location: {
@@ -323,7 +123,7 @@ const TasksPage: React.FC = () => {
           longitude: position.coords.longitude,
           accuracy: position.coords.accuracy
         },
-        eventId: eventData.id
+        eventId: todayTask.eventId
       };
       
       saveAttendanceRecord(record);
@@ -346,6 +146,7 @@ const TasksPage: React.FC = () => {
       // Dispatch an event to notify other tabs/windows
       const storageEvent = new Event("storage");
       window.dispatchEvent(storageEvent);
+      refreshTasks();
       
     } catch (error) {
       setLoadingLocation(false);
@@ -394,7 +195,27 @@ const TasksPage: React.FC = () => {
     );
   }
 
-  if (!eventData) {
+  if (error) {
+    return (
+      <OperatorLayout>
+        <div className="space-y-6">
+          <h1 className="text-2xl font-bold">Le tue attività di oggi</h1>
+          <Card className="shadow-md">
+            <CardContent className="pt-6 pb-6">
+              <div className="text-center py-8">
+                <p className="text-lg text-muted-foreground">{error}</p>
+                <Button onClick={refreshTasks} className="mt-4">
+                  Riprova a caricare
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </OperatorLayout>
+    );
+  }
+
+  if (!todayTask) {
     return (
       <OperatorLayout>
         <div className="space-y-6">
@@ -417,38 +238,38 @@ const TasksPage: React.FC = () => {
         <h1 className="text-2xl font-bold">Le tue attività di oggi</h1>
         <Card className="shadow-md">
           <CardHeader>
-            <CardTitle className="text-xl">{eventData.title}</CardTitle>
+            <CardTitle className="text-xl">{todayTask.title}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center space-x-2">
               <Calendar className="h-5 w-5 text-muted-foreground" />
               <span>
-                {format(eventData.startDate, "dd/MM/yyyy")} - {format(eventData.endDate, "dd/MM/yyyy")}
+                {format(todayTask.startDate, "dd/MM/yyyy")} - {format(todayTask.endDate, "dd/MM/yyyy")}
               </span>
             </div>
             <div className="flex items-center space-x-2">
               <Clock className="h-5 w-5 text-muted-foreground" />
               <span>
-                {eventData.startTime} - {eventData.endTime}
+                {format(todayTask.startDate, "HH:mm")} - {format(todayTask.endDate, "HH:mm")}
               </span>
             </div>
-            {eventData.location && (
+            {todayTask.location && (
               <div className="flex items-center space-x-2">
                 <MapPin className="h-5 w-5 text-muted-foreground" />
-                <span>{eventData.location}</span>
+                <span>{todayTask.location}</span>
               </div>
             )}
-            {eventData.address && (
+            {todayTask.address && (
               <div className="flex items-start space-x-2">
                 <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
-                <span>{eventData.address}</span>
+                <span>{todayTask.address}</span>
               </div>
             )}
             <div className="flex items-start space-x-2">
               <Users className="h-5 w-5 text-muted-foreground" />
               <div className="flex flex-col">
                 <span className="font-medium">Cliente:</span>
-                <span>{eventData.client}</span>
+                <span>{todayTask.client}</span>
               </div>
             </div>
             <div className="flex items-center space-x-2">
@@ -456,7 +277,7 @@ const TasksPage: React.FC = () => {
               <div className="flex flex-col">
                 <span className="font-medium">Turni assegnati:</span>
                 <ul className="list-disc list-inside">
-                  {eventData.shifts.map((shift, index) => (
+                  {todayTask.shifts.map((shift, index) => (
                     <li key={index}>{shift}</li>
                   ))}
                 </ul>
