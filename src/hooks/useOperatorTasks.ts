@@ -85,17 +85,25 @@ export const useOperatorTasks = (): UseOperatorTasksResult => {
       console.log("All operators found:", operators.length);
       console.log("Current user:", user);
       
-      // Improved operator matching strategy - first try exact email match, then try name match
-      let currentOperator = operators.find((op: any) => op.email && op.email.toLowerCase() === user.email.toLowerCase());
+      // Enhanced operator matching - make sure to normalize emails for case-insensitive matching
+      let currentOperator = null;
+      if (user.email) {
+        const userEmail = user.email.toLowerCase();
+        console.log("Looking for operator with email:", userEmail);
+        currentOperator = operators.find((op: any) => 
+          op.email && op.email.toLowerCase() === userEmail
+        );
+      }
       
-      // If no match by email, try by name
-      if (!currentOperator) {
+      // If still not found, try by name as fallback
+      if (!currentOperator && user.name) {
+        console.log("No email match, trying name match for:", user.name);
         currentOperator = operators.find((op: any) => op.name === user.name);
       }
       
-      // Debug each operator we're checking
-      operators.forEach((op: any) => {
-        console.log(`Operator: ${op.name}, email: ${op.email}`);
+      // Log each operator for debugging
+      operators.forEach((op: any, index: number) => {
+        console.log(`Operator ${index}: name=${op.name}, email=${op.email || 'no email'}`);
       });
       
       if (!currentOperator) {
@@ -171,10 +179,8 @@ export const useOperatorTasks = (): UseOperatorTasksResult => {
       // Categorize tasks
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      const tomorrow = new Date(today);
-      tomorrow.setDate(tomorrow.getDate() + 1);
       
-      // Find today's task
+      // Find today's task - important: need to check if the date is today, not just equal to today
       const todayTasks = operatorTasks.filter(task => {
         const taskDate = new Date(task.startDate);
         taskDate.setHours(0, 0, 0, 0);
@@ -182,6 +188,9 @@ export const useOperatorTasks = (): UseOperatorTasksResult => {
       });
       
       console.log(`Today's date: ${today.toISOString()}, found ${todayTasks.length} tasks for today`);
+      todayTasks.forEach((task, i) => {
+        console.log(`Today's task ${i+1}: ${task.title}, date: ${task.startDate.toISOString()}`);
+      });
       
       // Find upcoming tasks (future but not today)
       const upcoming = operatorTasks.filter(task => {
