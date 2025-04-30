@@ -13,6 +13,7 @@ const OperatorProfile = () => {
   const {
     operator,
     setOperator,
+    assignedEvents,
     loading,
     imagePreviewUrls,
     setImagePreviewUrls,
@@ -88,6 +89,7 @@ const OperatorProfile = () => {
           operator={operator} 
           onRatingChange={(value) => handleChange("rating", value)}
           onSave={handleSave}
+          assignedEventsCount={assignedEvents.length}
         />
         
         <OperatorTabs
@@ -121,6 +123,7 @@ const OperatorProfile = () => {
           setNetSalary={setNetSalary}
           onTemplateUpload={handleContractTemplateUpload}
           templateFile={templateFile}
+          assignedEvents={assignedEvents}
         />
       </div>
     </Layout>
