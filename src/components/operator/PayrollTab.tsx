@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { ExtendedOperator } from "@/types/operator";
+import { Event } from "@/types/event";
 import { CheckRecord } from "./payroll/types";
 import { exportToCSV } from "./payroll/payrollUtils";
 import { usePayrollData } from "./payroll/hooks/usePayrollData";
@@ -11,7 +12,12 @@ import HoursAdjustmentDialog from "./payroll/HoursAdjustmentDialog";
 import PayrollTabsManager from "./payroll/components/PayrollTabsManager";
 import PayrollLoading from "./payroll/components/PayrollLoading";
 
-const PayrollTab: React.FC<{ operator: ExtendedOperator }> = ({ operator }) => {
+interface PayrollTabProps {
+  operator: ExtendedOperator;
+  assignedEvents: Event[];
+}
+
+const PayrollTab: React.FC<PayrollTabProps> = ({ operator, assignedEvents }) => {
   const [activeTab, setActiveTab] = useState<string>("payroll");
   const [attendanceRecords, setAttendanceRecords] = useState<CheckRecord[]>([]);
 
