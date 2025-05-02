@@ -1,5 +1,4 @@
 
-import { useState } from "react";
 import { toast } from "sonner";
 import { Operator } from "@/types/operator";
 import { saveOperators } from "@/utils/operatorUtils";

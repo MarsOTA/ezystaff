@@ -3,9 +3,7 @@ import { safeLocalStorage } from "@/utils/fileUtils";
 import { Event, PayrollCalculation } from "../types";
 import { getAttendanceRecords } from "./attendanceApi";
 import { calculateEventPayroll, mapEventToPayrollEvent } from "./eventCalculations";
-
-const EVENTS_STORAGE_KEY = "app_events_data";
-const OPERATORS_STORAGE_KEY = "app_operators_data";
+import { EVENTS_STORAGE_KEY, OPERATORS_STORAGE_KEY } from "@/utils/operatorUtils";
 
 export const fetchOperatorEvents = async (operatorId: number) => {
   try {
@@ -60,4 +58,3 @@ export const fetchOperatorEvents = async (operatorId: number) => {
 };
 
 export { getAttendanceRecords } from './attendanceApi';
-

@@ -4,8 +4,9 @@ import { Event } from "@/types/event";
 import { Client } from "@/pages/Clients";
 import { safeLocalStorage } from "@/utils/fileUtils";
 import { differenceInHours, addDays, isSameDay, differenceInDays } from "date-fns";
+import { EVENTS_STORAGE_KEY } from "@/utils/operatorUtils";
 
-export const EVENTS_STORAGE_KEY = "app_events_data";
+// Local constant for clients storage
 export const CLIENTS_STORAGE_KEY = "app_clients_data";
 
 export interface PlacePrediction {

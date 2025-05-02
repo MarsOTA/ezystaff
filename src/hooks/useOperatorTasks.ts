@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { safeLocalStorage } from "@/utils/fileUtils";
@@ -6,9 +5,7 @@ import { Event } from "@/types/event";
 import { Operator } from "@/types/operator";
 import { toast } from "sonner";
 import { format } from "date-fns";
-
-export const EVENTS_STORAGE_KEY = "app_events_data";
-export const OPERATORS_STORAGE_KEY = "app_operators_data";
+import { EVENTS_STORAGE_KEY, OPERATORS_STORAGE_KEY } from "@/utils/operatorUtils";
 
 interface OperatorTask {
   eventId: number;

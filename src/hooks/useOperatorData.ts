@@ -1,10 +1,9 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { ExtendedOperator, OPERATORS_STORAGE_KEY } from "@/types/operator";
 import { safeLocalStorage } from "@/utils/fileUtils";
-import { EVENTS_STORAGE_KEY } from "@/hooks/useOperators";
+import { EVENTS_STORAGE_KEY } from "@/utils/operatorUtils";
 import { Event } from "@/types/event";
 
 export const useOperatorData = (operatorId: string | undefined) => {

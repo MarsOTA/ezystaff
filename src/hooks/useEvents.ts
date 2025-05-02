@@ -1,9 +1,7 @@
-
 import { useState, useEffect } from "react";
 import { safeLocalStorage } from "@/utils/fileUtils";
 import { Event } from "@/types/event";
-
-const EVENTS_STORAGE_KEY = "app_events_data";
+import { EVENTS_STORAGE_KEY } from "@/utils/operatorUtils";
 
 export const useEvents = () => {
   const [events, setEvents] = useState<Event[]>([]);

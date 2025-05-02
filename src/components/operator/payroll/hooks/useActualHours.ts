@@ -3,7 +3,7 @@ import { PayrollCalculation, PayrollSummary } from "../types";
 import { calculateSummary } from "../utils/payrollCalculations";
 import { toast } from "sonner";
 import { safeLocalStorage } from "@/utils/fileUtils";
-import { EVENTS_STORAGE_KEY } from "@/hooks/useOperators";
+import { EVENTS_STORAGE_KEY } from "@/utils/operatorUtils";
 
 export const useActualHours = (
   calculations: PayrollCalculation[],
