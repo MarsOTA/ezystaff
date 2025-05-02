@@ -3,7 +3,8 @@ import { EventFormData } from "@/hooks/useEventForm";
 import { Event } from "@/types/event";
 import { Client } from "@/pages/Clients";
 import { safeLocalStorage } from "@/utils/fileUtils";
-import { PlacePrediction, EVENTS_STORAGE_KEY } from "@/hooks/useEventForm";
+import { PlacePrediction } from "@/hooks/useEventForm";
+import { EVENTS_STORAGE_KEY } from "@/utils/operatorUtils";
 
 declare global {
   interface Window {

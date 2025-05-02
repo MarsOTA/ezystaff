@@ -12,7 +12,7 @@ export const useOperatorStatus = (initialOperators: Operator[], setOperators: Re
     setOperators((prev) => {
       const updated = prev.map((op) =>
         op.id === id
-          ? { ...op, status: op.status === "active" ? "inactive" : "active" }
+          ? { ...op, status: op.status === "active" ? "inactive" : "active" as "active" | "inactive" }
           : op
       );
       saveOperators(updated);
