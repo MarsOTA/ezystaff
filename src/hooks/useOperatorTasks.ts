@@ -10,7 +10,9 @@ import {
   EVENTS_STORAGE_KEY, 
   OPERATORS_STORAGE_KEY, 
   loadOperators, 
-  findOperatorByEmail 
+  findOperatorByEmail,
+  findOperatorByNameOrId,
+  saveOperators
 } from "@/utils/operatorUtils";
 
 interface OperatorTask {
@@ -80,37 +82,20 @@ export const useOperatorTasks = (): UseOperatorTasksResult => {
       console.log("All operators found:", operators.length);
       console.log("Current user:", user);
       
-      // Use the new utility function to find operator by email
-      const currentOperator = findOperatorByEmail(operators, user.email);
+      // Prima cerca per email
+      let currentOperator = findOperatorByEmail(operators, user.email);
       
-      // If no operator found by email, try by name as fallback
+      // Se non trova per email, cerca per nome
       if (!currentOperator && user.name) {
         console.log("No email match, trying name match for:", user.name);
-        const nameMatch = operators.find((op: any) => op.name === user.name);
-        if (nameMatch) {
-          console.log("Found operator by name:", nameMatch);
-          setOperator(nameMatch);
-          
-          // Update the operator email to match login email for future logins
-          if (user.email && !nameMatch.email) {
-            nameMatch.email = user.email;
-            // Update operators storage
-            safeLocalStorage.setItem(OPERATORS_STORAGE_KEY, JSON.stringify(operators));
-            console.log("Updated operator email:", nameMatch);
-          }
-          
-          if (!nameMatch.assignedEvents || nameMatch.assignedEvents.length === 0) {
-            console.log("No assigned events found for operator");
-            setLoading(false);
-            setTasks([]);
-            setTodayTask(null);
-            setUpcomingTasks([]);
-            setPastTasks([]);
-            return;
-          }
-          
-          processAssignedEvents(nameMatch, events);
-          return;
+        currentOperator = findOperatorByNameOrId(operators, user.name);
+        
+        // Se trova per nome, aggiorna l'email per i futuri login
+        if (currentOperator && user.email && (!currentOperator.email || currentOperator.email !== user.email)) {
+          console.log(`Aggiorno email dell'operatore ${currentOperator.name} da ${currentOperator.email || 'vuoto'} a ${user.email}`);
+          currentOperator.email = user.email;
+          // Salva operatori aggiornati
+          saveOperators(operators);
         }
       }
       
@@ -134,7 +119,8 @@ export const useOperatorTasks = (): UseOperatorTasksResult => {
         return;
       }
       
-      processAssignedEvents(currentOperator, events);
+      // Estrai funzionalità in una funzione separata
+      processOperatorEvents(currentOperator, events);
       
     } catch (error) {
       console.error("Error loading tasks:", error);
@@ -145,12 +131,13 @@ export const useOperatorTasks = (): UseOperatorTasksResult => {
     }
   }, [user]);
   
-  // Helper function to process assigned events for an operator
-  const processAssignedEvents = (operator: Operator, events: Event[]) => {
-    console.log("Assigned event IDs:", operator.assignedEvents);
+  // Funzione separata per elaborare gli eventi assegnati
+  const processOperatorEvents = (currentOperator: Operator, events: Event[]) => {
+    console.log("Processing events for operator:", currentOperator.name);
+    console.log("Assigned event IDs:", currentOperator.assignedEvents);
     
     // Convert event IDs to numbers for proper comparison
-    const assignedEventIds = operator.assignedEvents.map((id: any) => 
+    const assignedEventIds = currentOperator.assignedEvents.map((id: any) => 
       typeof id === 'string' ? parseInt(id, 10) : id
     );
     

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import OperatorLayout from "@/components/OperatorLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -7,6 +8,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { useOperatorTasks } from "@/hooks/useOperatorTasks";
 import { safeLocalStorage } from "@/utils/fileUtils";
+import { ATTENDANCE_RECORDS_KEY } from "@/utils/operatorUtils";
 
 interface CheckRecord {
   operatorId: string;
@@ -19,8 +21,6 @@ interface CheckRecord {
   };
   eventId: number;
 }
-
-const ATTENDANCE_RECORDS_KEY = "attendance_records";
 
 const TasksPage: React.FC = () => {
   const { todayTask, loading, error, refreshTasks } = useOperatorTasks();

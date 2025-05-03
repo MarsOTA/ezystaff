@@ -107,11 +107,42 @@ export const generateNewOperatorId = (operators: Operator[]): number => {
 };
 
 /**
- * Find operator by email (case insensitive)
+ * Find operator by email (case insensitive) or by name as fallback
  */
-export const findOperatorByEmail = (operators: Operator[], email: string): Operator | null => {
+export const findOperatorByEmail = (operators: Operator[], email: string | undefined): Operator | null => {
   if (!email) return null;
   
   const normalizedEmail = email.toLowerCase();
-  return operators.find(op => op.email && op.email.toLowerCase() === normalizedEmail) || null;
+  // Prima cerca per email (case insensitive)
+  const operatorByEmail = operators.find(op => op.email && op.email.toLowerCase() === normalizedEmail);
+  
+  if (operatorByEmail) {
+    console.log(`Trovato operatore per email: ${operatorByEmail.name}`);
+    return operatorByEmail;
+  }
+  
+  return null;
+};
+
+/**
+ * Find operator by name (case insensitive) or id
+ */
+export const findOperatorByNameOrId = (operators: Operator[], nameOrId: string | number | undefined): Operator | null => {
+  if (!nameOrId) return null;
+  
+  if (typeof nameOrId === 'number') {
+    return operators.find(op => op.id === nameOrId) || null;
+  }
+  
+  const normalizedName = nameOrId.toLowerCase();
+  const operator = operators.find(op => 
+    op.name && op.name.toLowerCase() === normalizedName
+  );
+  
+  if (operator) {
+    console.log(`Trovato operatore per nome: ${operator.name}`);
+    return operator;
+  }
+  
+  return null;
 };
