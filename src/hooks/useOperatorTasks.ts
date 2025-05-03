@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { safeLocalStorage } from "@/utils/fileUtils";
@@ -5,7 +6,12 @@ import { Event } from "@/types/event";
 import { Operator } from "@/types/operator";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { EVENTS_STORAGE_KEY, OPERATORS_STORAGE_KEY } from "@/utils/operatorUtils";
+import { 
+  EVENTS_STORAGE_KEY, 
+  OPERATORS_STORAGE_KEY, 
+  loadOperators, 
+  findOperatorByEmail 
+} from "@/utils/operatorUtils";
 
 interface OperatorTask {
   eventId: number;
@@ -69,39 +75,44 @@ export const useOperatorTasks = (): UseOperatorTasksResult => {
       }));
       console.log("All events found:", events.length);
       
-      // Get operators data
-      const operatorsData = safeLocalStorage.getItem(OPERATORS_STORAGE_KEY);
-      if (!operatorsData) {
-        console.log("No operators data found");
-        setLoading(false);
-        setError("Nessun operatore trovato");
-        return;
-      }
-      
-      const operators = JSON.parse(operatorsData);
+      // Load operators directly using the utility function
+      const operators = loadOperators();
       console.log("All operators found:", operators.length);
       console.log("Current user:", user);
       
-      // Enhanced operator matching - make sure to normalize emails for case-insensitive matching
-      let currentOperator = null;
-      if (user.email) {
-        const userEmail = user.email.toLowerCase();
-        console.log("Looking for operator with email:", userEmail);
-        currentOperator = operators.find((op: any) => 
-          op.email && op.email.toLowerCase() === userEmail
-        );
-      }
+      // Use the new utility function to find operator by email
+      const currentOperator = findOperatorByEmail(operators, user.email);
       
-      // If still not found, try by name as fallback
+      // If no operator found by email, try by name as fallback
       if (!currentOperator && user.name) {
         console.log("No email match, trying name match for:", user.name);
-        currentOperator = operators.find((op: any) => op.name === user.name);
+        const nameMatch = operators.find((op: any) => op.name === user.name);
+        if (nameMatch) {
+          console.log("Found operator by name:", nameMatch);
+          setOperator(nameMatch);
+          
+          // Update the operator email to match login email for future logins
+          if (user.email && !nameMatch.email) {
+            nameMatch.email = user.email;
+            // Update operators storage
+            safeLocalStorage.setItem(OPERATORS_STORAGE_KEY, JSON.stringify(operators));
+            console.log("Updated operator email:", nameMatch);
+          }
+          
+          if (!nameMatch.assignedEvents || nameMatch.assignedEvents.length === 0) {
+            console.log("No assigned events found for operator");
+            setLoading(false);
+            setTasks([]);
+            setTodayTask(null);
+            setUpcomingTasks([]);
+            setPastTasks([]);
+            return;
+          }
+          
+          processAssignedEvents(nameMatch, events);
+          return;
+        }
       }
-      
-      // Log each operator for debugging
-      operators.forEach((op: any, index: number) => {
-        console.log(`Operator ${index}: name=${op.name}, email=${op.email || 'no email'}`);
-      });
       
       if (!currentOperator) {
         console.log("Current operator not found for user:", user);
@@ -123,95 +134,7 @@ export const useOperatorTasks = (): UseOperatorTasksResult => {
         return;
       }
       
-      console.log("Assigned event IDs:", currentOperator.assignedEvents);
-      
-      // Convert event IDs to numbers for proper comparison
-      const assignedEventIds = currentOperator.assignedEvents.map((id: any) => 
-        typeof id === 'string' ? parseInt(id, 10) : id
-      );
-      
-      // Filter events assigned to the operator
-      const assignedEvents = events.filter((event: any) => {
-        const eventId = typeof event.id === 'string' ? parseInt(event.id, 10) : event.id;
-        const isIncluded = assignedEventIds.includes(eventId);
-        console.log(`Event ${event.id} (${event.title}) included: ${isIncluded}`);
-        return isIncluded;
-      });
-      
-      console.log("Found assigned events:", assignedEvents.length);
-      
-      // Convert to tasks format
-      const operatorTasks = assignedEvents.map((event: Event): OperatorTask => {
-        // Create shifts based on start and end times
-        const startTime = format(event.startDate, "HH:mm");
-        const endTime = format(event.endDate, "HH:mm");
-        
-        let shifts = [`${startTime} - ${endTime}`];
-        
-        // If the event has break times, add an additional shift
-        if (event.breakStartTime && event.breakEndTime) {
-          shifts = [
-            `${startTime} - ${event.breakStartTime}`,
-            `${event.breakEndTime} - ${endTime}`
-          ];
-        }
-        
-        return {
-          eventId: event.id,
-          title: event.title,
-          startDate: event.startDate,
-          endDate: event.endDate,
-          location: event.location,
-          address: event.address,
-          client: event.client,
-          shifts
-        };
-      });
-      
-      setTasks(operatorTasks);
-      
-      // Sort tasks by date
-      operatorTasks.sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
-      
-      // Categorize tasks
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      
-      // Find today's task - important: need to check if the date is today, not just equal to today
-      const todayTasks = operatorTasks.filter(task => {
-        const taskDate = new Date(task.startDate);
-        taskDate.setHours(0, 0, 0, 0);
-        return taskDate.getTime() === today.getTime();
-      });
-      
-      console.log(`Today's date: ${today.toISOString()}, found ${todayTasks.length} tasks for today`);
-      todayTasks.forEach((task, i) => {
-        console.log(`Today's task ${i+1}: ${task.title}, date: ${task.startDate.toISOString()}`);
-      });
-      
-      // Find upcoming tasks (future but not today)
-      const upcoming = operatorTasks.filter(task => {
-        const taskDate = new Date(task.startDate);
-        taskDate.setHours(0, 0, 0, 0);
-        return taskDate > today;
-      });
-      
-      // Find past tasks
-      const past = operatorTasks.filter(task => {
-        const taskDate = new Date(task.endDate);
-        taskDate.setHours(0, 0, 0, 0);
-        return taskDate < today;
-      });
-      
-      setTodayTask(todayTasks.length > 0 ? todayTasks[0] : null);
-      setUpcomingTasks(upcoming);
-      setPastTasks(past);
-      
-      console.log("Tasks processed:", {
-        today: todayTasks.length,
-        upcoming: upcoming.length,
-        past: past.length
-      });
+      processAssignedEvents(currentOperator, events);
       
     } catch (error) {
       console.error("Error loading tasks:", error);
@@ -221,6 +144,99 @@ export const useOperatorTasks = (): UseOperatorTasksResult => {
       setLoading(false);
     }
   }, [user]);
+  
+  // Helper function to process assigned events for an operator
+  const processAssignedEvents = (operator: Operator, events: Event[]) => {
+    console.log("Assigned event IDs:", operator.assignedEvents);
+    
+    // Convert event IDs to numbers for proper comparison
+    const assignedEventIds = operator.assignedEvents.map((id: any) => 
+      typeof id === 'string' ? parseInt(id, 10) : id
+    );
+    
+    // Filter events assigned to the operator
+    const assignedEvents = events.filter((event: any) => {
+      const eventId = typeof event.id === 'string' ? parseInt(event.id, 10) : event.id;
+      const isIncluded = assignedEventIds.includes(eventId);
+      console.log(`Event ${event.id} (${event.title}) included: ${isIncluded}`);
+      return isIncluded;
+    });
+    
+    console.log("Found assigned events:", assignedEvents.length);
+    
+    // Convert to tasks format
+    const operatorTasks = assignedEvents.map((event: Event): OperatorTask => {
+      // Create shifts based on start and end times
+      const startTime = format(event.startDate, "HH:mm");
+      const endTime = format(event.endDate, "HH:mm");
+      
+      let shifts = [`${startTime} - ${endTime}`];
+      
+      // If the event has break times, add an additional shift
+      if (event.breakStartTime && event.breakEndTime) {
+        shifts = [
+          `${startTime} - ${event.breakStartTime}`,
+          `${event.breakEndTime} - ${endTime}`
+        ];
+      }
+      
+      return {
+        eventId: event.id,
+        title: event.title,
+        startDate: event.startDate,
+        endDate: event.endDate,
+        location: event.location,
+        address: event.address,
+        client: event.client,
+        shifts
+      };
+    });
+    
+    setTasks(operatorTasks);
+    
+    // Sort tasks by date
+    operatorTasks.sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
+    
+    // Categorize tasks
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // Find today's task - important: need to check if the date is today, not just equal to today
+    const todayTasks = operatorTasks.filter(task => {
+      const taskDate = new Date(task.startDate);
+      taskDate.setHours(0, 0, 0, 0);
+      return taskDate.getTime() === today.getTime();
+    });
+    
+    console.log(`Today's date: ${today.toISOString()}, found ${todayTasks.length} tasks for today`);
+    todayTasks.forEach((task, i) => {
+      console.log(`Today's task ${i+1}: ${task.title}, date: ${task.startDate.toISOString()}`);
+    });
+    
+    // Find upcoming tasks (future but not today)
+    const upcoming = operatorTasks.filter(task => {
+      const taskDate = new Date(task.startDate);
+      taskDate.setHours(0, 0, 0, 0);
+      return taskDate > today;
+    });
+    
+    // Find past tasks
+    const past = operatorTasks.filter(task => {
+      const taskDate = new Date(task.endDate);
+      taskDate.setHours(0, 0, 0, 0);
+      return taskDate < today;
+    });
+    
+    setTodayTask(todayTasks.length > 0 ? todayTasks[0] : null);
+    setUpcomingTasks(upcoming);
+    setPastTasks(past);
+    
+    console.log("Tasks processed:", {
+      today: todayTasks.length,
+      upcoming: upcoming.length,
+      past: past.length
+    });
+  };
 
   // Load tasks on mount and when user changes
   useEffect(() => {

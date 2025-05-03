@@ -1,8 +1,7 @@
 
 import { safeLocalStorage } from "@/utils/fileUtils";
 import { CheckRecord } from "../types";
-
-const ATTENDANCE_RECORDS_KEY = "attendance_records";
+import { ATTENDANCE_RECORDS_KEY } from "@/utils/operatorUtils";
 
 export const getAttendanceRecords = (): CheckRecord[] => {
   const records = safeLocalStorage.getItem(ATTENDANCE_RECORDS_KEY);

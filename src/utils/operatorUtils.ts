@@ -16,7 +16,7 @@ export const DEFAULT_OPERATORS: Operator[] = [
     email: "mario.rossi@example.com",
     phone: "+39 123 456 7890",
     status: "active",
-    assignedEvents: [],
+    assignedEvents: [1],
   },
   {
     id: 2,
@@ -25,6 +25,14 @@ export const DEFAULT_OPERATORS: Operator[] = [
     phone: "+39 098 765 4321",
     status: "inactive",
     assignedEvents: [],
+  },
+  {
+    id: 3,
+    name: "Marco",
+    email: "marco@operator.com",
+    phone: "+39 333 444 5555",
+    status: "active",
+    assignedEvents: [1, 2],
   },
 ];
 
@@ -96,4 +104,14 @@ export const saveEvents = (events: Event[]): void => {
  */
 export const generateNewOperatorId = (operators: Operator[]): number => {
   return Math.max(0, ...operators.map((op) => op.id)) + 1;
+};
+
+/**
+ * Find operator by email (case insensitive)
+ */
+export const findOperatorByEmail = (operators: Operator[], email: string): Operator | null => {
+  if (!email) return null;
+  
+  const normalizedEmail = email.toLowerCase();
+  return operators.find(op => op.email && op.email.toLowerCase() === normalizedEmail) || null;
 };
