@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Event, PayrollCalculation } from "../types";
 import { processEvents, processPayrollCalculations } from "../utils/payrollCalculations";
