@@ -1,4 +1,3 @@
-
 import { Operator } from "@/types/operator";
 import { Event } from "@/types/event";
 import { safeLocalStorage } from "@/utils/fileUtils";
@@ -110,17 +109,27 @@ export const generateNewOperatorId = (operators: Operator[]): number => {
  * Find operator by email (case insensitive) or by name as fallback
  */
 export const findOperatorByEmail = (operators: Operator[], email: string | undefined): Operator | null => {
-  if (!email) return null;
+  if (!email) {
+    console.log("No email provided to findOperatorByEmail");
+    return null;
+  }
   
-  const normalizedEmail = email.toLowerCase();
-  // Prima cerca per email (case insensitive)
-  const operatorByEmail = operators.find(op => op.email && op.email.toLowerCase() === normalizedEmail);
+  const normalizedEmail = email.toLowerCase().trim();
+  console.log(`Finding operator by email: ${normalizedEmail}`);
+  console.log(`Available operators: ${operators.map(op => op.name).join(', ')}`);
+  console.log(`Available emails: ${operators.map(op => op.email || 'no email').join(', ')}`);
+  
+  // First search by email (case insensitive)
+  const operatorByEmail = operators.find(op => 
+    op.email && op.email.toLowerCase().trim() === normalizedEmail
+  );
   
   if (operatorByEmail) {
-    console.log(`Trovato operatore per email: ${operatorByEmail.name}`);
+    console.log(`Found operator by email: ${operatorByEmail.name}`);
     return operatorByEmail;
   }
   
+  console.log("No operator found by email");
   return null;
 };
 

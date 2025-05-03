@@ -12,7 +12,8 @@ import {
   loadOperators, 
   findOperatorByEmail,
   findOperatorByNameOrId,
-  saveOperators
+  saveOperators,
+  ATTENDANCE_RECORDS_KEY
 } from "@/utils/operatorUtils";
 
 interface OperatorTask {
@@ -64,6 +65,10 @@ export const useOperatorTasks = (): UseOperatorTasksResult => {
       if (!eventsData) {
         console.log("No events data found");
         setLoading(false);
+        setTasks([]);
+        setTodayTask(null);
+        setUpcomingTasks([]);
+        setPastTasks([]);
         setError("Nessun evento trovato");
         return;
       }
@@ -82,27 +87,28 @@ export const useOperatorTasks = (): UseOperatorTasksResult => {
       console.log("All operators found:", operators.length);
       console.log("Current user:", user);
       
-      // Prima cerca per email
+      // First try to find by email
       let currentOperator = findOperatorByEmail(operators, user.email);
       
-      // Se non trova per email, cerca per nome
+      // If not found by email, try finding by name
       if (!currentOperator && user.name) {
         console.log("No email match, trying name match for:", user.name);
         currentOperator = findOperatorByNameOrId(operators, user.name);
         
-        // Se trova per nome, aggiorna l'email per i futuri login
+        // If found by name, update the email for future logins
         if (currentOperator && user.email && (!currentOperator.email || currentOperator.email !== user.email)) {
-          console.log(`Aggiorno email dell'operatore ${currentOperator.name} da ${currentOperator.email || 'vuoto'} a ${user.email}`);
+          console.log(`Updating operator ${currentOperator.name}'s email from ${currentOperator.email || 'empty'} to ${user.email}`);
           currentOperator.email = user.email;
-          // Salva operatori aggiornati
+          // Save updated operators
           saveOperators(operators);
         }
       }
       
+      // If still not found, show a friendlier error message
       if (!currentOperator) {
         console.log("Current operator not found for user:", user);
         setLoading(false);
-        setError("Operatore non trovato");
+        setError(`Operatore non trovato per ${user.name || user.email}. Controlla che l'operatore sia stato registrato.`);
         return;
       }
       
@@ -116,10 +122,10 @@ export const useOperatorTasks = (): UseOperatorTasksResult => {
         setTodayTask(null);
         setUpcomingTasks([]);
         setPastTasks([]);
+        setError("Non hai eventi assegnati");
         return;
       }
       
-      // Estrai funzionalità in una funzione separata
       processOperatorEvents(currentOperator, events);
       
     } catch (error) {
@@ -131,7 +137,7 @@ export const useOperatorTasks = (): UseOperatorTasksResult => {
     }
   }, [user]);
   
-  // Funzione separata per elaborare gli eventi assegnati
+  // Function to process operator's assigned events
   const processOperatorEvents = (currentOperator: Operator, events: Event[]) => {
     console.log("Processing events for operator:", currentOperator.name);
     console.log("Assigned event IDs:", currentOperator.assignedEvents);
@@ -145,7 +151,7 @@ export const useOperatorTasks = (): UseOperatorTasksResult => {
     const assignedEvents = events.filter((event: any) => {
       const eventId = typeof event.id === 'string' ? parseInt(event.id, 10) : event.id;
       const isIncluded = assignedEventIds.includes(eventId);
-      console.log(`Event ${event.id} (${event.title}) included: ${isIncluded}`);
+      console.log(`Event ${event.id} (${event.title}) included for ${currentOperator.name}: ${isIncluded}`);
       return isIncluded;
     });
     
@@ -188,7 +194,7 @@ export const useOperatorTasks = (): UseOperatorTasksResult => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
-    // Find today's task - important: need to check if the date is today, not just equal to today
+    // Find today's task
     const todayTasks = operatorTasks.filter(task => {
       const taskDate = new Date(task.startDate);
       taskDate.setHours(0, 0, 0, 0);
