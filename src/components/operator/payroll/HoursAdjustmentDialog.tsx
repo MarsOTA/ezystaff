@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -19,17 +19,17 @@ const HoursAdjustmentDialog: React.FC<HoursAdjustmentDialogProps> = ({
   selectedEvent,
   onSubmit,
 }) => {
-  const [actualHours, setActualHours] = useState<string>("0");
+  const [actualHours, setActualHours] = useState<string>("");
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (selectedEvent) {
-      // If actual_hours is defined, use it; otherwise use the netHours
-      if (selectedEvent.actual_hours !== undefined && selectedEvent.actual_hours !== null) {
+      // If actual_hours is defined, use it; otherwise use the netHours (estimated - break)
+      if (selectedEvent.actual_hours !== undefined) {
         setActualHours(selectedEvent.actual_hours.toString());
-      } else if (selectedEvent.netHours !== undefined && selectedEvent.netHours !== null) {
+      } else if (selectedEvent.netHours) {
         setActualHours(selectedEvent.netHours.toString());
       } else {
-        setActualHours("0");
+        setActualHours("");
       }
     }
   }, [selectedEvent]);
@@ -42,19 +42,14 @@ const HoursAdjustmentDialog: React.FC<HoursAdjustmentDialogProps> = ({
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return "";
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleString('it-IT', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-    } catch (error) {
-      console.error("Error formatting date:", error);
-      return "";
-    }
+    const date = new Date(dateString);
+    return date.toLocaleString('it-IT', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   return (
@@ -85,9 +80,7 @@ const HoursAdjustmentDialog: React.FC<HoursAdjustmentDialogProps> = ({
               <div className="grid grid-cols-2 items-center gap-4">
                 <Label htmlFor="estimatedHours">Ore Stimate:</Label>
                 <div id="estimatedHours" className="font-medium">
-                  {(selectedEvent.grossHours !== undefined && selectedEvent.grossHours !== null) 
-                    ? selectedEvent.grossHours.toFixed(2) 
-                    : "0.00"}
+                  {selectedEvent.grossHours.toFixed(2)}
                 </div>
               </div>
               <div className="grid grid-cols-2 items-center gap-4">

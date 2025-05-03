@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Layout from "@/components/Layout";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
-import { Event } from "@/types/event";
+import { Event } from "./Events";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,

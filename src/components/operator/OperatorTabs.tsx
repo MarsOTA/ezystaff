@@ -3,7 +3,6 @@ import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { User, FileText, DollarSign } from "lucide-react";
 import { ExtendedOperator } from "@/types/operator";
-import { Event } from "@/types/event";
 import PersonalInfoTab from "@/components/operator/PersonalInfoTab";
 import ContractTab from "@/components/operator/ContractTab";
 import PayrollTab from "@/components/operator/PayrollTab";
@@ -39,7 +38,6 @@ interface OperatorTabsProps {
   setNetSalary: (value: string) => void;
   onTemplateUpload?: (file: File | null) => void;
   templateFile?: File | null;
-  assignedEvents?: Event[];
 }
 
 const OperatorTabs: React.FC<OperatorTabsProps> = ({
@@ -72,8 +70,7 @@ const OperatorTabs: React.FC<OperatorTabsProps> = ({
   netSalary,
   setNetSalary,
   onTemplateUpload,
-  templateFile,
-  assignedEvents = []
+  templateFile
 }) => {
   return (
     <Tabs defaultValue="info" value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -132,7 +129,7 @@ const OperatorTabs: React.FC<OperatorTabsProps> = ({
       </TabsContent>
 
       <TabsContent value="payroll" className="space-y-6 mt-6">
-        <PayrollTab operator={operator} assignedEvents={assignedEvents} />
+        <PayrollTab operator={operator} />
       </TabsContent>
     </Tabs>
   );

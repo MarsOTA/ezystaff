@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, Edit } from "lucide-react";
 import { Client } from "./Clients";
-import { Event } from "@/types/event";
+import { Event } from "./Events";
 import ClientInfo from "@/components/client/ClientInfo";
 import ClientEvents from "@/components/client/ClientEvents";
 import { loadClientById, loadClientEvents } from "@/utils/client";

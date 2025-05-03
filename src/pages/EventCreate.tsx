@@ -16,6 +16,7 @@ import {
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 
+// Custom hooks and components
 import { useEventForm } from "@/hooks/useEventForm";
 import { handleLocationSearch, handleAddressSearch, validateEventForm, saveEvent } from "@/utils/eventUtils";
 import GooglePlacesScript from "@/components/event/GooglePlacesScript";
@@ -24,6 +25,7 @@ import EventPersonnelSelect from "@/components/event/EventPersonnelSelect";
 import EventDateTimeSelector from "@/components/event/EventDateTimeSelector";
 import EventHoursAndCosts from "@/components/event/EventHoursAndCosts";
 
+// Use the type declaration from eventUtils.ts instead of defining it here again
 const EventCreate = () => {
   const navigate = useNavigate();
   const locationHook = useLocation();
@@ -37,7 +39,6 @@ const EventCreate = () => {
     clients,
     isEditMode,
     handlePersonnelChange,
-    handleStaffCountChange,
     locationSuggestions,
     setLocationSuggestions,
     addressSuggestions,
@@ -192,9 +193,7 @@ const EventCreate = () => {
             
             <EventPersonnelSelect 
               selectedPersonnel={formData.selectedPersonnel}
-              staffCount={formData.staffCount || {}}
               onPersonnelChange={handlePersonnelChange}
-              onStaffCountChange={handleStaffCountChange}
             />
             
             <EventDateTimeSelector 

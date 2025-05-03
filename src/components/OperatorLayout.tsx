@@ -3,7 +3,7 @@ import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { LogOut, Briefcase, User, Calendar } from "lucide-react";
+import { LogOut, Briefcase, User } from "lucide-react";
 
 const OperatorLayout = ({ children }: { children: React.ReactNode }) => {
   const { logout, user } = useAuth();
@@ -26,14 +26,6 @@ const OperatorLayout = ({ children }: { children: React.ReactNode }) => {
               >
                 <Briefcase className="mr-2 h-4 w-4" />
                 Task
-              </Button>
-            </Link>
-            <Link to="/operator/attendance">
-              <Button 
-                variant={location.pathname === "/operator/attendance" ? "default" : "outline"}
-              >
-                <Calendar className="mr-2 h-4 w-4" />
-                Presenze
               </Button>
             </Link>
             <Link to="/operator/profile">

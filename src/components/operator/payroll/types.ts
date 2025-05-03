@@ -1,3 +1,4 @@
+
 // Define the event type
 export interface Event {
   id: number;
@@ -49,15 +50,3 @@ export const attendanceOptions = [
   { value: "late", label: "In ritardo", color: "bg-yellow-100 text-yellow-800" },
   { value: "absent", label: "Assente", color: "bg-red-100 text-red-800" }
 ];
-
-export interface CheckRecord {
-  operatorId: string;
-  timestamp: string;
-  type: "check-in" | "check-out";
-  location: {
-    latitude: number;
-    longitude: number;
-    accuracy: number;
-  };
-  eventId: number;
-}

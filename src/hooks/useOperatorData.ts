@@ -1,15 +1,13 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { ExtendedOperator, OPERATORS_STORAGE_KEY } from "@/types/operator";
 import { safeLocalStorage } from "@/utils/fileUtils";
-import { EVENTS_STORAGE_KEY } from "@/utils/operatorUtils";
-import { Event } from "@/types/event";
 
 export const useOperatorData = (operatorId: string | undefined) => {
   const navigate = useNavigate();
   const [operator, setOperator] = useState<ExtendedOperator | null>(null);
-  const [assignedEvents, setAssignedEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [imagePreviewUrls, setImagePreviewUrls] = useState<Record<string, string>>({});
   
@@ -24,11 +22,8 @@ export const useOperatorData = (operatorId: string | undefined) => {
   const [netSalary, setNetSalary] = useState("");
 
   useEffect(() => {
-    const loadOperatorAndEvents = async () => {
+    const loadOperator = () => {
       try {
-        setLoading(true);
-        
-        // Load operator data
         const storedOperators = safeLocalStorage.getItem(OPERATORS_STORAGE_KEY);
         if (!storedOperators) {
           toast.error("Nessun operatore trovato");
@@ -110,33 +105,6 @@ export const useOperatorData = (operatorId: string | undefined) => {
         
         setOperator(extendedOperator);
         
-        // Load assigned events if any
-        if (extendedOperator.assignedEvents && extendedOperator.assignedEvents.length > 0) {
-          const eventsData = safeLocalStorage.getItem(EVENTS_STORAGE_KEY);
-          if (eventsData) {
-            const allEvents = JSON.parse(eventsData);
-            // Convert event IDs to ensure matching
-            const assignedEventIds = extendedOperator.assignedEvents.map((id) => 
-              typeof id === 'string' ? parseInt(id, 10) : id
-            );
-            
-            // Filter and convert dates
-            const operatorEvents = allEvents
-              .filter((event: any) => {
-                const eventId = typeof event.id === 'string' ? parseInt(event.id, 10) : event.id;
-                return assignedEventIds.includes(eventId);
-              })
-              .map((event: any) => ({
-                ...event,
-                startDate: new Date(event.startDate),
-                endDate: new Date(event.endDate)
-              }));
-            
-            setAssignedEvents(operatorEvents);
-            console.log(`Loaded ${operatorEvents.length} events for operator ${operatorId}`);
-          }
-        }
-        
         const previews: Record<string, string> = {};
         if (extendedOperator.resumeFile) previews.resumeFile = extendedOperator.resumeFile;
         if (extendedOperator.idCardFrontImage) previews.idCardFrontImage = extendedOperator.idCardFrontImage;
@@ -174,13 +142,12 @@ export const useOperatorData = (operatorId: string | undefined) => {
       }
     };
     
-    loadOperatorAndEvents();
+    loadOperator();
   }, [operatorId, navigate]);
 
   return {
     operator,
     setOperator,
-    assignedEvents,
     loading,
     imagePreviewUrls,
     setImagePreviewUrls,

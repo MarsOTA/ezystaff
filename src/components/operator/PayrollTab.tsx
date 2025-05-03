@@ -1,119 +1,78 @@
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState } from "react";
 import { ExtendedOperator } from "@/types/operator";
-import { Event } from "@/types/event";
-import { CheckRecord } from "./payroll/types";
+import { attendanceOptions, PayrollCalculation } from "./payroll/types";
 import { exportToCSV } from "./payroll/payrollUtils";
 import { usePayrollData } from "./payroll/hooks/usePayrollData";
-import { useHoursAdjustment } from "./payroll/hooks/useHoursAdjustment";
-import { getAttendanceRecords, setupAttendanceListener } from "./payroll/api/attendanceApi";
+import PayrollSummary from "./payroll/PayrollSummary";
+import PayrollCharts from "./payroll/PayrollCharts";
+import PayrollTable from "./payroll/PayrollTable";
 import PayrollHeader from "./payroll/PayrollHeader";
 import HoursAdjustmentDialog from "./payroll/HoursAdjustmentDialog";
-import PayrollTabsManager from "./payroll/components/PayrollTabsManager";
-import PayrollLoading from "./payroll/components/PayrollLoading";
+import { toast } from "sonner";
 
-interface PayrollTabProps {
-  operator: ExtendedOperator;
-  assignedEvents: Event[];
-}
-
-const PayrollTab: React.FC<PayrollTabProps> = ({ operator, assignedEvents }) => {
-  const [activeTab, setActiveTab] = useState<string>("payroll");
-  const [attendanceRecords, setAttendanceRecords] = useState<CheckRecord[]>([]);
-
+const PayrollTab: React.FC<{ operator: ExtendedOperator }> = ({ operator }) => {
+  const [isHoursDialogOpen, setIsHoursDialogOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<PayrollCalculation | null>(null);
+  
   const {
     events,
     calculations,
     summaryData,
     loading,
-    updateActualHours,
-    updateMealAllowance,
-    updateTravelAllowance,
-    refresh
+    updateActualHours
   } = usePayrollData(operator);
-
-  const {
-    isHoursDialogOpen,
-    setIsHoursDialogOpen,
-    selectedEvent,
-    openHoursDialog,
-    handleHoursSubmit
-  } = useHoursAdjustment(updateActualHours);
-
-  const loadAttendanceRecords = useCallback(() => {
-    const records = getAttendanceRecords();
-    const operatorRecords = records.filter(record => record.operatorId === operator.email);
-    setAttendanceRecords(operatorRecords);
-  }, [operator.email]);
-
-  useEffect(() => {
-    loadAttendanceRecords();
-    
-    // Set up listener for attendance changes (when operators check in/out)
-    const removeListener = setupAttendanceListener(() => {
-      console.log("Attendance records updated, refreshing data...");
-      loadAttendanceRecords();
-      refresh();
-    });
-    
-    // Set up interval for periodic refreshes
-    const intervalId = setInterval(() => {
-      refresh();
-      loadAttendanceRecords();
-    }, 60000);
-    
-    // Clean up
-    return () => {
-      removeListener();
-      clearInterval(intervalId);
-    };
-  }, [operator.email, loadAttendanceRecords, refresh]);
-
-  // Listen for storage events (when another tab updates attendance)
-  useEffect(() => {
-    const handleStorageEvent = () => {
-      console.log("Storage event detected, refreshing attendance data...");
-      loadAttendanceRecords();
-      refresh();
-    };
-    
-    window.addEventListener('storage', handleStorageEvent);
-    
-    return () => {
-      window.removeEventListener('storage', handleStorageEvent);
-    };
-  }, [loadAttendanceRecords, refresh]);
-
+  
   const handleExportCSV = () => {
     exportToCSV(calculations, summaryData, operator.name);
   };
-
-  if (loading) {
-    return <PayrollLoading />;
-  }
-
+  
+  const openHoursDialog = (event: PayrollCalculation) => {
+    setSelectedEvent(event);
+    setIsHoursDialogOpen(true);
+  };
+  
+  const handleHoursSubmit = (eventId: number, actualHours: number) => {
+    if (actualHours < 0) {
+      toast.error("Le ore devono essere maggiori di zero");
+      return;
+    }
+    
+    const success = updateActualHours(eventId, actualHours);
+    if (success) {
+      setIsHoursDialogOpen(false);
+    }
+  };
+  
   return (
     <div className="space-y-6">
+      {/* Header */}
       <PayrollHeader 
         operatorName={operator.name}
         onExportCSV={handleExportCSV}
-        onRefresh={refresh}
       />
-
-      <PayrollTabsManager
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        calculations={calculations}
-        summaryData={summaryData}
-        loading={loading}
-        attendanceRecords={attendanceRecords}
-        events={events}
+      
+      {/* Summary Cards */}
+      <PayrollSummary 
+        summaryData={summaryData} 
+        eventCount={calculations.length}
+      />
+      
+      {/* Charts */}
+      <PayrollCharts 
+        calculations={calculations} 
+        totalCompensation={summaryData.totalCompensation} 
+      />
+      
+      {/* Event Table */}
+      <PayrollTable 
+        calculations={calculations} 
+        summaryData={summaryData} 
+        loading={loading} 
         onClientClick={openHoursDialog}
-        onMealAllowanceChange={updateMealAllowance}
-        onTravelAllowanceChange={updateTravelAllowance}
-        onRefresh={refresh}
       />
-
+      
+      {/* Hours Adjustment Dialog */}
       <HoursAdjustmentDialog
         isOpen={isHoursDialogOpen}
         onOpenChange={setIsHoursDialogOpen}

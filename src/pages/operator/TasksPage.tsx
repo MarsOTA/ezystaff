@@ -1,14 +1,12 @@
-
 import React, { useState, useEffect } from "react";
 import OperatorLayout from "@/components/OperatorLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, MapPin, Users, LogIn, LogOut, Loader2 } from "lucide-react";
+import { Calendar, Clock, MapPin, Users, Check, LogIn, LogOut, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { useOperatorTasks } from "@/hooks/useOperatorTasks";
+import { useAuth } from "@/contexts/AuthContext";
 import { safeLocalStorage } from "@/utils/fileUtils";
-import { ATTENDANCE_RECORDS_KEY } from "@/utils/operatorUtils";
 
 interface CheckRecord {
   operatorId: string;
@@ -22,8 +20,10 @@ interface CheckRecord {
   eventId: number;
 }
 
+const ATTENDANCE_RECORDS_KEY = "attendance_records";
+
 const TasksPage: React.FC = () => {
-  const { todayTask, loading, error, refreshTasks } = useOperatorTasks();
+  const { user } = useAuth();
   const [isCheckingIn, setIsCheckingIn] = useState(true);
   const [locationStatus, setLocationStatus] = useState("");
   const [loadingLocation, setLoadingLocation] = useState(false);
@@ -31,26 +31,43 @@ const TasksPage: React.FC = () => {
   const [locationAccuracy, setLocationAccuracy] = useState<number | null>(null);
   const [locationRetries, setLocationRetries] = useState(0);
   
+  // Mock event data - in a real application, this would be loaded from a backend
+  const mockEvent = {
+    id: 1,
+    title: "Milano Security Conference",
+    startDate: new Date("2025-04-15T09:00:00"),
+    endDate: new Date("2025-04-16T18:00:00"),
+    startTime: "09:00",
+    endTime: "18:00",
+    location: "Via Milano 123, Milano, MI",
+    shifts: ["Mattina (09:00-13:00)", "Pomeriggio (14:00-18:00)"]
+  };
+  
   useEffect(() => {
     // Check if there was a recent check-in to determine button state
     const attendanceRecords = getAttendanceRecords();
-    if (todayTask) {
-      const userRecords = attendanceRecords.filter(record => 
-        record.eventId === todayTask.eventId &&
-        new Date(record.timestamp).toDateString() === new Date().toDateString()
-      );
-      
-      if (userRecords.length > 0) {
-        const lastRecord = userRecords[userRecords.length - 1];
-        setIsCheckingIn(lastRecord.type === "check-out");
-        setLastCheckTime(new Date(lastRecord.timestamp));
-      }
+    const userRecords = attendanceRecords.filter(record => 
+      record.operatorId === user?.email && 
+      record.eventId === mockEvent.id &&
+      new Date(record.timestamp).toDateString() === new Date().toDateString()
+    );
+    
+    if (userRecords.length > 0) {
+      const lastRecord = userRecords[userRecords.length - 1];
+      setIsCheckingIn(lastRecord.type === "check-out");
+      setLastCheckTime(new Date(lastRecord.timestamp));
     }
-  }, [todayTask]);
+  }, [user]);
   
   const getAttendanceRecords = (): CheckRecord[] => {
     const records = safeLocalStorage.getItem(ATTENDANCE_RECORDS_KEY);
     return records ? JSON.parse(records) : [];
+  };
+  
+  const saveAttendanceRecord = (record: CheckRecord) => {
+    const records = getAttendanceRecords();
+    records.push(record);
+    safeLocalStorage.setItem(ATTENDANCE_RECORDS_KEY, JSON.stringify(records));
   };
   
   const getHighAccuracyPosition = (): Promise<GeolocationPosition> => {
@@ -66,7 +83,7 @@ const TasksPage: React.FC = () => {
   };
   
   const handleCheckAction = async () => {
-    if (!todayTask) return;
+    if (!user) return;
     
     setLoadingLocation(true);
     setLocationStatus("Rilevamento posizione in corso...");
@@ -109,13 +126,8 @@ const TasksPage: React.FC = () => {
       const type = isCheckingIn ? "check-in" : "check-out";
       const timestamp = new Date().toISOString();
       
-      // Get the user email from local storage if not available directly
-      const currentUserJson = safeLocalStorage.getItem("app_user");
-      const currentUser = currentUserJson ? JSON.parse(currentUserJson) : null;
-      const userEmail = currentUser?.email || "unknown@user.com";
-      
       const record: CheckRecord = {
-        operatorId: userEmail,
+        operatorId: user.email,
         timestamp,
         type,
         location: {
@@ -123,7 +135,7 @@ const TasksPage: React.FC = () => {
           longitude: position.coords.longitude,
           accuracy: position.coords.accuracy
         },
-        eventId: todayTask.eventId
+        eventId: mockEvent.id
       };
       
       saveAttendanceRecord(record);
@@ -143,23 +155,12 @@ const TasksPage: React.FC = () => {
         setLocationAccuracy(null);
       }, 5000);
       
-      // Dispatch an event to notify other tabs/windows
-      const storageEvent = new Event("storage");
-      window.dispatchEvent(storageEvent);
-      refreshTasks();
-      
     } catch (error) {
       setLoadingLocation(false);
       console.error("Error getting location:", error);
       toast.error("Errore nel rilevamento della posizione. Assicurati di aver concesso i permessi di geolocalizzazione.");
       setLocationStatus("Errore nel rilevamento della posizione");
     }
-  };
-  
-  const saveAttendanceRecord = (record: CheckRecord) => {
-    const records = getAttendanceRecords();
-    records.push(record);
-    safeLocalStorage.setItem(ATTENDANCE_RECORDS_KEY, JSON.stringify(records));
   };
 
   const renderLocationStatusIndicator = () => {
@@ -182,102 +183,37 @@ const TasksPage: React.FC = () => {
     );
   };
 
-  if (loading) {
-    return (
-      <OperatorLayout>
-        <div className="space-y-6">
-          <h1 className="text-2xl font-bold">Le tue attività di oggi</h1>
-          <div className="flex items-center justify-center p-8">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        </div>
-      </OperatorLayout>
-    );
-  }
-
-  if (error) {
-    return (
-      <OperatorLayout>
-        <div className="space-y-6">
-          <h1 className="text-2xl font-bold">Le tue attività di oggi</h1>
-          <Card className="shadow-md">
-            <CardContent className="pt-6 pb-6">
-              <div className="text-center py-8">
-                <p className="text-lg text-muted-foreground">{error}</p>
-                <Button onClick={refreshTasks} className="mt-4">
-                  Riprova a caricare
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </OperatorLayout>
-    );
-  }
-
-  if (!todayTask) {
-    return (
-      <OperatorLayout>
-        <div className="space-y-6">
-          <h1 className="text-2xl font-bold">Le tue attività di oggi</h1>
-          <Card className="shadow-md">
-            <CardContent className="pt-6 pb-6">
-              <div className="text-center py-8">
-                <p className="text-lg text-muted-foreground">Non hai eventi assegnati per oggi.</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </OperatorLayout>
-    );
-  }
-
   return (
     <OperatorLayout>
       <div className="space-y-6">
         <h1 className="text-2xl font-bold">Le tue attività di oggi</h1>
         <Card className="shadow-md">
           <CardHeader>
-            <CardTitle className="text-xl">{todayTask.title}</CardTitle>
+            <CardTitle className="text-xl">{mockEvent.title}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center space-x-2">
               <Calendar className="h-5 w-5 text-muted-foreground" />
               <span>
-                {format(todayTask.startDate, "dd/MM/yyyy")} - {format(todayTask.endDate, "dd/MM/yyyy")}
+                {format(mockEvent.startDate, "dd/MM/yyyy")} - {format(mockEvent.endDate, "dd/MM/yyyy")}
               </span>
             </div>
             <div className="flex items-center space-x-2">
               <Clock className="h-5 w-5 text-muted-foreground" />
               <span>
-                {format(todayTask.startDate, "HH:mm")} - {format(todayTask.endDate, "HH:mm")}
+                {mockEvent.startTime} - {mockEvent.endTime}
               </span>
             </div>
-            {todayTask.location && (
-              <div className="flex items-center space-x-2">
-                <MapPin className="h-5 w-5 text-muted-foreground" />
-                <span>{todayTask.location}</span>
-              </div>
-            )}
-            {todayTask.address && (
-              <div className="flex items-start space-x-2">
-                <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
-                <span>{todayTask.address}</span>
-              </div>
-            )}
-            <div className="flex items-start space-x-2">
-              <Users className="h-5 w-5 text-muted-foreground" />
-              <div className="flex flex-col">
-                <span className="font-medium">Cliente:</span>
-                <span>{todayTask.client}</span>
-              </div>
+            <div className="flex items-center space-x-2">
+              <MapPin className="h-5 w-5 text-muted-foreground" />
+              <span>{mockEvent.location}</span>
             </div>
             <div className="flex items-center space-x-2">
               <Users className="h-5 w-5 text-muted-foreground" />
               <div className="flex flex-col">
                 <span className="font-medium">Turni assegnati:</span>
                 <ul className="list-disc list-inside">
-                  {todayTask.shifts.map((shift, index) => (
+                  {mockEvent.shifts.map((shift, index) => (
                     <li key={index}>{shift}</li>
                   ))}
                 </ul>

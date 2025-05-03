@@ -1,12 +1,10 @@
 
 import { useState, useEffect } from "react";
-import { Event } from "@/types/event";
+import { Event } from "@/pages/Events";
 import { Client } from "@/pages/Clients";
 import { safeLocalStorage } from "@/utils/fileUtils";
-import { differenceInHours, addDays, isSameDay, differenceInDays } from "date-fns";
-import { EVENTS_STORAGE_KEY } from "@/utils/operatorUtils";
 
-// Local constant for clients storage
+export const EVENTS_STORAGE_KEY = "app_events_data";
 export const CLIENTS_STORAGE_KEY = "app_clients_data";
 
 export interface PlacePrediction {
@@ -26,7 +24,6 @@ export interface EventFormData {
   title: string;
   client: string;
   selectedPersonnel: string[];
-  staffCount: Record<string, number>;
   startDate: Date | undefined;
   endDate: Date | undefined;
   startTime: string;
@@ -48,7 +45,6 @@ export function useEventForm(eventId: string | null) {
     title: "",
     client: "",
     selectedPersonnel: [],
-    staffCount: {},
     startDate: new Date(),
     endDate: new Date(),
     startTime: "09:00",
@@ -69,6 +65,7 @@ export function useEventForm(eventId: string | null) {
   const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
   const [showAddressSuggestions, setShowAddressSuggestions] = useState(false);
   
+  // Load clients
   useEffect(() => {
     const storedClients = safeLocalStorage.getItem(CLIENTS_STORAGE_KEY);
     if (storedClients) {
@@ -84,6 +81,7 @@ export function useEventForm(eventId: string | null) {
     }
   }, []);
   
+  // Load event data in edit mode
   useEffect(() => {
     if (isEditMode) {
       try {
@@ -104,7 +102,6 @@ export function useEventForm(eventId: string | null) {
               title: eventToEdit.title,
               client: clientObject ? clientObject.id.toString() : "",
               selectedPersonnel: eventToEdit.personnelTypes,
-              staffCount: eventToEdit.staffCount,
               startDate: eventToEdit.startDate,
               endDate: eventToEdit.endDate,
               startTime: eventToEdit.startDate ? new Date(eventToEdit.startDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) : "09:00",
@@ -126,45 +123,7 @@ export function useEventForm(eventId: string | null) {
     }
   }, [eventId, isEditMode, clients]);
   
-  useEffect(() => {
-    if (formData.startDate && formData.endDate && formData.startTime && formData.endTime) {
-      try {
-        const [startHours, startMinutes] = formData.startTime.split(':').map(Number);
-        const [endHours, endMinutes] = formData.endTime.split(':').map(Number);
-        
-        const startDateTime = new Date(formData.startDate);
-        startDateTime.setHours(startHours, startMinutes, 0, 0);
-        
-        const endDateTime = new Date(formData.endDate);
-        endDateTime.setHours(endHours, endMinutes, 0, 0);
-        
-        const daysDiff = Math.ceil((endDateTime.getTime() - startDateTime.getTime()) / (1000 * 60 * 60 * 24));
-        
-        let hoursPerDay = 0;
-        if (startHours <= endHours) {
-          hoursPerDay = endHours - startHours + (endMinutes - startMinutes) / 60;
-        } else {
-          hoursPerDay = 24 - startHours + endHours + (endMinutes - startMinutes) / 60;
-        }
-        
-        let totalGrossHours = 0;
-        
-        if (isSameDay(startDateTime, endDateTime)) {
-          totalGrossHours = hoursPerDay;
-        } else {
-          totalGrossHours = daysDiff * hoursPerDay;
-        }
-        
-        setFormData(prev => ({
-          ...prev,
-          grossHours: totalGrossHours.toFixed(2)
-        }));
-      } catch (error) {
-        console.error("Error calculating gross hours:", error);
-      }
-    }
-  }, [formData.startDate, formData.endDate, formData.startTime, formData.endTime]);
-  
+  // Calculate net hours
   useEffect(() => {
     if (formData.grossHours) {
       const breakStart = formData.breakStartTime.split(':').map(Number);
@@ -175,55 +134,32 @@ export function useEventForm(eventId: string | null) {
       
       const breakDurationHours = (breakEndMinutes - breakStartMinutes) / 60;
       
-      let numberOfDays = 1;
-      if (formData.startDate && formData.endDate) {
-        numberOfDays = Math.max(1, differenceInDays(formData.endDate, formData.startDate) + 1);
-      }
-      
-      const totalBreakTime = breakDurationHours * numberOfDays;
-      
-      const netHoursValue = Math.max(0, Number(formData.grossHours) - totalBreakTime);
+      const netHoursValue = Math.max(0, Number(formData.grossHours) - breakDurationHours);
       
       setFormData(prev => ({
         ...prev,
         netHours: netHoursValue.toFixed(2)
       }));
     }
-  }, [formData.grossHours, formData.breakStartTime, formData.breakEndTime, formData.startDate, formData.endDate]);
+  }, [formData.grossHours, formData.breakStartTime, formData.breakEndTime]);
   
   const handlePersonnelChange = (personnelId: string) => {
     setFormData(prev => {
       const current = [...prev.selectedPersonnel];
-      const newStaffCount = { ...prev.staffCount };
-      
       if (current.includes(personnelId)) {
-        delete newStaffCount[personnelId];
         return {
           ...prev,
-          selectedPersonnel: current.filter((id) => id !== personnelId),
-          staffCount: newStaffCount
+          selectedPersonnel: current.filter((id) => id !== personnelId)
         };
       } else {
-        newStaffCount[personnelId] = 1;
         return {
           ...prev,
-          selectedPersonnel: [...current, personnelId],
-          staffCount: newStaffCount
+          selectedPersonnel: [...current, personnelId]
         };
       }
     });
   };
-
-  const handleStaffCountChange = (personnelId: string, count: number) => {
-    setFormData(prev => ({
-      ...prev,
-      staffCount: {
-        ...prev.staffCount,
-        [personnelId]: count
-      }
-    }));
-  };
-
+  
   const updateFormField = (field: keyof EventFormData, value: any) => {
     setFormData(prev => ({
       ...prev,
@@ -237,7 +173,6 @@ export function useEventForm(eventId: string | null) {
     clients,
     isEditMode,
     handlePersonnelChange,
-    handleStaffCountChange,
     locationSuggestions,
     setLocationSuggestions,
     addressSuggestions,
