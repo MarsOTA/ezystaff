@@ -1,74 +1,57 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import OperatorLayout from "@/components/OperatorLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, MapPin, Users, Check, LogIn, LogOut, Loader2 } from "lucide-react";
+import { Calendar, Clock, MapPin, Users, LogIn, LogOut, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { useAuth } from "@/contexts/AuthContext";
-import { safeLocalStorage } from "@/utils/fileUtils";
-
-interface CheckRecord {
-  operatorId: string;
-  timestamp: string;
-  type: "check-in" | "check-out";
-  location: {
-    latitude: number;
-    longitude: number;
-    accuracy: number;
-  };
-  eventId: number;
-}
-
-const ATTENDANCE_RECORDS_KEY = "attendance_records";
+import { useOperatorTasks, CheckRecord } from "@/hooks/useOperatorTasks";
 
 const TasksPage: React.FC = () => {
   const { user } = useAuth();
-  const [isCheckingIn, setIsCheckingIn] = useState(true);
-  const [locationStatus, setLocationStatus] = useState("");
+  const { tasks, loading: loadingTasks, error, getAttendanceRecords, saveAttendanceRecord } = useOperatorTasks();
   const [loadingLocation, setLoadingLocation] = useState(false);
-  const [lastCheckTime, setLastCheckTime] = useState<Date | null>(null);
+  const [locationStatus, setLocationStatus] = useState("");
   const [locationAccuracy, setLocationAccuracy] = useState<number | null>(null);
   const [locationRetries, setLocationRetries] = useState(0);
   
-  // Mock event data - in a real application, this would be loaded from a backend
-  const mockEvent = {
-    id: 1,
-    title: "Milano Security Conference",
-    startDate: new Date("2025-04-15T09:00:00"),
-    endDate: new Date("2025-04-16T18:00:00"),
-    startTime: "09:00",
-    endTime: "18:00",
-    location: "Via Milano 123, Milano, MI",
-    shifts: ["Mattina (09:00-13:00)", "Pomeriggio (14:00-18:00)"]
-  };
-  
-  useEffect(() => {
-    // Check if there was a recent check-in to determine button state
-    const attendanceRecords = getAttendanceRecords();
-    const userRecords = attendanceRecords.filter(record => 
-      record.operatorId === user?.email && 
-      record.eventId === mockEvent.id &&
-      new Date(record.timestamp).toDateString() === new Date().toDateString()
+  // If still loading or no tasks, show loading state
+  if (loadingTasks) {
+    return (
+      <OperatorLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="flex flex-col items-center">
+            <Loader2 className="h-8 w-8 animate-spin mb-2" />
+            <p>Caricamento attività...</p>
+          </div>
+        </div>
+      </OperatorLayout>
     );
-    
-    if (userRecords.length > 0) {
-      const lastRecord = userRecords[userRecords.length - 1];
-      setIsCheckingIn(lastRecord.type === "check-out");
-      setLastCheckTime(new Date(lastRecord.timestamp));
-    }
-  }, [user]);
+  }
   
-  const getAttendanceRecords = (): CheckRecord[] => {
-    const records = safeLocalStorage.getItem(ATTENDANCE_RECORDS_KEY);
-    return records ? JSON.parse(records) : [];
-  };
+  // If error or no tasks found, show error message
+  if (error || tasks.length === 0) {
+    return (
+      <OperatorLayout>
+        <div className="space-y-6">
+          <h1 className="text-2xl font-bold">Le tue attività di oggi</h1>
+          <Card className="shadow-md">
+            <CardContent className="pt-6">
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">
+                  {error || "Non ci sono attività programmate al momento."}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </OperatorLayout>
+    );
+  }
   
-  const saveAttendanceRecord = (record: CheckRecord) => {
-    const records = getAttendanceRecords();
-    records.push(record);
-    safeLocalStorage.setItem(ATTENDANCE_RECORDS_KEY, JSON.stringify(records));
-  };
+  // Get the first task from the list (main implementation works with one task)
+  const task = tasks[0];
   
   const getHighAccuracyPosition = (): Promise<GeolocationPosition> => {
     return new Promise((resolve, reject) => {
@@ -82,7 +65,7 @@ const TasksPage: React.FC = () => {
     });
   };
   
-  const handleCheckAction = async () => {
+  const handleCheckAction = async (task: typeof tasks[0]) => {
     if (!user) return;
     
     setLoadingLocation(true);
@@ -123,6 +106,7 @@ const TasksPage: React.FC = () => {
       position = await getHighAccuracyPosition();
       setLocationAccuracy(position.coords.accuracy);
       
+      const isCheckingIn = !task.isCheckedIn;
       const type = isCheckingIn ? "check-in" : "check-out";
       const timestamp = new Date().toISOString();
       
@@ -135,12 +119,10 @@ const TasksPage: React.FC = () => {
           longitude: position.coords.longitude,
           accuracy: position.coords.accuracy
         },
-        eventId: mockEvent.id
+        eventId: task.id
       };
       
       saveAttendanceRecord(record);
-      setIsCheckingIn(!isCheckingIn);
-      setLastCheckTime(new Date(timestamp));
       setLoadingLocation(false);
       
       // Show accuracy information in the success message
@@ -189,41 +171,43 @@ const TasksPage: React.FC = () => {
         <h1 className="text-2xl font-bold">Le tue attività di oggi</h1>
         <Card className="shadow-md">
           <CardHeader>
-            <CardTitle className="text-xl">{mockEvent.title}</CardTitle>
+            <CardTitle className="text-xl">{task.title}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center space-x-2">
               <Calendar className="h-5 w-5 text-muted-foreground" />
               <span>
-                {format(mockEvent.startDate, "dd/MM/yyyy")} - {format(mockEvent.endDate, "dd/MM/yyyy")}
+                {format(task.startDate, "dd/MM/yyyy")} 
+                {!task.endDate.toDateString().includes(task.startDate.toDateString()) && 
+                  ` - ${format(task.endDate, "dd/MM/yyyy")}`}
               </span>
             </div>
             <div className="flex items-center space-x-2">
               <Clock className="h-5 w-5 text-muted-foreground" />
               <span>
-                {mockEvent.startTime} - {mockEvent.endTime}
+                {task.startTime} - {task.endTime}
               </span>
             </div>
             <div className="flex items-center space-x-2">
               <MapPin className="h-5 w-5 text-muted-foreground" />
-              <span>{mockEvent.location}</span>
+              <span>{task.location}</span>
             </div>
             <div className="flex items-center space-x-2">
               <Users className="h-5 w-5 text-muted-foreground" />
               <div className="flex flex-col">
                 <span className="font-medium">Turni assegnati:</span>
                 <ul className="list-disc list-inside">
-                  {mockEvent.shifts.map((shift, index) => (
+                  {task.shifts.map((shift, index) => (
                     <li key={index}>{shift}</li>
                   ))}
                 </ul>
               </div>
             </div>
             
-            {lastCheckTime && (
+            {task.lastCheckTime && (
               <div className="bg-muted p-3 rounded-md text-sm">
-                <span className="font-medium">Ultimo {isCheckingIn ? "check-out" : "check-in"}:</span>{" "}
-                {format(lastCheckTime, "dd/MM/yyyy HH:mm:ss")}
+                <span className="font-medium">Ultimo {task.isCheckedIn ? "check-in" : "check-out"}:</span>{" "}
+                {format(task.lastCheckTime, "dd/MM/yyyy HH:mm:ss")}
               </div>
             )}
             
@@ -233,7 +217,7 @@ const TasksPage: React.FC = () => {
             <Button 
               size="lg" 
               className="w-full"
-              onClick={handleCheckAction}
+              onClick={() => handleCheckAction(task)}
               disabled={loadingLocation}
             >
               {loadingLocation ? (
@@ -241,7 +225,7 @@ const TasksPage: React.FC = () => {
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                   Rilevamento posizione...
                 </>
-              ) : isCheckingIn ? (
+              ) : !task.isCheckedIn ? (
                 <>
                   <LogIn className="mr-2 h-5 w-5" />
                   Check-in
