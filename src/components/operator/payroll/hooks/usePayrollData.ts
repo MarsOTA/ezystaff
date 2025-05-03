@@ -66,8 +66,7 @@ export const usePayrollData = (operator: ExtendedOperator) => {
         console.log("Loading events for operator ID:", operator.id);
         
         // Fetch events for this operator
-        // Convert operator.id to string to fix the type error
-        const { events: eventsData, calculations: calculationsData } = await fetchOperatorEvents(operator.id.toString());
+        const { events: eventsData, calculations: calculationsData } = await fetchOperatorEvents(operator.id);
         
         if (!eventsData || eventsData.length === 0) {
           console.log("No events found for operator ID:", operator.id);
