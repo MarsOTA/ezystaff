@@ -57,8 +57,8 @@ export const useOperatorTasks = () => {
             endDate: new Date(event.endDate),
             startTime: new Date(event.startDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             endTime: new Date(event.endDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            location: event.location || "No location specified",
-            shifts: event.shifts || ["Default shift"]
+            location: event.location || "Via Milano 123, Milano, MI", // Default location if none provided
+            shifts: event.shifts || ["Mattina (09:00-13:00)", "Pomeriggio (14:00-18:00)"] // Default shifts if none provided
           }));
         
         console.log("Operator tasks:", operatorTasks);

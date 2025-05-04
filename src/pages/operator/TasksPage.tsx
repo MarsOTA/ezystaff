@@ -8,7 +8,7 @@ import { useAttendance } from "@/hooks/useAttendance";
 const TasksPage: React.FC = () => {
   const { tasks, loading } = useOperatorTasks();
   
-  // If no tasks are available, use a mock event for demo purposes
+  // Se non ci sono attività disponibili, usa un evento mock per la dimostrazione
   const mockEvent = {
     id: 1,
     title: "Milano Security Conference",
