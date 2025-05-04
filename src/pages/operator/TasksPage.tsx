@@ -3,7 +3,7 @@ import React from "react";
 import OperatorLayout from "@/components/OperatorLayout";
 import TaskCard from "@/components/operator/tasks/TaskCard";
 import { useOperatorTasks } from "@/hooks/useOperatorTasks";
-import { useAttendance } from "@/hooks/useAttendance";
+import { useOperatorAttendance } from "@/hooks/useOperatorAttendance";
 
 const TasksPage: React.FC = () => {
   const { tasks, loading } = useOperatorTasks();
@@ -29,7 +29,7 @@ const TasksPage: React.FC = () => {
     lastCheckTime,
     locationAccuracy,
     handleCheckAction
-  } = useAttendance({ eventId: currentEvent.id });
+  } = useOperatorAttendance({ eventId: currentEvent.id });
 
   return (
     <OperatorLayout>

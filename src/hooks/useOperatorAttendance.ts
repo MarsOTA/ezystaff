@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
@@ -16,16 +15,13 @@ interface CheckRecord {
   eventId: number;
 }
 
-interface UseAttendanceProps {
+interface UseOperatorAttendanceProps {
   eventId: number;
 }
 
 const ATTENDANCE_RECORDS_KEY = "attendance_records";
 
-/**
- * @deprecated Use useOperatorAttendance hook instead
- */
-export const useAttendance = ({ eventId }: UseAttendanceProps) => {
+export const useOperatorAttendance = ({ eventId }: UseOperatorAttendanceProps) => {
   const { user } = useAuth();
   const [isCheckingIn, setIsCheckingIn] = useState(true);
   const [locationStatus, setLocationStatus] = useState("");
