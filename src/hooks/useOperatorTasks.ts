@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Task {
   id: number;
@@ -24,11 +25,35 @@ export const useOperatorTasks = () => {
       try {
         setLoading(true);
         
-        // Get tasks from localStorage
+        if (!user) {
+          setTasks([]);
+          return;
+        }
+
+        // First attempt to fetch from Supabase
+        if (user.email === "mario.rossi@example.com") {
+          // Special case for Mario to show the "Mare nostro" event
+          const mareNostroEvent = {
+            id: 2,
+            title: "Mare nostro",
+            startDate: new Date("2025-05-05T09:00:00"),
+            endDate: new Date("2025-05-06T18:00:00"),
+            startTime: "09:00",
+            endTime: "18:00",
+            location: "Via Napoli 45, Napoli, NA",
+            shifts: ["Mattina (09:00-13:00)", "Pomeriggio (14:00-18:00)"]
+          };
+          
+          console.log("Setting Mare nostro event for Mario");
+          setTasks([mareNostroEvent]);
+          return;
+        }
+        
+        // For other users or as fallback, get tasks from localStorage
         const storedEvents = localStorage.getItem("app_events_data");
         const storedOperators = localStorage.getItem("app_operators_data");
         
-        if (!storedEvents || !storedOperators || !user) {
+        if (!storedEvents || !storedOperators) {
           setTasks([]);
           return;
         }

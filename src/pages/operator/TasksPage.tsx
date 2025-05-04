@@ -12,8 +12,8 @@ const TasksPage: React.FC = () => {
   const mockEvent = {
     id: 1,
     title: "Milano Security Conference",
-    startDate: new Date("2025-04-15T09:00:00"),
-    endDate: new Date("2025-04-16T18:00:00"),
+    startDate: new Date("2025-05-05T09:00:00"),
+    endDate: new Date("2025-05-06T18:00:00"),
     startTime: "09:00",
     endTime: "18:00",
     location: "Via Milano 123, Milano, MI",
