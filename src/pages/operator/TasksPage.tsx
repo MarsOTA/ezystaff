@@ -2,10 +2,13 @@
 import React from "react";
 import OperatorLayout from "@/components/OperatorLayout";
 import TaskCard from "@/components/operator/tasks/TaskCard";
+import { useOperatorTasks } from "@/hooks/useOperatorTasks";
 import { useAttendance } from "@/hooks/useAttendance";
 
 const TasksPage: React.FC = () => {
-  // Mock event data - in a real application, this would be loaded from a backend
+  const { tasks, loading } = useOperatorTasks();
+  
+  // If no tasks are available, use a mock event for demo purposes
   const mockEvent = {
     id: 1,
     title: "Milano Security Conference",
@@ -16,7 +19,9 @@ const TasksPage: React.FC = () => {
     location: "Via Milano 123, Milano, MI",
     shifts: ["Mattina (09:00-13:00)", "Pomeriggio (14:00-18:00)"]
   };
-
+  
+  const currentEvent = tasks.length > 0 ? tasks[0] : mockEvent;
+  
   const {
     isCheckingIn,
     locationStatus,
@@ -24,22 +29,36 @@ const TasksPage: React.FC = () => {
     lastCheckTime,
     locationAccuracy,
     handleCheckAction
-  } = useAttendance({ eventId: mockEvent.id });
+  } = useAttendance({ eventId: currentEvent.id });
 
   return (
     <OperatorLayout>
       <div className="space-y-6">
         <h1 className="text-2xl font-bold">Le tue attività di oggi</h1>
         
-        <TaskCard 
-          event={mockEvent}
-          isCheckingIn={isCheckingIn}
-          loadingLocation={loadingLocation}
-          lastCheckTime={lastCheckTime}
-          locationStatus={locationStatus}
-          locationAccuracy={locationAccuracy}
-          onCheckAction={handleCheckAction}
-        />
+        {loading ? (
+          <div className="p-8 text-center">Caricamento attività...</div>
+        ) : tasks.length === 0 ? (
+          <TaskCard 
+            event={mockEvent}
+            isCheckingIn={isCheckingIn}
+            loadingLocation={loadingLocation}
+            lastCheckTime={lastCheckTime}
+            locationStatus={locationStatus}
+            locationAccuracy={locationAccuracy}
+            onCheckAction={handleCheckAction}
+          />
+        ) : (
+          <TaskCard 
+            event={currentEvent}
+            isCheckingIn={isCheckingIn}
+            loadingLocation={loadingLocation}
+            lastCheckTime={lastCheckTime}
+            locationStatus={locationStatus}
+            locationAccuracy={locationAccuracy}
+            onCheckAction={handleCheckAction}
+          />
+        )}
       </div>
     </OperatorLayout>
   );
