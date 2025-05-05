@@ -8,7 +8,7 @@ import { useOperatorAttendance } from "@/hooks/useOperatorAttendance";
 const TasksPage: React.FC = () => {
   const { tasks, loading } = useOperatorTasks();
   
-  // Se non ci sono attività disponibili, usa un evento mock per la dimostrazione
+  // Mock event for demonstration when no tasks are available
   const mockEvent = {
     id: 1,
     title: "Milano Security Conference",
@@ -20,7 +20,21 @@ const TasksPage: React.FC = () => {
     shifts: ["Mattina (09:00-13:00)", "Pomeriggio (14:00-18:00)"]
   };
   
-  const currentEvent = tasks.length > 0 ? tasks[0] : mockEvent;
+  // Select the most relevant event to display using proper prioritization
+  const today = new Date();
+  
+  // 1) Find event that includes today's date
+  const todayEvent = tasks.find(
+    (e) => e.startDate <= today && e.endDate >= today
+  );
+  
+  // 2) If no today event exists, find the first upcoming event sorted by start date
+  const upcomingEvent = tasks
+    .filter((e) => e.startDate > today)
+    .sort((a, b) => a.startDate.getTime() - b.startDate.getTime())[0];
+  
+  // Use today's event if available, otherwise upcoming event, finally fallback to mock
+  const currentEvent = todayEvent ?? upcomingEvent ?? mockEvent;
   
   const {
     isCheckingIn,

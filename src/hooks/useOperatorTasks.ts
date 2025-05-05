@@ -72,16 +72,28 @@ export const useOperatorTasks = () => {
           return;
         }
         
+        // Convert assignedEvents to numbers if they are strings to ensure proper comparison
+        const normalizedAssignedEvents = currentOperator.assignedEvents.map((id: any) => Number(id));
+        
         // Get events assigned to this operator
         const operatorTasks = events
-          .filter((event: any) => currentOperator.assignedEvents.includes(event.id))
+          .filter((event: any) => normalizedAssignedEvents.includes(Number(event.id)))
           .map((event: any) => ({
-            id: event.id,
+            id: Number(event.id),
             title: event.title,
             startDate: new Date(event.startDate),
             endDate: new Date(event.endDate),
-            startTime: new Date(event.startDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            endTime: new Date(event.endDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            // Format times with consistent 24-hour format
+            startTime: new Date(event.startDate).toLocaleTimeString([], { 
+              hour: '2-digit', 
+              minute: '2-digit',
+              hour12: false 
+            }),
+            endTime: new Date(event.endDate).toLocaleTimeString([], { 
+              hour: '2-digit', 
+              minute: '2-digit',
+              hour12: false 
+            }),
             location: event.location || "Via Roma 123, Milano, MI", // Improved default location
             shifts: event.shifts || ["Mattina (09:00-13:00)", "Pomeriggio (14:00-18:00)"] // Default shifts
           }));
