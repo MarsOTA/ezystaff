@@ -1,10 +1,10 @@
-
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { safeLocalStorage } from "@/utils/fileUtils";
 import { Operator } from "@/types/operator";
 import { Event } from "@/pages/Events";
+import { getOperators, saveOperators } from "@/utils/operatorUtils";
 
 export const EVENTS_STORAGE_KEY = "app_events_data";
 export const OPERATORS_STORAGE_KEY = "app_operators_data";
@@ -47,17 +47,15 @@ export const useOperators = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const storedOperators = safeLocalStorage.getItem(OPERATORS_STORAGE_KEY);
-    if (storedOperators) {
-      try {
-        setOperators(JSON.parse(storedOperators));
-      } catch (error) {
-        console.error("Errore nel caricamento degli operatori:", error);
-      }
+    // Load operators from storage
+    const storedOperators = getOperators();
+    if (storedOperators.length > 0) {
+      setOperators(storedOperators);
     } else {
-      safeLocalStorage.setItem(OPERATORS_STORAGE_KEY, JSON.stringify(operators));
+      saveOperators(operators);
     }
     
+    // Load events from storage
     const storedEvents = safeLocalStorage.getItem(EVENTS_STORAGE_KEY);
     if (storedEvents) {
       try {
@@ -78,7 +76,7 @@ export const useOperators = () => {
   }, []);
   
   useEffect(() => {
-    safeLocalStorage.setItem(OPERATORS_STORAGE_KEY, JSON.stringify(operators));
+    saveOperators(operators);
   }, [operators]);
 
   const handleStatusToggle = (id: number) => {
