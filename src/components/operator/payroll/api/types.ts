@@ -75,5 +75,6 @@ export interface OperatorEventsResult {
 }
 
 // Re-export types from the main types.ts file to maintain compatibility
+// Using 'export type' for proper TypeScript isolatedModules compatibility
 import { Event, PayrollCalculation } from "../types";
-export { Event, PayrollCalculation };
+export type { Event, PayrollCalculation };
