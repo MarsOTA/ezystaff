@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { Event, PayrollCalculation, PayrollSummary } from "../types";
 import { ExtendedOperator } from "@/types/operator";
@@ -58,58 +58,17 @@ export const usePayrollData = (operator: ExtendedOperator) => {
     }
   };
 
-  // Load events and calculate payroll from Supabase or localStorage
-  useEffect(() => {
-    const loadEvents = async () => {
-      try {
-        setLoading(true);
-        console.log("Loading events for operator ID:", operator.id);
-        
-        // Fetch events for this operator
-        const { events: eventsData, calculations: calculationsData } = await fetchOperatorEvents(operator.id.toString());
-        
-        if (!eventsData || eventsData.length === 0) {
-          console.log("No events found for operator ID:", operator.id);
-          setEvents([]);
-          setCalculations([]);
-          setSummaryData({
-            totalGrossHours: 0,
-            totalNetHours: 0,
-            totalCompensation: 0,
-            totalAllowances: 0,
-            totalRevenue: 0
-          });
-          setLoading(false);
-          return;
-        }
-
-        // Process completed events and calculate actual hours
-        const processedCalculations = calculationsData.map(calc => {
-          if (calc.actual_hours === undefined) {
-            // For completed events without actual hours set, use estimated hours minus break
-            const grossHours = calc.grossHours;
-            const netHours = grossHours > 5 ? grossHours - 1 : grossHours;
-            return {
-              ...calc,
-              netHours,
-              actual_hours: netHours // Set actual_hours equal to netHours (estimated - break)
-            };
-          }
-          return calc;
-        });
-        
-        // Set events and calculations
-        setEvents(eventsData);
-        setCalculations(processedCalculations);
-        
-        // Calculate summary
-        const summary = calculateSummary(processedCalculations);
-        setSummaryData(summary);
-        
-      } catch (error) {
-        console.error("Errore nel caricamento degli eventi:", error);
-        toast.error("Errore nel caricamento degli eventi");
-        
+  // Function to reload payroll data
+  const loadEvents = useCallback(async () => {
+    try {
+      setLoading(true);
+      console.log("Loading events for operator ID:", operator.id);
+      
+      // Fetch events for this operator
+      const { events: eventsData, calculations: calculationsData } = await fetchOperatorEvents(operator.id.toString());
+      
+      if (!eventsData || eventsData.length === 0) {
+        console.log("No events found for operator ID:", operator.id);
         setEvents([]);
         setCalculations([]);
         setSummaryData({
@@ -119,19 +78,66 @@ export const usePayrollData = (operator: ExtendedOperator) => {
           totalAllowances: 0,
           totalRevenue: 0
         });
-      } finally {
-        setLoading(false);
+        return;
       }
-    };
-    
-    loadEvents();
+
+      // Process completed events and calculate actual hours
+      const processedCalculations = calculationsData.map(calc => {
+        if (calc.actual_hours === undefined) {
+          // For completed events without actual hours set, use estimated hours minus break
+          const grossHours = calc.grossHours;
+          const netHours = grossHours > 5 ? grossHours - 1 : grossHours;
+          return {
+            ...calc,
+            netHours,
+            actual_hours: netHours // Set actual_hours equal to netHours (estimated - break)
+          };
+        }
+        return calc;
+      });
+      
+      // Set events and calculations
+      setEvents(eventsData);
+      setCalculations(processedCalculations);
+      
+      // Calculate summary
+      const summary = calculateSummary(processedCalculations);
+      setSummaryData(summary);
+      
+    } catch (error) {
+      console.error("Errore nel caricamento degli eventi:", error);
+      toast.error("Errore nel caricamento degli eventi");
+      
+      setEvents([]);
+      setCalculations([]);
+      setSummaryData({
+        totalGrossHours: 0,
+        totalNetHours: 0,
+        totalCompensation: 0,
+        totalAllowances: 0,
+        totalRevenue: 0
+      });
+    } finally {
+      setLoading(false);
+    }
   }, [operator.id]);
+
+  // Load events and calculate payroll from Supabase or localStorage
+  useEffect(() => {
+    loadEvents();
+  }, [loadEvents]);
+
+  // Expose function to refresh data
+  const refreshData = useCallback(() => {
+    loadEvents();
+  }, [loadEvents]);
 
   return {
     events,
     calculations,
     summaryData,
     loading,
-    updateActualHours
+    updateActualHours,
+    refreshData
   };
 };

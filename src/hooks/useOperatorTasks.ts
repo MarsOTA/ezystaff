@@ -32,12 +32,12 @@ export const useOperatorTasks = () => {
 
         // First attempt to fetch from Supabase
         if (user.email === "mario.rossi@example.com") {
-          // Special case for Mario to show the "Mare nostro" event
+          // Special case for Mario to show the "Mare nostro" event with the correct address
           const mareNostroEvent = {
             id: 2,
             title: "Mare nostro",
             startDate: new Date("2025-05-05T09:00:00"),
-            endDate: new Date("2025-05-06T18:00:00"),
+            endDate: new Date("2025-05-05T18:00:00"),
             startTime: "09:00",
             endTime: "18:00",
             location: "Via Napoli 45, Napoli, NA",
@@ -82,8 +82,8 @@ export const useOperatorTasks = () => {
             endDate: new Date(event.endDate),
             startTime: new Date(event.startDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             endTime: new Date(event.endDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            location: event.location || "Via Milano 123, Milano, MI", // Default location if none provided
-            shifts: event.shifts || ["Mattina (09:00-13:00)", "Pomeriggio (14:00-18:00)"] // Default shifts if none provided
+            location: event.location || "Via Roma 123, Milano, MI", // Improved default location
+            shifts: event.shifts || ["Mattina (09:00-13:00)", "Pomeriggio (14:00-18:00)"] // Default shifts
           }));
         
         console.log("Operator tasks:", operatorTasks);

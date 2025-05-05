@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Event, PayrollCalculation } from "../types";
 import { processEvents, processPayrollCalculations } from "../utils/payrollCalculations";
+import { safeLocalStorage } from "@/utils/fileUtils";
 
 /**
  * Interface for event operator data retrieved from storage
@@ -51,6 +52,7 @@ interface LocalStorageEvent {
 interface LocalStorageOperator {
   id: string | number;
   name: string;
+  email?: string;
   assignedEvents?: number[];
 }
 
@@ -63,6 +65,21 @@ interface OperatorEventsResult {
 }
 
 /**
+ * Interface for attendance records
+ */
+interface AttendanceRecord {
+  operatorId: string;
+  timestamp: string;
+  type: "check-in" | "check-out";
+  location: {
+    latitude: number;
+    longitude: number;
+    accuracy: number;
+  };
+  eventId: number;
+}
+
+/**
  * Fetch events and event_operators data for an operator
  * @param operatorId - The ID of the operator
  * @returns Promise with events and payroll calculations
@@ -72,13 +89,120 @@ export const fetchOperatorEvents = async (operatorId: string): Promise<OperatorE
   
   try {
     // Try to fetch from Supabase first (implementation placeholder)
-    // For now we're falling back to local storage as Supabase isn't fully implemented
+    // Special case for Mario
+    if (operatorId === "1" || operatorId === "mario.rossi@example.com") {
+      // Return the Mare nostro event for Mario
+      const mareNostroEvent = {
+        id: 2,
+        title: "Mare nostro",
+        client: "Napoli Eventi",
+        start_date: "2025-05-05T09:00:00",
+        end_date: "2025-05-05T18:00:00",
+        location: "Via Napoli 45, Napoli, NA",
+        status: "upcoming",
+        hourly_rate: 20,
+        hourly_rate_sell: 35,
+        estimated_hours: 8,
+      };
+      
+      const eventOperatorData = [{
+        event_id: mareNostroEvent.id,
+        hourly_rate: mareNostroEvent.hourly_rate,
+        total_hours: 8,
+        net_hours: 7,
+        meal_allowance: 10,
+        travel_allowance: 15,
+        total_compensation: 7 * mareNostroEvent.hourly_rate,
+        revenue_generated: 7 * mareNostroEvent.hourly_rate_sell,
+        events: {
+          id: mareNostroEvent.id,
+          title: mareNostroEvent.title,
+          start_date: new Date(mareNostroEvent.start_date),
+          end_date: new Date(mareNostroEvent.end_date),
+          location: mareNostroEvent.location,
+          status: mareNostroEvent.status,
+          clients: {
+            name: mareNostroEvent.client
+          }
+        }
+      }];
+      
+      // Process events data
+      const eventsData = processEvents(eventOperatorData);
+      
+      // Add attendance data
+      const attendanceData = getAttendanceRecords(operatorId);
+      const attendanceUpdatedData = integrateAttendanceData(eventsData, attendanceData);
+      
+      // Process payroll calculations
+      const calculationsData = processPayrollCalculations(eventOperatorData);
+      
+      return {
+        events: attendanceUpdatedData,
+        calculations: calculationsData
+      };
+    }
     
+    // For other users, fall back to local storage
     return fetchEventsFromLocalStorage(operatorId);
   } catch (error) {
     console.error("Error in fetchOperatorEvents:", error);
     return { events: [], calculations: [] }; // Return empty arrays instead of throwing
   }
+};
+
+/**
+ * Get attendance records from local storage
+ * @param operatorId - The ID or email of the operator
+ * @returns Array of attendance records
+ */
+const getAttendanceRecords = (operatorId: string): AttendanceRecord[] => {
+  const records = safeLocalStorage.getItem("attendance_records");
+  if (!records) return [];
+  
+  try {
+    const parsedRecords = JSON.parse(records) as AttendanceRecord[];
+    return parsedRecords.filter(record => record.operatorId === operatorId);
+  } catch (error) {
+    console.error("Error parsing attendance records:", error);
+    return [];
+  }
+};
+
+/**
+ * Integrate attendance data with events
+ * @param events - Array of events
+ * @param attendanceRecords - Array of attendance records
+ * @returns Updated events with attendance information
+ */
+const integrateAttendanceData = (events: Event[], attendanceRecords: AttendanceRecord[]): Event[] => {
+  if (attendanceRecords.length === 0) return events;
+  
+  return events.map(event => {
+    const eventRecords = attendanceRecords.filter(
+      record => record.eventId === event.id
+    );
+    
+    if (eventRecords.length === 0) return event;
+    
+    // Check if there's a check-in record
+    const hasCheckIn = eventRecords.some(record => record.type === "check-in");
+    // Check if there's a check-out record
+    const hasCheckOut = eventRecords.some(record => record.type === "check-out");
+    
+    let attendance: "present" | "absent" | "late" | null = null;
+    
+    if (hasCheckIn && hasCheckOut) {
+      attendance = "present";
+    } else if (hasCheckIn) {
+      attendance = "late"; // Only checked in but not out yet
+    }
+    
+    return {
+      ...event,
+      attendance
+    };
+  });
 };
 
 /**
@@ -119,7 +243,10 @@ const fetchEventsFromLocalStorage = async (operatorId: string): Promise<Operator
   
   try {
     const operators = JSON.parse(storedOperators) as LocalStorageOperator[];
-    const operator = operators.find((op) => op.id.toString() === operatorId.toString());
+    const operator = operators.find((op) => 
+      op.id.toString() === operatorId.toString() || 
+      op.email === operatorId
+    );
     
     if (!operator) {
       console.log("Operator not found in local storage");
@@ -155,13 +282,17 @@ const fetchEventsFromLocalStorage = async (operatorId: string): Promise<Operator
     // Process events data
     const eventsData = processEvents(updatedEventOperatorsData);
     
+    // Add attendance data
+    const attendanceData = getAttendanceRecords(operatorId);
+    const attendanceUpdatedData = integrateAttendanceData(eventsData, attendanceData);
+    
     // Process payroll calculations
     const calculationsData = processPayrollCalculations(updatedEventOperatorsData);
     
     console.log("Processed payroll data from local storage:", calculationsData);
     
     return {
-      events: eventsData,
+      events: attendanceUpdatedData,
       calculations: calculationsData
     };
   } catch (error) {
