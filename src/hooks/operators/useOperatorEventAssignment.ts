@@ -53,6 +53,30 @@ export const useOperatorEventAssignment = (
     setIsAssignDialogOpen(false);
   };
 
+  const handleUnassignOperator = (operatorId: number, eventId: number) => {
+    setOperators((prev) =>
+      prev.map((op) => {
+        if (op.id === operatorId) {
+          const currentAssignedEvents = op.assignedEvents || [];
+          return {
+            ...op,
+            assignedEvents: currentAssignedEvents.filter(id => id !== eventId)
+          };
+        }
+        return op;
+      })
+    );
+    
+    const operator = operators.find(op => op.id === operatorId);
+    const event = events.find(e => e.id === eventId);
+    
+    if (operator && event) {
+      toast.success(`${operator.name} rimosso da "${event.title}"`);
+    } else {
+      toast.success("Operatore rimosso dall'evento");
+    }
+  };
+
   return {
     isAssignDialogOpen,
     setIsAssignDialogOpen,
@@ -60,6 +84,7 @@ export const useOperatorEventAssignment = (
     selectedEventId,
     setSelectedEventId,
     openAssignDialog,
-    handleAssignSubmit
+    handleAssignSubmit,
+    handleUnassignOperator
   };
 };

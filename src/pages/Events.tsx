@@ -1,16 +1,17 @@
-
 import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useNavigate } from "react-router-dom";
+import { format } from "date-fns";
+import { it } from "date-fns/locale";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Input } from "@/components/ui/input";
+import { Plus, X, Search } from "lucide-react";
+import EventTable from "@/components/events/EventTable";
+import EmptyEventCard from "@/components/events/EmptyEventCard";
+import EventDetailDialog from "@/components/events/EventDetailDialog";
+import { safeLocalStorage } from "@/utils/fileUtils";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import EventTable from "@/components/events/EventTable";
-import EventDetailDialog from "@/components/events/EventDetailDialog";
-import EmptyEventCard from "@/components/events/EmptyEventCard";
-import { safeLocalStorage } from "@/utils/fileUtils";
 
 export interface Event {
   id: number;
@@ -21,17 +22,17 @@ export interface Event {
   personnelTypes: string[];
   location?: string;
   address?: string;
+  status?: string;
   grossHours?: number;
+  netHours?: number;
   breakStartTime?: string;
   breakEndTime?: string;
-  netHours?: number;
   hourlyRateCost?: number;
   hourlyRateSell?: number;
-  status?: string;
+  personnelCounts?: Record<string, number>;
 }
 
-const EVENTS_STORAGE_KEY = "app_events_data";
-const OPERATORS_STORAGE_KEY = "app_operators_data";
+export const EVENTS_STORAGE_KEY = "app_events_data";
 
 const Events = () => {
   const navigate = useNavigate();
@@ -39,7 +40,8 @@ const Events = () => {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isClosingEvent, setIsClosingEvent] = useState(false);
-  
+  const [searchQuery, setSearchQuery] = useState("");
+
   useEffect(() => {
     const storedEvents = safeLocalStorage.getItem(EVENTS_STORAGE_KEY);
     
@@ -101,29 +103,21 @@ const Events = () => {
     }
   }, [events]);
 
-  const handleCreateEvent = () => {
-    navigate("/events/create");
-  };
-  
-  const handleEditEvent = (e: React.MouseEvent, eventId: number) => {
-    e.stopPropagation();
-    navigate(`/events/create?id=${eventId}`);
-  };
-  
-  const handleDeleteEvent = (e: React.MouseEvent, eventId: number) => {
-    e.stopPropagation();
-    const updatedEvents = events.filter(event => event.id !== eventId);
-    setEvents(updatedEvents);
-    safeLocalStorage.setItem(EVENTS_STORAGE_KEY, JSON.stringify(updatedEvents));
-    toast.success("Evento eliminato con successo");
-  };
-  
-  const handleShowDetails = (event: Event) => {
+  useEffect(() => {
+    const filteredEvents = events.filter(event => {
+      const titleMatch = event.title.toLowerCase().includes(searchQuery.toLowerCase());
+      const clientMatch = event.client.toLowerCase().includes(searchQuery.toLowerCase());
+      return titleMatch || clientMatch;
+    });
+    setEvents(filteredEvents);
+  }, [searchQuery, events]);
+
+  const handleEventClick = (event: Event) => {
     setSelectedEvent(event);
     setIsDetailsOpen(true);
   };
 
-  const handleCloseEvent = async (eventId: number) => {
+  const handleEventClose = async (eventId: number) => {
     setIsClosingEvent(true);
     
     try {
@@ -245,6 +239,32 @@ const Events = () => {
     }
   };
 
+  const handleCreateEvent = () => {
+    navigate("/events/create");
+  };
+
+  const handleEditEvent = (e: React.MouseEvent, eventId: number) => {
+    e.stopPropagation();
+    navigate(`/events/create?id=${eventId}`);
+  };
+
+  const handleDeleteEvent = (e: React.MouseEvent, eventId: number) => {
+    e.stopPropagation();
+    const updatedEvents = events.filter(event => event.id !== eventId);
+    setEvents(updatedEvents);
+    safeLocalStorage.setItem(EVENTS_STORAGE_KEY, JSON.stringify(updatedEvents));
+    toast.success("Evento eliminato con successo");
+  };
+
+  const handleShowDetails = (event: Event) => {
+    setSelectedEvent(event);
+    setIsDetailsOpen(true);
+  };
+
+  const formatDate = (date: Date) => {
+    return format(date, "d MMMM yyyy", { locale: it });
+  };
+
   const calculateHours = (startDate: Date, endDate: Date): number => {
     const diffMs = endDate.getTime() - startDate.getTime();
     const diffHours = diffMs / (1000 * 60 * 60);
@@ -265,6 +285,12 @@ const Events = () => {
             <Plus className="mr-2 h-4 w-4" />
             Crea nuovo evento
           </Button>
+          <Input
+            placeholder="Cerca evento"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="ml-2"
+          />
         </CardHeader>
         <CardContent>
           {events.length > 0 ? (

@@ -6,6 +6,7 @@ import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -13,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, FileText, Users } from "lucide-react";
 import { toast } from "sonner";
 
 // Custom hooks and components
@@ -21,17 +22,18 @@ import { useEventForm } from "@/hooks/useEventForm";
 import { handleLocationSearch, handleAddressSearch, validateEventForm, saveEvent } from "@/utils/eventUtils";
 import GooglePlacesScript from "@/components/event/GooglePlacesScript";
 import EventLocationFields from "@/components/event/EventLocationFields";
-import EventPersonnelSelect from "@/components/event/EventPersonnelSelect";
 import EventDateTimeSelector from "@/components/event/EventDateTimeSelector";
 import EventHoursAndCosts from "@/components/event/EventHoursAndCosts";
+import EventPlanner from "@/components/event/EventPlanner";
 
-// Use the type declaration from eventUtils.ts instead of defining it here again
 const EventCreate = () => {
   const navigate = useNavigate();
   const locationHook = useLocation();
   
   const eventId = new URLSearchParams(locationHook.search).get("id");
   const autocompleteService = useRef<any>(null);
+  const [activeTab, setActiveTab] = useState("details");
+  const [personnelCounts, setPersonnelCounts] = useState<Record<string, number>>({});
   
   const {
     formData,
@@ -48,6 +50,13 @@ const EventCreate = () => {
     showAddressSuggestions,
     setShowAddressSuggestions
   } = useEventForm(eventId);
+  
+  // Load personnel counts from form data if available
+  useEffect(() => {
+    if (formData.personnelCounts) {
+      setPersonnelCounts(formData.personnelCounts);
+    }
+  }, [formData.personnelCounts]);
   
   const handleGoogleMapsLoaded = () => {
     if (window.google && window.google.maps && window.google.maps.places) {
@@ -85,6 +94,16 @@ const EventCreate = () => {
     setShowAddressSuggestions(false);
   };
   
+  const handlePersonnelCountChange = (personnelId: string, count: number) => {
+    const newPersonnelCounts = {
+      ...personnelCounts,
+      [personnelId]: count
+    };
+    
+    setPersonnelCounts(newPersonnelCounts);
+    updateFormField('personnelCounts', newPersonnelCounts);
+  };
+  
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -94,7 +113,11 @@ const EventCreate = () => {
       return;
     }
 
-    const result = saveEvent(formData, eventId, clients);
+    // Include personnel counts in the save data
+    const result = saveEvent({
+      ...formData,
+      personnelCounts
+    }, eventId, clients);
     
     if (result.success) {
       toast.success(result.message);
@@ -129,97 +152,117 @@ const EventCreate = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="title">Titolo evento *</Label>
-              <Input 
-                id="title" 
-                placeholder="Inserisci titolo evento" 
-                value={formData.title}
-                onChange={(e) => updateFormField('title', e.target.value)}
-                required
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="client">Cliente *</Label>
-              <Select 
-                value={formData.client} 
-                onValueChange={(value) => updateFormField('client', value)}
-              >
-                <SelectTrigger id="client">
-                  <SelectValue placeholder="Seleziona cliente" />
-                </SelectTrigger>
-                <SelectContent>
-                  {clients.length > 0 ? (
-                    clients.map((clientItem) => (
-                      <SelectItem key={clientItem.id} value={clientItem.id.toString()}>
-                        {clientItem.companyName}
-                      </SelectItem>
-                    ))
-                  ) : (
-                    <SelectItem value="no-clients" disabled>
-                      Nessun cliente disponibile
-                    </SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
-              {clients.length === 0 && (
-                <p className="text-sm text-amber-500 mt-1">
-                  Non ci sono clienti disponibili. 
-                  <Button 
-                    variant="link" 
-                    className="px-1 py-0 h-auto text-sm" 
-                    onClick={() => navigate('/client-create')}
+          <form onSubmit={handleSubmit}>
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+              <TabsList className="grid grid-cols-2 w-full">
+                <TabsTrigger value="details" className="flex items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  Dettagli Evento
+                </TabsTrigger>
+                <TabsTrigger value="planner" className="flex items-center gap-2">
+                  <Users className="h-4 w-4" />
+                  Event Planner
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="details" className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="title">Titolo evento *</Label>
+                  <Input 
+                    id="title" 
+                    placeholder="Inserisci titolo evento" 
+                    value={formData.title}
+                    onChange={(e) => updateFormField('title', e.target.value)}
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="client">Cliente *</Label>
+                  <Select 
+                    value={formData.client} 
+                    onValueChange={(value) => updateFormField('client', value)}
                   >
-                    Crea un cliente
-                  </Button>
-                </p>
-              )}
-            </div>
-            
-            <EventLocationFields 
-              eventLocation={formData.eventLocation}
-              eventAddress={formData.eventAddress}
-              showLocationSuggestions={showLocationSuggestions}
-              showAddressSuggestions={showAddressSuggestions}
-              locationSuggestions={locationSuggestions}
-              addressSuggestions={addressSuggestions}
-              onLocationChange={handleLocationChange}
-              onAddressChange={handleAddressChange}
-              onLocationSelect={handleSelectLocationSuggestion}
-              onAddressSelect={handleSelectAddressSuggestion}
-            />
-            
-            <EventPersonnelSelect 
-              selectedPersonnel={formData.selectedPersonnel}
-              onPersonnelChange={handlePersonnelChange}
-            />
-            
-            <EventDateTimeSelector 
-              startDate={formData.startDate}
-              endDate={formData.endDate}
-              startTime={formData.startTime}
-              endTime={formData.endTime}
-              onStartDateChange={(date) => updateFormField('startDate', date)}
-              onEndDateChange={(date) => updateFormField('endDate', date)}
-              onStartTimeChange={(value) => updateFormField('startTime', value)}
-              onEndTimeChange={(value) => updateFormField('endTime', value)}
-            />
-            
-            <EventHoursAndCosts 
-              grossHours={formData.grossHours}
-              netHours={formData.netHours}
-              breakStartTime={formData.breakStartTime}
-              breakEndTime={formData.breakEndTime}
-              hourlyRateCost={formData.hourlyRateCost}
-              hourlyRateSell={formData.hourlyRateSell}
-              onGrossHoursChange={(value) => updateFormField('grossHours', value)}
-              onBreakStartTimeChange={(value) => updateFormField('breakStartTime', value)}
-              onBreakEndTimeChange={(value) => updateFormField('breakEndTime', value)}
-              onHourlyRateCostChange={(value) => updateFormField('hourlyRateCost', value)}
-              onHourlyRateSellChange={(value) => updateFormField('hourlyRateSell', value)}
-            />
+                    <SelectTrigger id="client">
+                      <SelectValue placeholder="Seleziona cliente" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {clients.length > 0 ? (
+                        clients.map((clientItem) => (
+                          <SelectItem key={clientItem.id} value={clientItem.id.toString()}>
+                            {clientItem.companyName}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="no-clients" disabled>
+                          Nessun cliente disponibile
+                        </SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                  {clients.length === 0 && (
+                    <p className="text-sm text-amber-500 mt-1">
+                      Non ci sono clienti disponibili. 
+                      <Button 
+                        variant="link" 
+                        className="px-1 py-0 h-auto text-sm" 
+                        onClick={() => navigate('/client-create')}
+                      >
+                        Crea un cliente
+                      </Button>
+                    </p>
+                  )}
+                </div>
+                
+                <EventLocationFields 
+                  eventLocation={formData.eventLocation}
+                  eventAddress={formData.eventAddress}
+                  showLocationSuggestions={showLocationSuggestions}
+                  showAddressSuggestions={showAddressSuggestions}
+                  locationSuggestions={locationSuggestions}
+                  addressSuggestions={addressSuggestions}
+                  onLocationChange={handleLocationChange}
+                  onAddressChange={handleAddressChange}
+                  onLocationSelect={handleSelectLocationSuggestion}
+                  onAddressSelect={handleSelectAddressSuggestion}
+                />
+                
+                <EventDateTimeSelector 
+                  startDate={formData.startDate}
+                  endDate={formData.endDate}
+                  startTime={formData.startTime}
+                  endTime={formData.endTime}
+                  onStartDateChange={(date) => updateFormField('startDate', date)}
+                  onEndDateChange={(date) => updateFormField('endDate', date)}
+                  onStartTimeChange={(value) => updateFormField('startTime', value)}
+                  onEndTimeChange={(value) => updateFormField('endTime', value)}
+                />
+                
+                <EventHoursAndCosts 
+                  grossHours={formData.grossHours}
+                  netHours={formData.netHours}
+                  breakStartTime={formData.breakStartTime}
+                  breakEndTime={formData.breakEndTime}
+                  hourlyRateCost={formData.hourlyRateCost}
+                  hourlyRateSell={formData.hourlyRateSell}
+                  onGrossHoursChange={(value) => updateFormField('grossHours', value)}
+                  onBreakStartTimeChange={(value) => updateFormField('breakStartTime', value)}
+                  onBreakEndTimeChange={(value) => updateFormField('breakEndTime', value)}
+                  onHourlyRateCostChange={(value) => updateFormField('hourlyRateCost', value)}
+                  onHourlyRateSellChange={(value) => updateFormField('hourlyRateSell', value)}
+                />
+              </TabsContent>
+              
+              <TabsContent value="planner" className="space-y-6">
+                <EventPlanner 
+                  selectedPersonnel={formData.selectedPersonnel}
+                  onPersonnelChange={handlePersonnelChange}
+                  personnelCounts={personnelCounts}
+                  onPersonnelCountChange={handlePersonnelCountChange}
+                  eventId={eventId}
+                />
+              </TabsContent>
+            </Tabs>
             
             <div className="pt-4">
               <Button type="submit" className="w-full md:w-auto">

@@ -36,6 +36,7 @@ export interface EventFormData {
   netHours: string;
   hourlyRateCost: string;
   hourlyRateSell: string;
+  personnelCounts?: Record<string, number>;
 }
 
 export function useEventForm(eventId: string | null) {
@@ -56,7 +57,8 @@ export function useEventForm(eventId: string | null) {
     breakEndTime: "14:00",
     netHours: "",
     hourlyRateCost: "",
-    hourlyRateSell: ""
+    hourlyRateSell: "",
+    personnelCounts: {}
   });
   
   const [clients, setClients] = useState<Client[]>([]);
@@ -113,7 +115,8 @@ export function useEventForm(eventId: string | null) {
               breakEndTime: eventToEdit.breakEndTime || "14:00",
               netHours: eventToEdit.netHours ? eventToEdit.netHours.toString() : "",
               hourlyRateCost: eventToEdit.hourlyRateCost ? eventToEdit.hourlyRateCost.toString() : "",
-              hourlyRateSell: eventToEdit.hourlyRateSell ? eventToEdit.hourlyRateSell.toString() : ""
+              hourlyRateSell: eventToEdit.hourlyRateSell ? eventToEdit.hourlyRateSell.toString() : "",
+              personnelCounts: eventToEdit.personnelCounts || {}
             });
           }
         }

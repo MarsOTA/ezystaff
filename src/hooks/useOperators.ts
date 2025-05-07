@@ -33,7 +33,8 @@ export const useOperators = () => {
     selectedEventId,
     setSelectedEventId,
     openAssignDialog,
-    handleAssignSubmit
+    handleAssignSubmit,
+    handleUnassignOperator
   } = useOperatorEventAssignment(operators, setOperators, events);
 
   return {
@@ -56,6 +57,7 @@ export const useOperators = () => {
     handleSubmit,
     openAssignDialog,
     handleAssignSubmit,
+    handleUnassignOperator,
     handleEdit
   };
 };

@@ -1,3 +1,4 @@
+
 import { format } from "date-fns";
 import { EventFormData } from "@/hooks/useEventForm";
 import { Event } from "@/pages/Events";
@@ -140,7 +141,8 @@ export const saveEvent = (formData: EventFormData, eventId: string | null, clien
       breakEndTime: formData.breakEndTime || undefined,
       netHours: formData.netHours ? Number(formData.netHours) : undefined,
       hourlyRateCost: formData.hourlyRateCost ? Number(formData.hourlyRateCost) : undefined,
-      hourlyRateSell: formData.hourlyRateSell ? Number(formData.hourlyRateSell) : undefined
+      hourlyRateSell: formData.hourlyRateSell ? Number(formData.hourlyRateSell) : undefined,
+      personnelCounts: formData.personnelCounts || {}
     };
     
     const isEditMode = !!eventId;
