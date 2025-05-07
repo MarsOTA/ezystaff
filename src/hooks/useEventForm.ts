@@ -1,10 +1,8 @@
-
 import { useState, useEffect } from "react";
-import { Event } from "@/pages/Events";
+import { Event, EVENTS_STORAGE_KEY } from "@/types/event";
 import { Client } from "@/pages/Clients";
 import { safeLocalStorage } from "@/utils/fileUtils";
 
-export const EVENTS_STORAGE_KEY = "app_events_data";
 export const CLIENTS_STORAGE_KEY = "app_clients_data";
 
 export interface PlacePrediction {

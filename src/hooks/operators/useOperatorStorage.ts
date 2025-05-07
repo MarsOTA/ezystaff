@@ -1,11 +1,8 @@
-
 import { useState, useEffect } from "react";
 import { Operator } from "@/types/operator";
-import { Event } from "@/pages/Events";
+import { Event, EVENTS_STORAGE_KEY } from "@/types/event";
 import { safeLocalStorage } from "@/utils/fileUtils";
 import { getOperators, saveOperators, OPERATORS_STORAGE_KEY } from "@/utils/operatorUtils";
-
-export const EVENTS_STORAGE_KEY = "app_events_data";
 
 export const useOperatorStorage = () => {
   const [operators, setOperators] = useState<Operator[]>([
