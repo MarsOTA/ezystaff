@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
@@ -12,6 +13,8 @@ import EventDetailDialog from "@/components/events/EventDetailDialog";
 import { safeLocalStorage } from "@/utils/fileUtils";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { OPERATORS_STORAGE_KEY } from "@/types/operator";
 
 export interface Event {
   id: number;
@@ -117,7 +120,7 @@ const Events = () => {
     setIsDetailsOpen(true);
   };
 
-  const handleEventClose = async (eventId: number) => {
+  const handleCloseEvent = async (eventId: number) => {
     setIsClosingEvent(true);
     
     try {

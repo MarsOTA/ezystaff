@@ -1,4 +1,3 @@
-
 import React from "react";
 import { ExtendedOperator, SERVICES, AVAILABILITY, LANGUAGES, SIZES, HAIR_COLORS, BODY_TYPES } from "@/types/operator";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -264,7 +263,7 @@ const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
                 File selezionato: {operator.resumeFileName}
               </div>
             )}
-            {imagePreviewUrls.resumeFile && operator.resumeFile?.startsWith('data:application/pdf') && (
+            {imagePreviewUrls.resumeFile && typeof operator.resumeFile === 'string' && operator.resumeFile.startsWith('data:application/pdf') && (
               <div className="mt-2">
                 <a 
                   href={imagePreviewUrls.resumeFile} 
