@@ -1,10 +1,9 @@
-
 import { format } from "date-fns";
 import { safeLocalStorage } from "@/utils/fileUtils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Event } from "@/types/event";
-import { OPERATORS_STORAGE_KEY } from "@/types/operator";
+import { Event, EVENTS_STORAGE_KEY } from "@/types/event";
+import { OPERATORS_STORAGE_KEY } from "@/utils/operatorUtils";
 
 export const calculateHours = (startDate: Date, endDate: Date): number => {
   const diffMs = endDate.getTime() - startDate.getTime();

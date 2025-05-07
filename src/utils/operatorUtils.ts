@@ -1,4 +1,5 @@
 
+import { Operator } from "@/types/operator";
 import { safeLocalStorage } from "@/utils/fileUtils";
 
 export const OPERATORS_STORAGE_KEY = "app_operators_data";

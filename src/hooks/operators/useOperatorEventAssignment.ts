@@ -1,8 +1,7 @@
-
 import { useState } from "react";
 import { toast } from "sonner";
 import { Operator } from "@/types/operator";
-import { Event } from "@/pages/Events";
+import { Event } from "@/types/event";
 
 export const useOperatorEventAssignment = (
   operators: Operator[], 

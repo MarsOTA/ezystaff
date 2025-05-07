@@ -1,10 +1,10 @@
-
 import { format } from "date-fns";
 import { EventFormData } from "@/hooks/useEventForm";
-import { Event } from "@/pages/Events";
+import { Event } from "@/types/event";
 import { Client } from "@/pages/Clients";
 import { safeLocalStorage } from "@/utils/fileUtils";
-import { PlacePrediction, EVENTS_STORAGE_KEY } from "@/hooks/useEventForm";
+import { PlacePrediction } from "@/hooks/useEventForm";
+import { EVENTS_STORAGE_KEY } from "@/types/event";
 
 // Define the missing Google Maps types to fix TypeScript errors
 declare global {

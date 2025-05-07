@@ -1,7 +1,7 @@
 
 import { safeLocalStorage } from "@/utils/fileUtils";
 import { Client } from "@/pages/Clients";
-import { Event } from "@/pages/Events";
+import { Event } from "@/types/event";
 
 // Constants
 export const EVENTS_STORAGE_KEY = "app_events_data";
