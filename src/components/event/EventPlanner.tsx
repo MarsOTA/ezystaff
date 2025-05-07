@@ -25,10 +25,18 @@ const EventPlanner: React.FC<EventPlannerProps> = ({
   // Get assigned operators for this event (if eventId exists and is a number)
   const assignedOperators = useMemo(() => {
     if (!eventId) return [];
-    const eventIdNum = parseInt(eventId);
-    return operators.filter(op => 
-      op.assignedEvents && op.assignedEvents.includes(eventIdNum)
-    );
+    
+    try {
+      const eventIdNum = parseInt(eventId);
+      if (isNaN(eventIdNum)) return [];
+      
+      return operators.filter(op => 
+        op.assignedEvents && op.assignedEvents.includes(eventIdNum)
+      );
+    } catch (error) {
+      console.error("Error parsing event ID:", error);
+      return [];
+    }
   }, [operators, eventId]);
 
   return (

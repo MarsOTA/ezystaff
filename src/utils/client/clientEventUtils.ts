@@ -1,10 +1,7 @@
 
 import { safeLocalStorage } from "@/utils/fileUtils";
 import { Client } from "@/pages/Clients";
-import { Event } from "@/types/event";
-
-// Constants
-export const EVENTS_STORAGE_KEY = "app_events_data";
+import { Event, EVENTS_STORAGE_KEY } from "@/types/event";
 
 // Load events for client
 export const loadClientEvents = (client: Client | null) => {
@@ -16,19 +13,19 @@ export const loadClientEvents = (client: Client | null) => {
     
     const events = JSON.parse(storedEvents);
     
-    // Converti le stringhe di date in oggetti Date
+    // Convert date strings to Date objects
     const parsedEvents = events.map((event: any) => ({
       ...event,
       startDate: new Date(event.startDate),
       endDate: new Date(event.endDate)
     }));
     
-    // Filtra gli eventi per il cliente corrente
+    // Filter events for the current client
     return parsedEvents.filter(
       (event: Event) => event.client === client.companyName
     );
   } catch (error) {
-    console.error("Errore nel caricamento degli eventi:", error);
+    console.error("Error loading client events:", error);
     return [];
   }
 };

@@ -1,10 +1,9 @@
 import { format } from "date-fns";
 import { EventFormData } from "@/hooks/useEventForm";
-import { Event } from "@/types/event";
+import { Event, EVENTS_STORAGE_KEY } from "@/types/event";
 import { Client } from "@/pages/Clients";
 import { safeLocalStorage } from "@/utils/fileUtils";
 import { PlacePrediction } from "@/hooks/useEventForm";
-import { EVENTS_STORAGE_KEY } from "@/types/event";
 
 // Define the missing Google Maps types to fix TypeScript errors
 declare global {
@@ -111,11 +110,16 @@ export const validateEventForm = (formData: EventFormData): string | null => {
     return "Compila tutti i campi obbligatori";
   }
   
-  const fullStartDate = combineDateTime(formData.startDate, formData.startTime);
-  const fullEndDate = combineDateTime(formData.endDate, formData.endTime);
-  
-  if (fullEndDate <= fullStartDate) {
-    return "La data di fine deve essere successiva alla data di inizio";
+  try {
+    const fullStartDate = combineDateTime(formData.startDate, formData.startTime);
+    const fullEndDate = combineDateTime(formData.endDate, formData.endTime);
+    
+    if (fullEndDate <= fullStartDate) {
+      return "La data di fine deve essere successiva alla data di inizio";
+    }
+  } catch (error) {
+    console.error("Error validating event form:", error);
+    return "Errore di validazione del modulo";
   }
   
   return null;
@@ -148,8 +152,13 @@ export const saveEvent = (formData: EventFormData, eventId: string | null, clien
     const isEditMode = !!eventId;
     
     if (isEditMode) {
+      const eventIdNum = parseInt(eventId as string);
+      if (isNaN(eventIdNum)) {
+        return { success: false, message: "ID evento non valido" };
+      }
+      
       const updatedEvents = existingEvents.map(event => {
-        if (event.id === Number(eventId)) {
+        if (event.id === eventIdNum) {
           return {
             ...event,
             title: formData.title,
