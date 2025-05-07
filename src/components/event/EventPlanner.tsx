@@ -26,7 +26,7 @@ const EventPlanner: React.FC<EventPlannerProps> = ({
   eventId
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
-  const { operators, handleAssignSubmit, openAssignDialog, handleUnassignOperator } = useOperators();
+  const { operators, openAssignDialog, handleUnassignOperator } = useOperators();
   
   // Calculate total personnel count
   const totalPersonnelCount = useMemo(() => {
@@ -85,6 +85,12 @@ const EventPlanner: React.FC<EventPlannerProps> = ({
     }
   };
   
+  const handleRemoveOperator = (operator: Operator) => {
+    if (eventId) {
+      handleUnassignOperator(operator.id, parseInt(eventId));
+    }
+  };
+  
   const getOperatorProfession = (operator: Operator): string => {
     // In a real implementation, this would come from the operator's profile
     // For this example, we'll return a placeholder
@@ -99,12 +105,6 @@ const EventPlanner: React.FC<EventPlannerProps> = ({
         return <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-red-100 text-red-800">Non Disponibile</span>;
       case 'partial':
         return <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-yellow-100 text-yellow-800">Parziale</span>;
-    }
-  };
-  
-  const handleRemoveOperator = (operator: Operator) => {
-    if (eventId) {
-      handleUnassignOperator(operator.id, parseInt(eventId));
     }
   };
 
