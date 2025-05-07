@@ -4,8 +4,11 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { X, Plus } from "lucide-react";
+import { X, Plus, AlertCircle } from "lucide-react";
 import { Operator } from "@/types/operator";
+import { useOperators } from "@/hooks/useOperators";
+import { EVENTS_STORAGE_KEY } from "@/types/event";
+import { safeLocalStorage } from "@/utils/fileUtils";
 
 interface OperatorsTableProps {
   operators: Operator[];
@@ -24,6 +27,7 @@ const OperatorsTable: React.FC<OperatorsTableProps> = ({
   handleUnassignOperator
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
+  const { isOperatorAvailable } = useOperators();
   
   // Filter operators based on search query
   const filteredOperators = useMemo(() => {
@@ -33,31 +37,96 @@ const OperatorsTable: React.FC<OperatorsTableProps> = ({
     });
   }, [operators, searchQuery]);
   
+  // Get any conflicting events for the operator
+  const getConflictingEvents = (operator: Operator) => {
+    if (!eventId || !operator.assignedEvents || operator.assignedEvents.length === 0) {
+      return [];
+    }
+    
+    try {
+      const eventIdNum = parseInt(eventId);
+      if (isNaN(eventIdNum)) return [];
+      
+      const storedEvents = safeLocalStorage.getItem(EVENTS_STORAGE_KEY);
+      if (!storedEvents) return [];
+      
+      const events = JSON.parse(storedEvents);
+      const currentEvent = events.find((e: any) => e.id === eventIdNum);
+      if (!currentEvent) return [];
+      
+      const currentStart = new Date(currentEvent.startDate);
+      const currentEnd = new Date(currentEvent.endDate);
+      
+      // Find conflicting events based on time overlap
+      return events
+        .filter((e: any) => {
+          if (e.id === eventIdNum) return false;
+          if (!operator.assignedEvents?.includes(e.id)) return false;
+          
+          const eventStart = new Date(e.startDate);
+          const eventEnd = new Date(e.endDate);
+          
+          // Check for time overlap
+          return (currentStart <= eventEnd && eventStart <= currentEnd);
+        })
+        .map((e: any) => e.title);
+    } catch (error) {
+      console.error("Error finding conflicting events:", error);
+      return [];
+    }
+  };
+  
   // Check operator availability for this event
   const checkAvailability = (operator: Operator): AvailabilityStatus => {
-    if (!eventId || !operator.assignedEvents || operator.assignedEvents.length === 0) {
+    if (!eventId) return 'yes';
+    
+    try {
+      const eventIdNum = parseInt(eventId);
+      if (isNaN(eventIdNum)) return 'yes';
+      
+      // If already assigned to this event, they're at least partially available
+      if (operator.assignedEvents?.includes(eventIdNum)) {
+        return 'partial';
+      }
+      
+      // Check for conflicting events
+      const conflicts = getConflictingEvents(operator);
+      if (conflicts.length > 0) {
+        return 'no';
+      }
+      
+      // If assigned to other events but no conflicts, consider them partially available
+      return operator.assignedEvents && operator.assignedEvents.length > 0 ? 'partial' : 'yes';
+    } catch (error) {
+      console.error("Error checking availability:", error);
       return 'yes';
     }
-    
-    // If already assigned to this event, they're at least partially available
-    if (operator.assignedEvents.includes(parseInt(eventId))) {
-      return 'partial';
-    }
-    
-    // If assigned to other events, consider them partially available
-    return operator.assignedEvents.length > 0 ? 'partial' : 'yes';
   };
   
   const getOperatorProfession = (operator: Operator): string => {
     return operator.profession || "security";
   };
   
-  const getAvailabilityBadge = (availability: AvailabilityStatus) => {
+  const getAvailabilityBadge = (availability: AvailabilityStatus, operator: Operator) => {
+    const conflicts = eventId ? getConflictingEvents(operator) : [];
+    
     switch(availability) {
       case 'yes':
         return <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-green-100 text-green-800">Disponibile</span>;
       case 'no':
-        return <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-red-100 text-red-800">Non Disponibile</span>;
+        return (
+          <div className="flex flex-col gap-1">
+            <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-red-100 text-red-800">
+              Non Disponibile
+            </span>
+            {conflicts.length > 0 && (
+              <span className="text-xs text-red-600 flex items-center gap-1">
+                <AlertCircle className="h-3 w-3" /> 
+                Conflitto: {conflicts.join(", ")}
+              </span>
+            )}
+          </div>
+        );
       case 'partial':
         return <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-yellow-100 text-yellow-800">Parziale</span>;
     }
@@ -101,20 +170,33 @@ const OperatorsTable: React.FC<OperatorsTableProps> = ({
                     <TableCell>{firstName}</TableCell>
                     <TableCell>{lastName}</TableCell>
                     <TableCell>{operator.gender || 'N/A'}</TableCell>
-                    <TableCell>{getAvailabilityBadge(availability)}</TableCell>
+                    <TableCell>{getAvailabilityBadge(availability, operator)}</TableCell>
                     <TableCell>{getOperatorProfession(operator)}</TableCell>
                     <TableCell className="text-right">
                       {isAssigned ? (
                         <Button 
                           variant="destructive" 
                           size="sm" 
-                          onClick={() => eventId && handleUnassignOperator(operator.id, parseInt(eventId))}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            eventId && handleUnassignOperator(operator.id, parseInt(eventId));
+                          }}
                         >
                           <X className="h-4 w-4 mr-1" />
                           Rimuovi
                         </Button>
                       ) : (
-                        <Button variant="outline" size="sm" onClick={() => openAssignDialog(operator)}>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            openAssignDialog(operator);
+                          }}
+                          disabled={availability === 'no'}
+                        >
                           <Plus className="h-4 w-4 mr-1" />
                           Assegna
                         </Button>

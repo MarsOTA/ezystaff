@@ -22,12 +22,16 @@ const PersonnelTypes: React.FC<PersonnelTypesProps> = ({
   // Calculate total personnel count
   const totalPersonnelCount = Object.values(personnelCounts).reduce((sum, count) => sum + count, 0);
   
-  const handleIncrementCount = (personnelId: string) => {
+  const handleIncrementCount = (e: React.MouseEvent, personnelId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
     const currentCount = personnelCounts[personnelId] || 0;
     onPersonnelCountChange(personnelId, currentCount + 1);
   };
   
-  const handleDecrementCount = (personnelId: string) => {
+  const handleDecrementCount = (e: React.MouseEvent, personnelId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
     const currentCount = personnelCounts[personnelId] || 0;
     if (currentCount > 0) {
       onPersonnelCountChange(personnelId, currentCount - 1);
@@ -35,7 +39,7 @@ const PersonnelTypes: React.FC<PersonnelTypesProps> = ({
   };
   
   return (
-    <div className="space-y-2">
+    <div className="space-y-2" onClick={(e) => e.stopPropagation()}>
       <Label>Tipologia di personale richiesto *</Label>
       <div className="space-y-4">
         {personnelTypes.map((type) => (
@@ -56,7 +60,7 @@ const PersonnelTypes: React.FC<PersonnelTypesProps> = ({
                   variant="outline" 
                   size="sm" 
                   className="h-8 w-8 p-0" 
-                  onClick={() => handleDecrementCount(type.id)}
+                  onClick={(e) => handleDecrementCount(e, type.id)}
                 >
                   <Minus className="h-4 w-4" />
                 </Button>
@@ -65,7 +69,7 @@ const PersonnelTypes: React.FC<PersonnelTypesProps> = ({
                   variant="outline" 
                   size="sm" 
                   className="h-8 w-8 p-0" 
-                  onClick={() => handleIncrementCount(type.id)}
+                  onClick={(e) => handleIncrementCount(e, type.id)}
                 >
                   <Plus className="h-4 w-4" />
                 </Button>

@@ -1,8 +1,10 @@
+
 import { useState, useEffect } from "react";
 import { Operator } from "@/types/operator";
 import { safeLocalStorage } from "@/utils/fileUtils";
 import { getOperators, saveOperators, OPERATORS_STORAGE_KEY } from "@/utils/operatorUtils";
 import { toast } from "sonner";
+import { EVENTS_STORAGE_KEY } from "@/types/event";
 
 export const useOperators = () => {
   const [operators, setOperators] = useState<Operator[]>([
@@ -90,14 +92,14 @@ export const useOperators = () => {
         setOperators(updatedOperators);
         saveOperators(updatedOperators);
         closeAssignDialog();
-        toast.success("Operator assigned to event successfully!");
+        toast.success("Operatore assegnato all'evento con successo!");
       } catch (error) {
         console.error("Error assigning operator to event:", error);
-        toast.error("Error assigning operator to event");
+        toast.error("Errore durante l'assegnazione dell'operatore all'evento");
       }
     } else {
       console.error("Missing operator or event ID");
-      toast.error("Missing operator or event ID");
+      toast.error("ID operatore o evento mancante");
     }
   };
 
@@ -125,15 +127,61 @@ export const useOperators = () => {
     }
   };
 
+  // Check if an event overlaps with another based on dates
+  const doEventsOverlap = (eventId1: number, eventId2: number) => {
+    try {
+      const storedEvents = safeLocalStorage.getItem(EVENTS_STORAGE_KEY);
+      if (!storedEvents) return false;
+      
+      const events = JSON.parse(storedEvents);
+      const event1 = events.find((e: any) => e.id === eventId1);
+      const event2 = events.find((e: any) => e.id === eventId2);
+      
+      if (!event1 || !event2) return false;
+      
+      const start1 = new Date(event1.startDate);
+      const end1 = new Date(event1.endDate);
+      const start2 = new Date(event2.startDate);
+      const end2 = new Date(event2.endDate);
+      
+      // Check if the events overlap
+      return (start1 <= end2 && start2 <= end1);
+    } catch (error) {
+      console.error("Error checking event overlap:", error);
+      return false;
+    }
+  };
+  
+  // Check if an operator is available for an event
+  const isOperatorAvailable = (operatorId: number, eventId: number) => {
+    const operator = operators.find(op => op.id === operatorId);
+    if (!operator || !operator.assignedEvents) return true;
+    
+    // If already assigned to this event, consider available
+    if (operator.assignedEvents.includes(eventId)) return true;
+    
+    // Check if operator is assigned to any overlapping events
+    for (const assignedEventId of operator.assignedEvents) {
+      if (doEventsOverlap(eventId, assignedEventId)) {
+        return false;
+      }
+    }
+    
+    return true;
+  };
+
   return {
     operators,
     setOperators,
     openAssignDialog,
+    closeAssignDialog,
+    assignOperatorToEvent,
     isAssignDialogOpen,
     setIsAssignDialogOpen,
     selectedOperatorId,
     selectedEventId,
     setSelectedEventId,
-    handleUnassignOperator
+    handleUnassignOperator,
+    isOperatorAvailable
   };
 };
