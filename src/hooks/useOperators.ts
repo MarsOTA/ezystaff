@@ -118,8 +118,10 @@ export const useOperators = () => {
       
       setOperators(updatedOperators);
       saveOperators(updatedOperators);
+      toast.success("Operatore rimosso dall'evento");
     } catch (error) {
       console.error("Error unassigning operator:", error);
+      toast.error("Errore durante la rimozione dell'operatore dall'evento");
     }
   };
 
@@ -127,11 +129,11 @@ export const useOperators = () => {
     operators,
     setOperators,
     openAssignDialog,
-    closeAssignDialog,
-    assignOperatorToEvent,
     isAssignDialogOpen,
+    setIsAssignDialogOpen,
     selectedOperatorId,
     selectedEventId,
+    setSelectedEventId,
     handleUnassignOperator
   };
 };

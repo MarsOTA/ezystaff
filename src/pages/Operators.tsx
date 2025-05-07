@@ -12,31 +12,37 @@ import Layout from "@/components/Layout";
 import OperatorsList from "@/components/operators/OperatorsList";
 import OperatorFormDialog from "@/components/operators/OperatorFormDialog";
 import AssignEventDialog from "@/components/operators/AssignEventDialog";
-import { useOperators } from "@/hooks/useOperators";
+import { useOperatorStorage } from "@/hooks/operators/useOperatorStorage";
+import { useOperatorForm } from "@/hooks/operators/useOperatorForm";
+import { useOperatorEventAssignment } from "@/hooks/operators/useOperatorEventAssignment";
 
 const Operators = () => {
+  // Split the hooks for better organization
+  const { operators, setOperators, events } = useOperatorStorage();
+  const { 
+    isDialogOpen, 
+    setIsDialogOpen, 
+    editingOperator, 
+    formData, 
+    setFormData,
+    handleStatusToggle, 
+    handleDelete, 
+    openEditDialog, 
+    handleNewOperator, 
+    handleSubmit,
+    handleEdit
+  } = useOperatorForm(operators, setOperators);
+
   const {
-    operators,
-    events,
-    isDialogOpen,
-    setIsDialogOpen,
     isAssignDialogOpen,
     setIsAssignDialogOpen,
-    editingOperator,
     assigningOperator,
     selectedEventId,
     setSelectedEventId,
-    formData,
-    setFormData,
-    handleStatusToggle,
-    handleDelete,
-    openEditDialog,
-    handleNewOperator,
-    handleSubmit,
     openAssignDialog,
     handleAssignSubmit,
-    handleEdit
-  } = useOperators();
+    handleUnassignOperator
+  } = useOperatorEventAssignment(operators, setOperators, events);
 
   return (
     <Layout>

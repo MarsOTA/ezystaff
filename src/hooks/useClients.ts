@@ -1,9 +1,11 @@
+
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { safeLocalStorage } from "@/utils/fileUtils";
 import { Client } from "@/pages/Clients";
-import { CLIENTS_STORAGE_KEY, EVENTS_STORAGE_KEY } from "@/utils/client";
+import { CLIENTS_STORAGE_KEY } from "@/utils/client";
+import { EVENTS_STORAGE_KEY } from "@/types/event";
 
 export const useClients = () => {
   const navigate = useNavigate();

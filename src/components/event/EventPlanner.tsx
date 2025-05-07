@@ -4,6 +4,7 @@ import { useOperators } from "@/hooks/useOperators";
 import PersonnelTypes from './personnel/PersonnelTypes';
 import OperatorsTable from './personnel/OperatorsTable';
 import AssignedOperatorsList from './personnel/AssignedOperatorsList';
+import { Operator } from '@/types/operator';
 
 interface EventPlannerProps {
   selectedPersonnel: string[];
@@ -39,6 +40,13 @@ const EventPlanner: React.FC<EventPlannerProps> = ({
     }
   }, [operators, eventId]);
 
+  // Convert the openAssignDialog function to match the expected signature
+  const handleOpenAssignDialog = (operator: Operator) => {
+    if (eventId) {
+      openAssignDialog(operator.id, eventId);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Personnel Types Selection with Counters */}
@@ -53,7 +61,7 @@ const EventPlanner: React.FC<EventPlannerProps> = ({
       <OperatorsTable
         operators={operators}
         eventId={eventId}
-        openAssignDialog={openAssignDialog}
+        openAssignDialog={handleOpenAssignDialog}
         handleUnassignOperator={handleUnassignOperator}
       />
 
