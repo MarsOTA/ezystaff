@@ -10,7 +10,7 @@ interface PersonnelTypesProps {
   selectedPersonnel: string[];
   onPersonnelChange: (personnelId: string) => void;
   personnelCounts: Record<string, number>;
-  onPersonnelCountChange: (personnelId: string, count: number) => void;
+  onPersonnelCountChange: (e: React.MouseEvent, personnelId: string, count: number) => void;
 }
 
 const PersonnelTypes: React.FC<PersonnelTypesProps> = ({
@@ -22,20 +22,10 @@ const PersonnelTypes: React.FC<PersonnelTypesProps> = ({
   // Calculate total personnel count
   const totalPersonnelCount = Object.values(personnelCounts).reduce((sum, count) => sum + count, 0);
   
-  const handleIncrementCount = (e: React.MouseEvent, personnelId: string) => {
+  const handlePersonnelChange = (e: React.MouseEvent, personnelId: string) => {
     e.preventDefault();
     e.stopPropagation();
-    const currentCount = personnelCounts[personnelId] || 0;
-    onPersonnelCountChange(personnelId, currentCount + 1);
-  };
-  
-  const handleDecrementCount = (e: React.MouseEvent, personnelId: string) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const currentCount = personnelCounts[personnelId] || 0;
-    if (currentCount > 0) {
-      onPersonnelCountChange(personnelId, currentCount - 1);
-    }
+    onPersonnelChange(personnelId);
   };
   
   return (
@@ -48,9 +38,24 @@ const PersonnelTypes: React.FC<PersonnelTypesProps> = ({
               <Checkbox 
                 id={`personnel-${type.id}`} 
                 checked={selectedPersonnel.includes(type.id)}
-                onCheckedChange={() => onPersonnelChange(type.id)}
+                onCheckedChange={(checked) => {
+                  // Prevent form submission
+                  const e = window.event;
+                  if (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }
+                  onPersonnelChange(type.id);
+                }}
               />
-              <Label htmlFor={`personnel-${type.id}`} className="cursor-pointer">
+              <Label 
+                htmlFor={`personnel-${type.id}`} 
+                className="cursor-pointer"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+              >
                 {type.label}
               </Label>
             </div>
@@ -60,7 +65,7 @@ const PersonnelTypes: React.FC<PersonnelTypesProps> = ({
                   variant="outline" 
                   size="sm" 
                   className="h-8 w-8 p-0" 
-                  onClick={(e) => handleDecrementCount(e, type.id)}
+                  onClick={(e) => onPersonnelCountChange(e, type.id, (personnelCounts[type.id] || 0) - 1)}
                 >
                   <Minus className="h-4 w-4" />
                 </Button>
@@ -69,7 +74,7 @@ const PersonnelTypes: React.FC<PersonnelTypesProps> = ({
                   variant="outline" 
                   size="sm" 
                   className="h-8 w-8 p-0" 
-                  onClick={(e) => handleIncrementCount(e, type.id)}
+                  onClick={(e) => onPersonnelCountChange(e, type.id, (personnelCounts[type.id] || 0) + 1)}
                 >
                   <Plus className="h-4 w-4" />
                 </Button>

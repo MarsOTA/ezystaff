@@ -23,7 +23,15 @@ const EventPlanner: React.FC<EventPlannerProps> = ({
   eventId
 }) => {
   // Use local state to track operators and assignments
-  const { operators, openAssignDialog: baseOpenAssignDialog, handleUnassignOperator: baseHandleUnassignOperator, isAssignDialogOpen, setIsAssignDialogOpen } = useOperators();
+  const { 
+    operators, 
+    assignOperatorToEvent,
+    handleUnassignOperator: baseHandleUnassignOperator, 
+    isAssignDialogOpen, 
+    setIsAssignDialogOpen,
+    openAssignDialog: baseOpenAssignDialog,
+    closeAssignDialog,
+  } = useOperators();
   
   // Local state to prevent unnecessary rerenders
   const [localOperators, setLocalOperators] = useState<Operator[]>([]);
@@ -32,6 +40,14 @@ const EventPlanner: React.FC<EventPlannerProps> = ({
   useEffect(() => {
     setLocalOperators(operators);
   }, [operators]);
+
+  // Listen for dialog state changes to refresh operators list
+  useEffect(() => {
+    if (!isAssignDialogOpen) {
+      // Refresh local operators when the dialog closes
+      setLocalOperators([...operators]);
+    }
+  }, [isAssignDialogOpen, operators]);
   
   // Get assigned operators for this event (if eventId exists and is a number)
   const assignedOperators = useMemo(() => {
@@ -50,7 +66,7 @@ const EventPlanner: React.FC<EventPlannerProps> = ({
     }
   }, [localOperators, eventId]);
   
-  // Wrap the openAssignDialog function to prevent form submission and match the expected signature
+  // Wrap the openAssignDialog function to properly handle operator objects
   const handleOpenAssignDialog = (operator: Operator) => {
     if (eventId) {
       baseOpenAssignDialog(operator.id, eventId);
@@ -79,18 +95,25 @@ const EventPlanner: React.FC<EventPlannerProps> = ({
   };
   
   // Handle assignment confirmation with local state update
-  useEffect(() => {
-    if (!isAssignDialogOpen && localOperators.length > 0) {
-      // This will re-calculate the assigned operators when the dialog closes
-      // by forcing a re-evaluation of our local operators state
-      setLocalOperators([...localOperators]);
+  const handleAssignOperator = () => {
+    if (eventId) {
+      // Call the assign function from the hook
+      assignOperatorToEvent();
+      
+      // Force update of local state
+      setLocalOperators([...operators]);
+      toast.success("Operatore assegnato all'evento");
     }
-  }, [isAssignDialogOpen]);
+  };
 
   // Prevent form submission on personnel count changes
-  const handlePersonnelCountChange = (personnelId: string, count: number) => {
+  const handlePersonnelCountChange = (e: React.MouseEvent, personnelId: string, count: number) => {
     try {
-      // Call the parent handler but prevent event propagation
+      // Prevent event propagation and default behavior
+      e.preventDefault();
+      e.stopPropagation();
+      
+      // Call the parent handler
       onPersonnelCountChange(personnelId, count);
     } catch (error) {
       console.error("Error changing personnel count:", error);

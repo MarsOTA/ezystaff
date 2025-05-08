@@ -1,4 +1,3 @@
-
 import React, { useRef, useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -95,6 +94,9 @@ const EventCreate = () => {
   };
   
   const handlePersonnelCountChange = (personnelId: string, count: number) => {
+    // Don't allow negative counts
+    if (count < 0) return;
+    
     const newPersonnelCounts = {
       ...personnelCounts,
       [personnelId]: count
@@ -106,6 +108,7 @@ const EventCreate = () => {
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     
     const validationError = validateEventForm(formData);
     if (validationError) {
@@ -265,7 +268,16 @@ const EventCreate = () => {
             </Tabs>
             
             <div className="pt-4">
-              <Button type="submit" className="w-full md:w-auto">
+              <Button 
+                type="submit" 
+                className="w-full md:w-auto"
+                onClick={(e) => {
+                  // Extra protection against form submission causing navigation
+                  if (e.target === e.currentTarget) {
+                    e.stopPropagation();
+                  }
+                }}
+              >
                 {isEditMode ? "Aggiorna Evento" : "Crea Evento"}
               </Button>
             </div>

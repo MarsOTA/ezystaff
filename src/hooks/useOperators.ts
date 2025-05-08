@@ -77,12 +77,17 @@ export const useOperators = () => {
         const eventIdNum = parseInt(selectedEventId);
         if (isNaN(eventIdNum)) {
           console.error("Invalid event ID format");
-          toast.error("Invalid event ID format");
+          toast.error("Formato ID evento non valido");
           return;
         }
         
         const updatedOperators = operators.map(op => {
           if (op.id === selectedOperatorId) {
+            // Check if already assigned to prevent duplicates
+            if (op.assignedEvents && op.assignedEvents.includes(eventIdNum)) {
+              return op;
+            }
+            
             const assignedEvents = op.assignedEvents ? [...op.assignedEvents, eventIdNum] : [eventIdNum];
             return { ...op, assignedEvents: assignedEvents };
           }
@@ -93,13 +98,16 @@ export const useOperators = () => {
         saveOperators(updatedOperators);
         closeAssignDialog();
         toast.success("Operatore assegnato all'evento con successo!");
+        return true;
       } catch (error) {
         console.error("Error assigning operator to event:", error);
         toast.error("Errore durante l'assegnazione dell'operatore all'evento");
+        return false;
       }
     } else {
       console.error("Missing operator or event ID");
       toast.error("ID operatore o evento mancante");
+      return false;
     }
   };
 
@@ -120,10 +128,11 @@ export const useOperators = () => {
       
       setOperators(updatedOperators);
       saveOperators(updatedOperators);
-      toast.success("Operatore rimosso dall'evento");
+      return true;
     } catch (error) {
       console.error("Error unassigning operator:", error);
       toast.error("Errore durante la rimozione dell'operatore dall'evento");
+      return false;
     }
   };
 
@@ -182,6 +191,7 @@ export const useOperators = () => {
     selectedEventId,
     setSelectedEventId,
     handleUnassignOperator,
-    isOperatorAvailable
+    isOperatorAvailable,
+    doEventsOverlap
   };
 };
