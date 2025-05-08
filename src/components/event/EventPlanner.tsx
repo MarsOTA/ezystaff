@@ -6,6 +6,8 @@ import OperatorsTable from './personnel/OperatorsTable';
 import AssignedOperatorsList from './personnel/AssignedOperatorsList';
 import { Operator } from '@/types/operator';
 import { toast } from "sonner";
+import AssignEventDialog from '../operators/AssignEventDialog';
+import { useOperatorStorage } from '@/hooks/operators/useOperatorStorage';
 
 interface EventPlannerProps {
   selectedPersonnel: string[];
@@ -22,34 +24,23 @@ const EventPlanner: React.FC<EventPlannerProps> = ({
   onPersonnelCountChange,
   eventId
 }) => {
-  // Use local state to track operators and assignments
-  const { 
-    operators, 
-    assignOperatorToEvent,
-    handleUnassignOperator: baseHandleUnassignOperator, 
-    isAssignDialogOpen, 
-    setIsAssignDialogOpen,
-    openAssignDialog: baseOpenAssignDialog,
-    closeAssignDialog,
-  } = useOperators();
+  // Use operator storage for operators and events data
+  const { operators: baseOperators, setOperators, events } = useOperatorStorage();
   
-  // Local state to prevent unnecessary rerenders
+  // Local state for operators
   const [localOperators, setLocalOperators] = useState<Operator[]>([]);
   
-  // Update local operators whenever the main operators change
-  useEffect(() => {
-    setLocalOperators(operators);
-  }, [operators]);
-
-  // Listen for dialog state changes to refresh operators list
-  useEffect(() => {
-    if (!isAssignDialogOpen) {
-      // Refresh local operators when the dialog closes
-      setLocalOperators([...operators]);
-    }
-  }, [isAssignDialogOpen, operators]);
+  // Dialog state
+  const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
+  const [assigningOperator, setAssigningOperator] = useState<Operator | null>(null);
+  const [selectedEventId, setSelectedEventId] = useState<string>("");
   
-  // Get assigned operators for this event (if eventId exists and is a number)
+  // Update local operators whenever the base operators change
+  useEffect(() => {
+    setLocalOperators(baseOperators);
+  }, [baseOperators]);
+  
+  // Get assigned operators for this event (if eventId exists)
   const assignedOperators = useMemo(() => {
     if (!eventId) return [];
     
@@ -66,21 +57,76 @@ const EventPlanner: React.FC<EventPlannerProps> = ({
     }
   }, [localOperators, eventId]);
   
-  // Wrap the openAssignDialog function to properly handle operator objects
-  const handleOpenAssignDialog = (operator: Operator) => {
-    if (eventId) {
-      baseOpenAssignDialog(operator.id, eventId);
+  // Open assignment dialog for an operator
+  const openAssignDialog = (operator: Operator) => {
+    setAssigningOperator(operator);
+    setSelectedEventId(eventId || "");
+    setIsAssignDialogOpen(true);
+  };
+  
+  // Handle dialog submission to assign operator to event
+  const handleAssignSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!assigningOperator || !selectedEventId) {
+      toast.error("Seleziona un evento");
+      return;
+    }
+    
+    try {
+      const eventIdNum = parseInt(selectedEventId);
+      
+      // Update local operators state first for immediate UI feedback
+      setLocalOperators(prev => 
+        prev.map(op => {
+          if (op.id === assigningOperator.id) {
+            const currentAssignedEvents = op.assignedEvents || [];
+            if (currentAssignedEvents.includes(eventIdNum)) {
+              toast.info("Operatore già assegnato a questo evento");
+              return op;
+            }
+            
+            return {
+              ...op,
+              assignedEvents: [...currentAssignedEvents, eventIdNum]
+            };
+          }
+          return op;
+        })
+      );
+      
+      // Also update the main operators state
+      setOperators(prev => 
+        prev.map(op => {
+          if (op.id === assigningOperator.id) {
+            const currentAssignedEvents = op.assignedEvents || [];
+            if (currentAssignedEvents.includes(eventIdNum)) {
+              return op;
+            }
+            
+            return {
+              ...op,
+              assignedEvents: [...currentAssignedEvents, eventIdNum]
+            };
+          }
+          return op;
+        })
+      );
+      
+      const eventName = events.find(e => e.id === eventIdNum)?.title || "Evento selezionato";
+      toast.success(`${assigningOperator.name} assegnato a "${eventName}"`);
+      setIsAssignDialogOpen(false);
+    } catch (error) {
+      console.error("Error assigning operator:", error);
+      toast.error("Errore durante l'assegnazione dell'operatore");
     }
   };
   
-  // Wrap the unassign function to update local state immediately
+  // Unassign operator from event
   const handleUnassignOperator = (operatorId: number, eventId: number) => {
-    // First call the base function to update storage
-    baseHandleUnassignOperator(operatorId, eventId);
-    
-    // Then update local state for immediate UI feedback
-    setLocalOperators(prevOperators => 
-      prevOperators.map(op => {
+    // Update local operators state first for immediate UI feedback
+    setLocalOperators(prev => 
+      prev.map(op => {
         if (op.id === operatorId) {
           return {
             ...op,
@@ -91,29 +137,34 @@ const EventPlanner: React.FC<EventPlannerProps> = ({
       })
     );
     
-    toast.success("Operatore rimosso dall'evento");
-  };
-  
-  // Handle assignment confirmation with local state update
-  const handleAssignOperator = () => {
-    if (eventId) {
-      // Call the assign function from the hook
-      assignOperatorToEvent();
-      
-      // Force update of local state
-      setLocalOperators([...operators]);
-      toast.success("Operatore assegnato all'evento");
+    // Also update the main operators state
+    setOperators(prev => 
+      prev.map(op => {
+        if (op.id === operatorId) {
+          return {
+            ...op,
+            assignedEvents: op.assignedEvents ? op.assignedEvents.filter(id => id !== eventId) : []
+          };
+        }
+        return op;
+      })
+    );
+    
+    const operator = localOperators.find(op => op.id === operatorId);
+    const event = events.find(e => e.id === eventId);
+    
+    if (operator && event) {
+      toast.success(`${operator.name} rimosso da "${event.title}"`);
+    } else {
+      toast.success("Operatore rimosso dall'evento");
     }
   };
 
   // Prevent form submission on personnel count changes
   const handlePersonnelCountChange = (e: React.MouseEvent, personnelId: string, count: number) => {
     try {
-      // Prevent event propagation and default behavior
       e.preventDefault();
       e.stopPropagation();
-      
-      // Call the parent handler
       onPersonnelCountChange(personnelId, count);
     } catch (error) {
       console.error("Error changing personnel count:", error);
@@ -135,7 +186,7 @@ const EventPlanner: React.FC<EventPlannerProps> = ({
       <OperatorsTable
         operators={localOperators}
         eventId={eventId}
-        openAssignDialog={handleOpenAssignDialog}
+        openAssignDialog={openAssignDialog}
         handleUnassignOperator={handleUnassignOperator}
       />
 
@@ -144,6 +195,17 @@ const EventPlanner: React.FC<EventPlannerProps> = ({
         assignedOperators={assignedOperators}
         eventId={eventId}
         handleUnassignOperator={handleUnassignOperator}
+      />
+      
+      {/* Assignment Dialog */}
+      <AssignEventDialog
+        open={isAssignDialogOpen}
+        onOpenChange={setIsAssignDialogOpen}
+        assigningOperator={assigningOperator}
+        selectedEventId={selectedEventId}
+        setSelectedEventId={setSelectedEventId}
+        events={events.filter(e => e.id.toString() === eventId)} // Only show current event
+        onSubmit={handleAssignSubmit}
       />
     </div>
   );
