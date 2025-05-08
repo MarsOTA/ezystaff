@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { Label } from "@/components/ui/label";
-import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableHead, TableHeader, TableRow, TableCell } from "@/components/ui/table";
 import { Operator } from "@/types/operator";
 
 // Import custom components
