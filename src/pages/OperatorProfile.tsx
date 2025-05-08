@@ -24,6 +24,8 @@ const OperatorProfile = () => {
     setLevel,
     employmentType,
     setEmploymentType,
+    jobType,
+    setJobType,
     startDate,
     setStartDate,
     endDate,
@@ -31,7 +33,37 @@ const OperatorProfile = () => {
     grossSalary,
     setGrossSalary,
     netSalary,
-    setNetSalary
+    setNetSalary,
+    weeklyHours,
+    setWeeklyHours,
+    normalHoursPercentage,
+    setNormalHoursPercentage,
+    workLocation,
+    setWorkLocation,
+    workSite,
+    setWorkSite,
+    basePayAndContingency,
+    setBasePayAndContingency,
+    edr,
+    setEdr,
+    totalMonthlyCompensation,
+    setTotalMonthlyCompensation,
+    totalAnnualCompensation,
+    setTotalAnnualCompensation,
+    contractSignDate,
+    setContractSignDate,
+    contractClause,
+    setContractClause,
+    workingHoursClause,
+    setWorkingHoursClause,
+    rebalancing,
+    setRebalancing,
+    trainerName,
+    setTrainerName,
+    trainingStartDate,
+    setTrainingStartDate,
+    trainingEndDate,
+    setTrainingEndDate
   } = useOperatorData(id);
   
   const {
@@ -55,10 +87,26 @@ const OperatorProfile = () => {
     ccnl,
     level,
     employmentType,
+    jobType,
     startDate,
     endDate,
     grossSalary,
-    netSalary
+    netSalary,
+    weeklyHours,
+    normalHoursPercentage,
+    workLocation,
+    workSite,
+    basePayAndContingency,
+    edr,
+    totalMonthlyCompensation,
+    totalAnnualCompensation,
+    contractSignDate,
+    contractClause,
+    workingHoursClause,
+    rebalancing,
+    trainerName,
+    trainingStartDate,
+    trainingEndDate
   );
   
   if (loading) {
@@ -111,6 +159,8 @@ const OperatorProfile = () => {
           setLevel={setLevel}
           employmentType={employmentType}
           setEmploymentType={setEmploymentType}
+          jobType={jobType}
+          setJobType={setJobType}
           startDate={startDate}
           setStartDate={setStartDate}
           endDate={endDate}
@@ -119,6 +169,36 @@ const OperatorProfile = () => {
           setGrossSalary={setGrossSalary}
           netSalary={netSalary}
           setNetSalary={setNetSalary}
+          weeklyHours={weeklyHours}
+          setWeeklyHours={setWeeklyHours}
+          normalHoursPercentage={normalHoursPercentage}
+          setNormalHoursPercentage={setNormalHoursPercentage}
+          workLocation={workLocation}
+          setWorkLocation={setWorkLocation}
+          workSite={workSite}
+          setWorkSite={setWorkSite}
+          basePayAndContingency={basePayAndContingency}
+          setBasePayAndContingency={setBasePayAndContingency}
+          edr={edr}
+          setEdr={setEdr}
+          totalMonthlyCompensation={totalMonthlyCompensation}
+          setTotalMonthlyCompensation={setTotalMonthlyCompensation}
+          totalAnnualCompensation={totalAnnualCompensation}
+          setTotalAnnualCompensation={setTotalAnnualCompensation}
+          contractSignDate={contractSignDate}
+          setContractSignDate={setContractSignDate}
+          contractClause={contractClause}
+          setContractClause={setContractClause}
+          workingHoursClause={workingHoursClause}
+          setWorkingHoursClause={setWorkingHoursClause}
+          rebalancing={rebalancing}
+          setRebalancing={setRebalancing}
+          trainerName={trainerName}
+          setTrainerName={setTrainerName}
+          trainingStartDate={trainingStartDate}
+          setTrainingStartDate={setTrainingStartDate}
+          trainingEndDate={trainingEndDate}
+          setTrainingEndDate={setTrainingEndDate}
           onTemplateUpload={handleContractTemplateUpload}
           templateFile={templateFile}
         />

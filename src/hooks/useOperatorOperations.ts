@@ -14,10 +14,26 @@ export const useOperatorOperations = (
   ccnl: string,
   level: string,
   employmentType: string,
+  jobType: string,
   startDate: Date | undefined,
   endDate: Date | undefined,
   grossSalary: string,
-  netSalary: string
+  netSalary: string,
+  weeklyHours: string,
+  normalHoursPercentage: string,
+  workLocation: string,
+  workSite: string,
+  basePayAndContingency: string,
+  edr: string,
+  totalMonthlyCompensation: string,
+  totalAnnualCompensation: string,
+  contractSignDate: Date | undefined,
+  contractClause: string,
+  workingHoursClause: string,
+  rebalancing: string,
+  trainerName: string,
+  trainingStartDate: Date | undefined,
+  trainingEndDate: Date | undefined
 ) => {
   const [activeTab, setActiveTab] = useState("info");
   const [templateFile, setTemplateFile] = useState<File | null>(null);
@@ -141,10 +157,26 @@ export const useOperatorOperations = (
           ccnl,
           level,
           employmentType,
+          jobType,
           startDate: startDate ? startDate.toISOString() : null,
           endDate: endDate ? endDate.toISOString() : null,
           grossSalary,
-          netSalary
+          netSalary,
+          weeklyHours,
+          normalHoursPercentage,
+          workLocation,
+          workSite,
+          basePayAndContingency,
+          edr,
+          totalMonthlyCompensation,
+          totalAnnualCompensation,
+          contractSignDate: contractSignDate ? contractSignDate.toISOString() : null,
+          contractClause,
+          workingHoursClause,
+          rebalancing,
+          trainerName,
+          trainingStartDate: trainingStartDate ? trainingStartDate.toISOString() : null,
+          trainingEndDate: trainingEndDate ? trainingEndDate.toISOString() : null
         }
       };
       
@@ -194,15 +226,33 @@ export const useOperatorOperations = (
           Città: operator.residenceCity,
           Provincia: operator.province,
           
-          TipoContratto: contractType === 'full-time' ? 'Tempo Pieno' : 
-                          contractType === 'part-time' ? 'Part-Time' : 
-                          'A Chiamata',
+          TipoContratto: employmentType === 'indeterminato' ? 'Indeterminato' : 
+                         employmentType === 'determinato' ? 'Determinato' : 
+                         employmentType === 'a-chiamata' ? 'A Chiamata' : 'Prestazione Occasionale',
+          TipoMansione: jobType === 'security' ? 'Security' :
+                        jobType === 'doorman' ? 'Doorman' :
+                        jobType === 'hostess-steward' ? 'Hostess/Steward' : 'Porterage',
           DataInizio: startDate ? startDate.toLocaleDateString('it-IT') : '',
           DataFine: endDate ? endDate.toLocaleDateString('it-IT') : 'indeterminato',
           CCNL: ccnl,
           Livello: level,
           RetribuzioneLorda: grossSalary,
           RetribuzioneNetta: netSalary,
+          OreSettimanali: weeklyHours,
+          PercentualeOrario: normalHoursPercentage,
+          SedeLavoro: workLocation,
+          LocationLavoro: workSite,
+          PagaBaseContingenza: basePayAndContingency,
+          EDR: edr,
+          TotaleRetribuzioneMese: totalMonthlyCompensation,
+          TotaleAnnuo: totalAnnualCompensation,
+          DataFirmaContratto: contractSignDate ? contractSignDate.toLocaleDateString('it-IT') : '',
+          DicituraContratto: contractClause,
+          DicituraOrarioLavoro: workingHoursClause,
+          Riproporzionamento: rebalancing,
+          NominativoFormatore: trainerName,
+          InizioFormazione: trainingStartDate ? trainingStartDate.toLocaleDateString('it-IT') : '',
+          FineFormazione: trainingEndDate ? trainingEndDate.toLocaleDateString('it-IT') : '',
           
           IBAN: operator.iban,
           Banca: operator.bankName,

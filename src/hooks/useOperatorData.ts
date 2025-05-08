@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -16,10 +15,26 @@ export const useOperatorData = (operatorId: string | undefined) => {
   const [ccnl, setCcnl] = useState("pulizia-multiservizi");
   const [level, setLevel] = useState("");
   const [employmentType, setEmploymentType] = useState("indeterminato");
+  const [jobType, setJobType] = useState("security");
   const [startDate, setStartDate] = useState<Date | undefined>(new Date());
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [grossSalary, setGrossSalary] = useState("");
   const [netSalary, setNetSalary] = useState("");
+  const [weeklyHours, setWeeklyHours] = useState("");
+  const [normalHoursPercentage, setNormalHoursPercentage] = useState("");
+  const [workLocation, setWorkLocation] = useState("");
+  const [workSite, setWorkSite] = useState("");
+  const [basePayAndContingency, setBasePayAndContingency] = useState("");
+  const [edr, setEdr] = useState("");
+  const [totalMonthlyCompensation, setTotalMonthlyCompensation] = useState("");
+  const [totalAnnualCompensation, setTotalAnnualCompensation] = useState("");
+  const [contractSignDate, setContractSignDate] = useState<Date | undefined>(new Date());
+  const [contractClause, setContractClause] = useState("");
+  const [workingHoursClause, setWorkingHoursClause] = useState("");
+  const [rebalancing, setRebalancing] = useState("");
+  const [trainerName, setTrainerName] = useState("");
+  const [trainingStartDate, setTrainingStartDate] = useState<Date | undefined>(undefined);
+  const [trainingEndDate, setTrainingEndDate] = useState<Date | undefined>(undefined);
 
   useEffect(() => {
     const loadOperator = () => {
@@ -118,10 +133,11 @@ export const useOperatorData = (operatorId: string | undefined) => {
         setImagePreviewUrls(previews);
         
         if (extendedOperator.contractData) {
-          setContractType(extendedOperator.contractData.contractType || "full-time");
+          setContractType(extendedOperator.contractData.contractType || "a-chiamata");
           setCcnl(extendedOperator.contractData.ccnl || "pulizia-multiservizi");
           setLevel(extendedOperator.contractData.level || "");
           setEmploymentType(extendedOperator.contractData.employmentType || "indeterminato");
+          setJobType(extendedOperator.contractData.jobType || "security");
           
           if (extendedOperator.contractData.startDate) {
             setStartDate(new Date(extendedOperator.contractData.startDate));
@@ -133,6 +149,31 @@ export const useOperatorData = (operatorId: string | undefined) => {
           
           setGrossSalary(extendedOperator.contractData.grossSalary || "");
           setNetSalary(extendedOperator.contractData.netSalary || "");
+          setWeeklyHours(extendedOperator.contractData.weeklyHours || "");
+          setNormalHoursPercentage(extendedOperator.contractData.normalHoursPercentage || "");
+          setWorkLocation(extendedOperator.contractData.workLocation || "");
+          setWorkSite(extendedOperator.contractData.workSite || "");
+          setBasePayAndContingency(extendedOperator.contractData.basePayAndContingency || "");
+          setEdr(extendedOperator.contractData.edr || "");
+          setTotalMonthlyCompensation(extendedOperator.contractData.totalMonthlyCompensation || "");
+          setTotalAnnualCompensation(extendedOperator.contractData.totalAnnualCompensation || "");
+          
+          if (extendedOperator.contractData.contractSignDate) {
+            setContractSignDate(new Date(extendedOperator.contractData.contractSignDate));
+          }
+          
+          setContractClause(extendedOperator.contractData.contractClause || "");
+          setWorkingHoursClause(extendedOperator.contractData.workingHoursClause || "");
+          setRebalancing(extendedOperator.contractData.rebalancing || "");
+          setTrainerName(extendedOperator.contractData.trainerName || "");
+          
+          if (extendedOperator.contractData.trainingStartDate) {
+            setTrainingStartDate(new Date(extendedOperator.contractData.trainingStartDate));
+          }
+          
+          if (extendedOperator.contractData.trainingEndDate) {
+            setTrainingEndDate(new Date(extendedOperator.contractData.trainingEndDate));
+          }
         }
       } catch (error) {
         console.error("Errore nel caricamento dell'operatore:", error);
@@ -159,6 +200,8 @@ export const useOperatorData = (operatorId: string | undefined) => {
     setLevel,
     employmentType,
     setEmploymentType,
+    jobType,
+    setJobType,
     startDate,
     setStartDate,
     endDate,
@@ -166,6 +209,36 @@ export const useOperatorData = (operatorId: string | undefined) => {
     grossSalary,
     setGrossSalary,
     netSalary,
-    setNetSalary
+    setNetSalary,
+    weeklyHours,
+    setWeeklyHours,
+    normalHoursPercentage,
+    setNormalHoursPercentage,
+    workLocation,
+    setWorkLocation,
+    workSite,
+    setWorkSite,
+    basePayAndContingency,
+    setBasePayAndContingency,
+    edr,
+    setEdr,
+    totalMonthlyCompensation,
+    setTotalMonthlyCompensation,
+    totalAnnualCompensation,
+    setTotalAnnualCompensation,
+    contractSignDate,
+    setContractSignDate,
+    contractClause,
+    setContractClause,
+    workingHoursClause,
+    setWorkingHoursClause,
+    rebalancing,
+    setRebalancing,
+    trainerName,
+    setTrainerName,
+    trainingStartDate,
+    setTrainingStartDate,
+    trainingEndDate,
+    setTrainingEndDate
   };
 };

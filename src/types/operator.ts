@@ -1,4 +1,3 @@
-
 export interface Operator {
   id: number;
   name: string;
@@ -85,10 +84,26 @@ export interface ExtendedOperator extends Operator {
     ccnl?: string;
     level?: string;
     employmentType?: string;
+    jobType?: string; // New field for "Tipo mansione"
     startDate?: string;
     endDate?: string | null;
     grossSalary?: string;
     netSalary?: string;
+    weeklyHours?: string; // New field for "Ore settimanali"
+    normalHoursPercentage?: string; // New field for "Percentuale dell'orario normale"
+    workLocation?: string; // New field for "Sede di lavoro"
+    workSite?: string; // New field for "Location di lavoro"
+    basePayAndContingency?: string; // New field for "Paga base e contingenza"
+    edr?: string; // New field for "EDR"
+    totalMonthlyCompensation?: string; // New field for "Totale retribuzione mese"
+    totalAnnualCompensation?: string; // New field for "Totale annuo (x 13)"
+    contractSignDate?: string; // New field for "Data firma contratto"
+    contractClause?: string; // New field for "Dicitura contratto"
+    workingHoursClause?: string; // New field for "Dicitura orario di lavoro"
+    rebalancing?: string; // New field for "Riproporzionamento"
+    trainerName?: string; // New field for "Nominativo Formatore"
+    trainingStartDate?: string; // New field for "Inizio formazione"
+    trainingEndDate?: string; // New field for "Fine formazione"
   };
 }
 
@@ -161,7 +176,16 @@ export const BODY_TYPES = [
 
 // Define contract types
 export const CONTRACT_TYPES = [
-  { value: "full-time", label: "Tempo Pieno" },
-  { value: "part-time", label: "Part-Time" },
-  { value: "a-chiamata", label: "A Chiamata" }
+  { value: "a-chiamata", label: "A Chiamata" },
+  { value: "determinato", label: "Determinato" },
+  { value: "indeterminato", label: "Indeterminato" },
+  { value: "prestazione-occasionale", label: "Prestazione Occasionale" }
+];
+
+// Define job types
+export const JOB_TYPES = [
+  { value: "doorman", label: "Doorman" },
+  { value: "security", label: "Security" },
+  { value: "hostess-steward", label: "Hostess/Steward" },
+  { value: "porterage", label: "Porterage" }
 ];

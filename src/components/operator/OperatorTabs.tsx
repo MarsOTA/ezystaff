@@ -28,6 +28,8 @@ interface OperatorTabsProps {
   setLevel: (value: string) => void;
   employmentType: string;
   setEmploymentType: (value: string) => void;
+  jobType: string;
+  setJobType: (value: string) => void;
   startDate: Date | undefined;
   setStartDate: (date: Date | undefined) => void;
   endDate: Date | undefined;
@@ -36,6 +38,36 @@ interface OperatorTabsProps {
   setGrossSalary: (value: string) => void;
   netSalary: string;
   setNetSalary: (value: string) => void;
+  weeklyHours: string;
+  setWeeklyHours: (value: string) => void;
+  normalHoursPercentage: string;
+  setNormalHoursPercentage: (value: string) => void;
+  workLocation: string;
+  setWorkLocation: (value: string) => void;
+  workSite: string;
+  setWorkSite: (value: string) => void;
+  basePayAndContingency: string;
+  setBasePayAndContingency: (value: string) => void;
+  edr: string;
+  setEdr: (value: string) => void;
+  totalMonthlyCompensation: string;
+  setTotalMonthlyCompensation: (value: string) => void;
+  totalAnnualCompensation: string;
+  setTotalAnnualCompensation: (value: string) => void;
+  contractSignDate: Date | undefined;
+  setContractSignDate: (date: Date | undefined) => void;
+  contractClause: string;
+  setContractClause: (value: string) => void;
+  workingHoursClause: string;
+  setWorkingHoursClause: (value: string) => void;
+  rebalancing: string;
+  setRebalancing: (value: string) => void;
+  trainerName: string;
+  setTrainerName: (value: string) => void;
+  trainingStartDate: Date | undefined;
+  setTrainingStartDate: (date: Date | undefined) => void;
+  trainingEndDate: Date | undefined;
+  setTrainingEndDate: (date: Date | undefined) => void;
   onTemplateUpload?: (file: File | null) => void;
   templateFile?: File | null;
 }
@@ -61,6 +93,8 @@ const OperatorTabs: React.FC<OperatorTabsProps> = ({
   setLevel,
   employmentType,
   setEmploymentType,
+  jobType,
+  setJobType,
   startDate,
   setStartDate,
   endDate,
@@ -69,6 +103,36 @@ const OperatorTabs: React.FC<OperatorTabsProps> = ({
   setGrossSalary,
   netSalary,
   setNetSalary,
+  weeklyHours,
+  setWeeklyHours,
+  normalHoursPercentage,
+  setNormalHoursPercentage,
+  workLocation,
+  setWorkLocation,
+  workSite,
+  setWorkSite,
+  basePayAndContingency,
+  setBasePayAndContingency,
+  edr,
+  setEdr,
+  totalMonthlyCompensation,
+  setTotalMonthlyCompensation,
+  totalAnnualCompensation,
+  setTotalAnnualCompensation,
+  contractSignDate,
+  setContractSignDate,
+  contractClause,
+  setContractClause,
+  workingHoursClause,
+  setWorkingHoursClause,
+  rebalancing,
+  setRebalancing,
+  trainerName,
+  setTrainerName,
+  trainingStartDate,
+  setTrainingStartDate,
+  trainingEndDate,
+  setTrainingEndDate,
   onTemplateUpload,
   templateFile
 }) => {
@@ -114,6 +178,8 @@ const OperatorTabs: React.FC<OperatorTabsProps> = ({
           setLevel={setLevel}
           employmentType={employmentType}
           setEmploymentType={setEmploymentType}
+          jobType={jobType}
+          setJobType={setJobType}
           startDate={startDate}
           setStartDate={setStartDate}
           endDate={endDate}
@@ -122,6 +188,36 @@ const OperatorTabs: React.FC<OperatorTabsProps> = ({
           setGrossSalary={setGrossSalary}
           netSalary={netSalary}
           setNetSalary={setNetSalary}
+          weeklyHours={weeklyHours}
+          setWeeklyHours={setWeeklyHours}
+          normalHoursPercentage={normalHoursPercentage}
+          setNormalHoursPercentage={setNormalHoursPercentage}
+          workLocation={workLocation}
+          setWorkLocation={setWorkLocation}
+          workSite={workSite}
+          setWorkSite={setWorkSite}
+          basePayAndContingency={basePayAndContingency}
+          setBasePayAndContingency={setBasePayAndContingency}
+          edr={edr}
+          setEdr={setEdr}
+          totalMonthlyCompensation={totalMonthlyCompensation}
+          setTotalMonthlyCompensation={setTotalMonthlyCompensation}
+          totalAnnualCompensation={totalAnnualCompensation}
+          setTotalAnnualCompensation={setTotalAnnualCompensation}
+          contractSignDate={contractSignDate}
+          setContractSignDate={setContractSignDate}
+          contractClause={contractClause}
+          setContractClause={setContractClause}
+          workingHoursClause={workingHoursClause}
+          setWorkingHoursClause={setWorkingHoursClause}
+          rebalancing={rebalancing}
+          setRebalancing={setRebalancing}
+          trainerName={trainerName}
+          setTrainerName={setTrainerName}
+          trainingStartDate={trainingStartDate}
+          setTrainingStartDate={setTrainingStartDate}
+          trainingEndDate={trainingEndDate}
+          setTrainingEndDate={setTrainingEndDate}
           onSave={onSave}
           onTemplateUpload={onTemplateUpload}
           templateFile={templateFile}
