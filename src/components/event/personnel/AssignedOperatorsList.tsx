@@ -17,13 +17,13 @@ const AssignedOperatorsList: React.FC<AssignedOperatorsListProps> = ({
   handleUnassignOperator
 }) => {
   const getOperatorProfession = (operator: Operator): string => {
-    return operator.profession || "security";
+    return operator.profession || operator.occupation || "security";
   };
 
   return (
     <div className="space-y-2">
-      <Label>Personale assegnato all'evento</Label>
-      <div className="border rounded-md p-4">
+      <Label>Personale assegnato all'evento ({assignedOperators.length})</Label>
+      <div className="border rounded-md p-4 max-h-60 overflow-y-auto">
         {assignedOperators.length > 0 ? (
           <ul className="divide-y">
             {assignedOperators.map((operator) => (
@@ -32,15 +32,17 @@ const AssignedOperatorsList: React.FC<AssignedOperatorsListProps> = ({
                   <span className="font-medium">{operator.name}</span>
                   <span className="ml-2 text-sm text-gray-500">{getOperatorProfession(operator)}</span>
                 </div>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="text-red-500" 
-                  onClick={() => eventId && handleUnassignOperator(operator.id, parseInt(eventId))}
-                >
-                  <X className="h-4 w-4 mr-1" />
-                  Rimuovi
-                </Button>
+                {eventId && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="text-red-500" 
+                    onClick={() => handleUnassignOperator(operator.id, parseInt(eventId))}
+                  >
+                    <X className="h-4 w-4 mr-1" />
+                    Rimuovi
+                  </Button>
+                )}
               </li>
             ))}
           </ul>

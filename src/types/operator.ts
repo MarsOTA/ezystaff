@@ -8,6 +8,7 @@ export interface Operator {
   gender?: string;
   profession?: string;
   rating?: number;
+  occupation?: string; // Add occupation as an alternative to profession
 }
 
 export interface ExtendedOperator extends Operator {
