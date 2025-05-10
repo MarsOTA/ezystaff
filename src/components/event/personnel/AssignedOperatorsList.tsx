@@ -37,7 +37,11 @@ const AssignedOperatorsList: React.FC<AssignedOperatorsListProps> = ({
                     variant="ghost" 
                     size="sm" 
                     className="text-red-500" 
-                    onClick={() => handleUnassignOperator(operator.id, parseInt(eventId))}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      handleUnassignOperator(operator.id, parseInt(eventId));
+                    }}
                   >
                     <X className="h-4 w-4 mr-1" />
                     Rimuovi

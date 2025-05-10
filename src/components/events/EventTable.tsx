@@ -125,7 +125,10 @@ const EventTable = ({ events, onShowDetails, onEditEvent, onDeleteEvent }: Event
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    onClick={(e) => onEditEvent(e, event.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEditEvent(e, event.id);
+                    }}
                   >
                     <Edit className="h-4 w-4" />
                   </Button>
@@ -133,7 +136,10 @@ const EventTable = ({ events, onShowDetails, onEditEvent, onDeleteEvent }: Event
                     variant="outline" 
                     size="sm" 
                     className="text-red-500 hover:text-red-600" 
-                    onClick={(e) => onDeleteEvent(e, event.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDeleteEvent(e, event.id);
+                    }}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
