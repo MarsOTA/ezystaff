@@ -70,24 +70,25 @@ const EventPlanner: React.FC<EventPlannerProps> = ({
         return;
       }
       
-      // Update operators state
-      setOperators(prev => 
-        prev.map(op => {
-          if (op.id === assigningOperator.id) {
-            const currentAssignedEvents = op.assignedEvents || [];
-            if (currentAssignedEvents.includes(eventIdNum)) {
-              toast.info("Operatore già assegnato a questo evento");
-              return op;
-            }
-            
-            return {
-              ...op,
-              assignedEvents: [...currentAssignedEvents, eventIdNum]
-            };
+      // Update operators state with the new assignment
+      const updatedOperators = operators.map(op => {
+        if (op.id === assigningOperator.id) {
+          const currentAssignedEvents = op.assignedEvents || [];
+          if (currentAssignedEvents.includes(eventIdNum)) {
+            toast.info("Operatore già assegnato a questo evento");
+            return op;
           }
-          return op;
-        })
-      );
+          
+          return {
+            ...op,
+            assignedEvents: [...currentAssignedEvents, eventIdNum]
+          };
+        }
+        return op;
+      });
+      
+      // Update state and storage
+      setOperators(updatedOperators);
       
       const eventName = events.find(e => e.id === eventIdNum)?.title || "Evento corrente";
       toast.success(`${assigningOperator.name} assegnato a "${eventName}"`);
@@ -100,17 +101,19 @@ const EventPlanner: React.FC<EventPlannerProps> = ({
   
   // Unassign operator from event
   const handleUnassignOperator = (operatorId: number, eventId: number) => {
-    setOperators(prev => 
-      prev.map(op => {
-        if (op.id === operatorId) {
-          return {
-            ...op,
-            assignedEvents: op.assignedEvents ? op.assignedEvents.filter(id => id !== eventId) : []
-          };
-        }
-        return op;
-      })
-    );
+    // Update operators state with the operator removed from this event
+    const updatedOperators = operators.map(op => {
+      if (op.id === operatorId) {
+        return {
+          ...op,
+          assignedEvents: op.assignedEvents ? op.assignedEvents.filter(id => id !== eventId) : []
+        };
+      }
+      return op;
+    });
+    
+    // Update state and storage
+    setOperators(updatedOperators);
     
     const operator = operators.find(op => op.id === operatorId);
     const event = events.find(e => e.id === eventId);

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Operator } from "@/types/operator";
 import { Event, EVENTS_STORAGE_KEY } from "@/types/event";
@@ -58,12 +59,28 @@ export const useOperatorStorage = () => {
   
   // Save operators to storage whenever they change
   useEffect(() => {
-    saveOperators(operators);
+    if (operators.length > 0) {
+      saveOperators(operators);
+    }
   }, [operators]);
+
+  // Update setOperators to ensure operator data is saved
+  const updateOperators = (newOperators: Operator[] | ((prev: Operator[]) => Operator[])) => {
+    if (typeof newOperators === 'function') {
+      setOperators((prev) => {
+        const result = newOperators(prev);
+        saveOperators(result);
+        return result;
+      });
+    } else {
+      setOperators(newOperators);
+      saveOperators(newOperators);
+    }
+  };
 
   return {
     operators,
-    setOperators,
+    setOperators: updateOperators,
     events
   };
 };
