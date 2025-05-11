@@ -81,19 +81,40 @@ export const usePayrollData = (operator: ExtendedOperator) => {
         return;
       }
 
-      // Process completed events and calculate actual hours
+      // Process completed events and calculate compensation based on gross salary
       const processedCalculations = calculationsData.map(calc => {
+        // Retrieves contract data from operator
+        const contractData = operator.contractData || {};
+        // Get gross salary from contract or default to 0
+        const grossSalary = parseFloat(contractData.grossSalary || "0");
+        
+        // Calculate hourly rate from gross monthly salary
+        // Assuming standard 160 working hours per month (40 hours/week * 4 weeks)
+        const hourlyRate = grossSalary / 160;
+        
         if (calc.actual_hours === undefined) {
           // For completed events without actual hours set, use estimated hours minus break
           const grossHours = calc.grossHours;
           const netHours = grossHours > 5 ? grossHours - 1 : grossHours;
+          
+          // Calculate compensation based on gross salary hourly rate
+          const compensation = netHours * hourlyRate;
+          
           return {
             ...calc,
             netHours,
+            compensation,
             actual_hours: netHours // Set actual_hours equal to netHours (estimated - break)
           };
         }
-        return calc;
+        
+        // For events with actual_hours already set, recalculate compensation
+        const compensation = calc.actual_hours * hourlyRate;
+        
+        return {
+          ...calc,
+          compensation
+        };
       });
       
       // Set events and calculations
@@ -120,7 +141,7 @@ export const usePayrollData = (operator: ExtendedOperator) => {
     } finally {
       setLoading(false);
     }
-  }, [operator.id]);
+  }, [operator.id, operator.contractData]);
 
   // Load events and calculate payroll from Supabase or localStorage
   useEffect(() => {
