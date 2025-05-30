@@ -7,21 +7,16 @@ import 'react-big-calendar/lib/css/react-big-calendar.css';
 import Layout from "@/components/Layout";
 import { Event, EVENTS_STORAGE_KEY } from "@/types/event";
 import { safeLocalStorage } from "@/utils/fileUtils";
-import EventDetailDialog from "@/components/events/EventDetailDialog";
 
 const localizer = momentLocalizer(moment);
 
 const Calendar = () => {
   const navigate = useNavigate();
   const [events, setEvents] = useState<Event[]>([]);
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
-  const [isClosingEvent, setIsClosingEvent] = useState(false);
   const calendarRef = useRef<BigCalendar>(null);
 
   useEffect(() => {
     const storedEvents = safeLocalStorage.getItem(EVENTS_STORAGE_KEY);
-    
     if (storedEvents) {
       try {
         const parsedEvents = JSON.parse(storedEvents);
@@ -41,24 +36,7 @@ const Calendar = () => {
   }, []);
 
   const handleSelectEvent = (event: Event) => {
-    // Set the selected event and open the dialog
-    const originalEvent = events.find(e => e.id === event.id);
-    if (originalEvent) {
-      setSelectedEvent(originalEvent);
-      setIsDetailsOpen(true);
-    } else {
-      navigate(`/events/create?id=${event.id}`);
-    }
-  };
-
-  const handleCloseEvent = (eventId: number) => {
-    // Implement event closing logic or navigate to edit
-    setIsClosingEvent(true);
-    setTimeout(() => {
-      navigate(`/events/create?id=${eventId}`);
-      setIsClosingEvent(false);
-      setIsDetailsOpen(false);
-    }, 500);
+    navigate(`/events/create?id=${event.id}`);
   };
 
   return (
@@ -74,15 +52,6 @@ const Calendar = () => {
           style={{ margin: '20px' }}
         />
       </div>
-      
-      {/* Event Detail Dialog */}
-      <EventDetailDialog
-        event={selectedEvent}
-        isOpen={isDetailsOpen}
-        onOpenChange={setIsDetailsOpen}
-        onEventClose={handleCloseEvent}
-        isClosingEvent={isClosingEvent}
-      />
     </Layout>
   );
 };
