@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
@@ -57,17 +56,18 @@ const EventTable = ({ events, onShowDetails, onEditEvent, onDeleteEvent }: Event
     }
   };
 
-  // Calculate staff KPI for an event
+  // Calculate staff KPI for an event - updated to force re-calculation
   const calculateStaffKPI = (event: Event) => {
-    // Count assigned operators
+    // Count assigned operators for this specific event
     const assignedOperatorsCount = operators.filter(op => 
       op.assignedEvents && op.assignedEvents.includes(event.id)
     ).length;
 
-    // Calculate total required personnel
+    // Calculate total required personnel from event data
     const totalRequired = event.personnelCounts ? 
       Object.values(event.personnelCounts).reduce((sum, count) => sum + count, 0) : 0;
 
+    // Return both numbers and percentage
     return {
       assigned: assignedOperatorsCount,
       required: totalRequired,

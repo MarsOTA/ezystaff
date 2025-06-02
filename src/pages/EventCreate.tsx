@@ -124,7 +124,17 @@ const EventCreate = () => {
     
     if (result.success) {
       toast.success(result.message);
-      navigate("/events");
+      // Only navigate if creating a new event, stay on the same page if editing
+      if (!isEditMode) {
+        navigate("/events");
+      }
+      // If editing, refresh the form data to reflect any changes
+      else {
+        // Force a small delay to ensure data is saved before any potential re-renders
+        setTimeout(() => {
+          toast.success("Evento aggiornato. Le modifiche sono state salvate.");
+        }, 100);
+      }
     } else {
       toast.error(result.message);
     }

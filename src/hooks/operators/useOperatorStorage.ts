@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Operator } from "@/types/operator";
 import { Event, EVENTS_STORAGE_KEY } from "@/types/event";
 import { safeLocalStorage } from "@/utils/fileUtils";
@@ -64,23 +63,29 @@ export const useOperatorStorage = () => {
     }
   }, [operators]);
 
-  // Update setOperators to ensure operator data is saved
-  const updateOperators = (newOperators: Operator[] | ((prev: Operator[]) => Operator[])) => {
+  // Enhanced updateOperators function with callback support for immediate updates
+  const updateOperators = useCallback((newOperators: Operator[] | ((prev: Operator[]) => Operator[])) => {
     if (typeof newOperators === 'function') {
       setOperators((prev) => {
         const result = newOperators(prev);
+        // Immediate save to ensure persistence
         saveOperators(result);
         return result;
       });
     } else {
       setOperators(newOperators);
+      // Immediate save to ensure persistence
       saveOperators(newOperators);
     }
-  };
+  }, []);
+
+  // Force a re-render when operators change by returning a key
+  const operatorsKey = operators.map(op => `${op.id}-${op.assignedEvents?.join(',') || ''}`).join('|');
 
   return {
     operators,
     setOperators: updateOperators,
-    events
+    events,
+    operatorsKey // Add this to help components detect changes
   };
 };
