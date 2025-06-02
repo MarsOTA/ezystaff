@@ -106,8 +106,8 @@ export const combineDateTime = (date: Date | undefined, timeString: string): Dat
 };
 
 export const validateEventForm = (formData: EventFormData): string | null => {
-  if (!formData.title || !formData.client || formData.selectedPersonnel.length === 0 || !formData.startDate || !formData.endDate) {
-    return "Compila tutti i campi obbligatori";
+  if (!formData.title || !formData.client || !formData.startDate || !formData.endDate) {
+    return "Compila tutti i campi obbligatori (titolo, cliente, date)";
   }
   
   try {

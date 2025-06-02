@@ -6,7 +6,6 @@ import OperatorsTable from './personnel/OperatorsTable';
 import AssignedOperatorsList from './personnel/AssignedOperatorsList';
 import { Operator } from '@/types/operator';
 import { toast } from "sonner";
-import AssignEventDialog from '../operators/AssignEventDialog';
 
 interface EventPlannerProps {
   selectedPersonnel: string[];
@@ -26,10 +25,6 @@ const EventPlanner: React.FC<EventPlannerProps> = ({
   // Use operator storage for operators and events data
   const { operators, setOperators, events } = useOperatorStorage();
   
-  // Dialog state
-  const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
-  const [assigningOperator, setAssigningOperator] = useState<Operator | null>(null);
-  
   // Get assigned operators for this event (if eventId exists)
   const assignedOperators = useMemo(() => {
     if (!eventId) return [];
@@ -47,18 +42,9 @@ const EventPlanner: React.FC<EventPlannerProps> = ({
     }
   }, [operators, eventId]);
   
-  // Open assignment dialog for an operator
-  const openAssignDialog = (operator: Operator) => {
-    setAssigningOperator(operator);
-    setIsAssignDialogOpen(true);
-  };
-  
-  // Handle dialog submission to assign operator to event
-  const handleAssignSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (!assigningOperator || !eventId) {
+  // Direct assignment without dialog - simplified for Event Planner context
+  const handleDirectAssign = (operator: Operator) => {
+    if (!eventId) {
       toast.error("Impossibile assegnare l'operatore all'evento");
       return;
     }
@@ -72,7 +58,7 @@ const EventPlanner: React.FC<EventPlannerProps> = ({
       
       // Update operators state with the new assignment
       const updatedOperators = operators.map(op => {
-        if (op.id === assigningOperator.id) {
+        if (op.id === operator.id) {
           const currentAssignedEvents = op.assignedEvents || [];
           if (currentAssignedEvents.includes(eventIdNum)) {
             toast.info("Operatore già assegnato a questo evento");
@@ -91,8 +77,7 @@ const EventPlanner: React.FC<EventPlannerProps> = ({
       setOperators(updatedOperators);
       
       const eventName = events.find(e => e.id === eventIdNum)?.title || "Evento corrente";
-      toast.success(`${assigningOperator.name} assegnato a "${eventName}"`);
-      setIsAssignDialogOpen(false);
+      toast.success(`${operator.name} assegnato a "${eventName}"`);
     } catch (error) {
       console.error("Error assigning operator:", error);
       toast.error("Errore durante l'assegnazione dell'operatore");
@@ -146,7 +131,7 @@ const EventPlanner: React.FC<EventPlannerProps> = ({
       <OperatorsTable
         operators={operators}
         eventId={eventId}
-        openAssignDialog={openAssignDialog}
+        openAssignDialog={handleDirectAssign}
         handleUnassignOperator={handleUnassignOperator}
       />
 
@@ -155,17 +140,6 @@ const EventPlanner: React.FC<EventPlannerProps> = ({
         assignedOperators={assignedOperators}
         eventId={eventId}
         handleUnassignOperator={handleUnassignOperator}
-      />
-      
-      {/* Assignment Dialog */}
-      <AssignEventDialog
-        open={isAssignDialogOpen}
-        onOpenChange={setIsAssignDialogOpen}
-        assigningOperator={assigningOperator}
-        selectedEventId={eventId || ""}
-        setSelectedEventId={() => {}} // Not needed here since we're using the current event
-        events={eventId ? events.filter(e => e.id.toString() === eventId) : []}
-        onSubmit={handleAssignSubmit}
       />
     </div>
   );

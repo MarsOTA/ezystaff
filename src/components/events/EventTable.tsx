@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
@@ -22,7 +23,7 @@ interface EventTableProps {
 }
 
 const EventTable = ({ events, onShowDetails, onEditEvent, onDeleteEvent }: EventTableProps) => {
-  const { operators } = useOperatorStorage();
+  const { operators, operatorsKey } = useOperatorStorage();
   
   const formatDateRange = (start: Date, end: Date) => {
     const sameDay = start.getDate() === end.getDate() && 
@@ -56,8 +57,8 @@ const EventTable = ({ events, onShowDetails, onEditEvent, onDeleteEvent }: Event
     }
   };
 
-  // Calculate staff KPI for an event - updated to force re-calculation
-  const calculateStaffKPI = (event: Event) => {
+  // Calculate staff KPI for an event - force re-calculation with operatorsKey
+  const calculateStaffKPI = (event: Event, _operatorsKey: string) => {
     // Count assigned operators for this specific event
     const assignedOperatorsCount = operators.filter(op => 
       op.assignedEvents && op.assignedEvents.includes(event.id)
@@ -96,10 +97,10 @@ const EventTable = ({ events, onShowDetails, onEditEvent, onDeleteEvent }: Event
       </TableHeader>
       <TableBody>
         {events.map((event) => {
-          const kpi = calculateStaffKPI(event);
+          const kpi = calculateStaffKPI(event, operatorsKey);
           return (
             <TableRow 
-              key={event.id} 
+              key={`${event.id}-${operatorsKey}`}
               className="cursor-pointer hover:bg-muted/50" 
               onClick={() => onShowDetails(event)}
             >
