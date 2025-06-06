@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { User, Instagram, Facebook, Linkedin } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { User, Instagram, Facebook, Linkedin, X } from "lucide-react";
 
 interface PersonalInfoTabProps {
   operator: ExtendedOperator;
@@ -28,6 +29,28 @@ const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
   onSizeToggle,
   onFileUpload
 }) => {
+  const handleLanguageAdd = (language: string, type: 'fluent' | 'basic') => {
+    const field = type === 'fluent' ? 'fluentLanguages' : 'basicLanguages';
+    const currentLanguages = operator[field] || [];
+    
+    if (!currentLanguages.includes(language)) {
+      onFieldChange(field, [...currentLanguages, language]);
+    }
+  };
+
+  const handleLanguageRemove = (language: string, type: 'fluent' | 'basic') => {
+    const field = type === 'fluent' ? 'fluentLanguages' : 'basicLanguages';
+    const currentLanguages = operator[field] || [];
+    
+    onFieldChange(field, currentLanguages.filter(lang => lang !== language));
+  };
+
+  const getAvailableLanguages = (type: 'fluent' | 'basic') => {
+    const field = type === 'fluent' ? 'fluentLanguages' : 'basicLanguages';
+    const selectedLanguages = operator[field] || [];
+    return LANGUAGES.filter(lang => !selectedLanguages.includes(lang));
+  };
+
   return (
     <div className="space-y-6">
       {/* DATI ANAGRAFICI */}
@@ -287,43 +310,59 @@ const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
         <CardContent className="space-y-6">
           <div className="space-y-4">
             <Label>Lingue parlate fluentemente</Label>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
-              {LANGUAGES.map((language) => (
-                <div key={`fluent-${language}`} className="flex items-center space-x-2">
-                  <Checkbox 
-                    id={`fluent-${language}`} 
-                    checked={operator.fluentLanguages?.includes(language)}
-                    onCheckedChange={() => onLanguageToggle(language, 'fluent')}
-                  />
-                  <Label 
-                    htmlFor={`fluent-${language}`}
-                    className="text-sm font-normal"
-                  >
+            <div className="space-y-2">
+              <Select onValueChange={(value) => handleLanguageAdd(value, 'fluent')}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleziona lingua" />
+                </SelectTrigger>
+                <SelectContent>
+                  {getAvailableLanguages('fluent').map((language) => (
+                    <SelectItem key={language} value={language}>
+                      {language}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {operator.fluentLanguages?.map((language) => (
+                  <Badge key={language} variant="secondary" className="flex items-center gap-1">
                     {language}
-                  </Label>
-                </div>
-              ))}
+                    <X 
+                      className="h-3 w-3 cursor-pointer" 
+                      onClick={() => handleLanguageRemove(language, 'fluent')}
+                    />
+                  </Badge>
+                ))}
+              </div>
             </div>
           </div>
           
           <div className="space-y-4">
             <Label>Lingue parlate a livello base</Label>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
-              {LANGUAGES.map((language) => (
-                <div key={`basic-${language}`} className="flex items-center space-x-2">
-                  <Checkbox 
-                    id={`basic-${language}`} 
-                    checked={operator.basicLanguages?.includes(language)}
-                    onCheckedChange={() => onLanguageToggle(language, 'basic')}
-                  />
-                  <Label 
-                    htmlFor={`basic-${language}`}
-                    className="text-sm font-normal"
-                  >
+            <div className="space-y-2">
+              <Select onValueChange={(value) => handleLanguageAdd(value, 'basic')}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleziona lingua" />
+                </SelectTrigger>
+                <SelectContent>
+                  {getAvailableLanguages('basic').map((language) => (
+                    <SelectItem key={language} value={language}>
+                      {language}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {operator.basicLanguages?.map((language) => (
+                  <Badge key={language} variant="secondary" className="flex items-center gap-1">
                     {language}
-                  </Label>
-                </div>
-              ))}
+                    <X 
+                      className="h-3 w-3 cursor-pointer" 
+                      onClick={() => handleLanguageRemove(language, 'basic')}
+                    />
+                  </Badge>
+                ))}
+              </div>
             </div>
           </div>
         </CardContent>
