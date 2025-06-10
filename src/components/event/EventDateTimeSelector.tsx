@@ -26,6 +26,10 @@ const EventDateTimeSelector: React.FC<EventDateTimeSelectorProps> = ({
   onStartTimeChange,
   onEndTimeChange
 }) => {
+  // Ensure dates are valid Date objects or undefined
+  const validStartDate = startDate && !isNaN(startDate.getTime()) ? startDate : undefined;
+  const validEndDate = endDate && !isNaN(endDate.getTime()) ? endDate : undefined;
+
   return (
     <div className="grid md:grid-cols-2 gap-6">
       <div className="space-y-2">
@@ -33,7 +37,7 @@ const EventDateTimeSelector: React.FC<EventDateTimeSelectorProps> = ({
         <div className="border rounded-md p-4">
           <Calendar
             mode="single"
-            selected={startDate}
+            selected={validStartDate}
             onSelect={onStartDateChange}
             locale={it}
             className="mx-auto"
@@ -43,7 +47,7 @@ const EventDateTimeSelector: React.FC<EventDateTimeSelectorProps> = ({
             <Input 
               id="start-time" 
               type="time" 
-              value={startTime}
+              value={startTime || "09:00"}
               onChange={(e) => onStartTimeChange(e.target.value)}
             />
           </div>
@@ -55,7 +59,7 @@ const EventDateTimeSelector: React.FC<EventDateTimeSelectorProps> = ({
         <div className="border rounded-md p-4">
           <Calendar
             mode="single"
-            selected={endDate}
+            selected={validEndDate}
             onSelect={onEndDateChange}
             locale={it}
             className="mx-auto"
@@ -65,7 +69,7 @@ const EventDateTimeSelector: React.FC<EventDateTimeSelectorProps> = ({
             <Input 
               id="end-time" 
               type="time" 
-              value={endTime}
+              value={endTime || "18:00"}
               onChange={(e) => onEndTimeChange(e.target.value)}
             />
           </div>

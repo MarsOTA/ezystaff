@@ -3,6 +3,13 @@ import { useState, useEffect } from 'react';
 import { Event, EVENTS_STORAGE_KEY } from '@/types/event';
 import { safeLocalStorage } from "@/utils/fileUtils";
 
+// Helper function to safely convert to Date
+const safeToDate = (dateValue: any): Date => {
+  if (!dateValue) return new Date();
+  const date = new Date(dateValue);
+  return isNaN(date.getTime()) ? new Date() : date;
+};
+
 export const useEventsData = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
@@ -19,8 +26,8 @@ export const useEventsData = () => {
         const parsedEvents = JSON.parse(storedEvents);
         const eventsWithDates = parsedEvents.map((event: any) => ({
           ...event,
-          startDate: new Date(event.startDate),
-          endDate: new Date(event.endDate)
+          startDate: safeToDate(event.startDate),
+          endDate: safeToDate(event.endDate)
         }));
         setEvents(eventsWithDates);
       } catch (error) {
@@ -68,8 +75,8 @@ export const useEventsData = () => {
         const parsedEvents = JSON.parse(storedEvents);
         const eventsWithDates = parsedEvents.map((event: any) => ({
           ...event,
-          startDate: new Date(event.startDate),
-          endDate: new Date(event.endDate)
+          startDate: safeToDate(event.startDate),
+          endDate: safeToDate(event.endDate)
         }));
         
         const filteredEvents = eventsWithDates.filter(event => {
@@ -88,8 +95,8 @@ export const useEventsData = () => {
         const parsedEvents = JSON.parse(storedEvents);
         const eventsWithDates = parsedEvents.map((event: any) => ({
           ...event,
-          startDate: new Date(event.startDate),
-          endDate: new Date(event.endDate)
+          startDate: safeToDate(event.startDate),
+          endDate: safeToDate(event.endDate)
         }));
         setEvents(eventsWithDates);
       } catch (error) {

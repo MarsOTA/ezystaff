@@ -24,11 +24,23 @@ const Calendar = () => {
     if (storedEvents) {
       try {
         const parsedEvents = JSON.parse(storedEvents);
-        const eventsWithDates = parsedEvents.map((event: any) => ({
-          ...event,
-          start: new Date(event.startDate),
-          end: new Date(event.endDate),
-        }));
+        const eventsWithDates = parsedEvents.map((event: any) => {
+          // Ensure dates are properly converted to Date objects
+          const startDate = event.startDate ? new Date(event.startDate) : new Date();
+          const endDate = event.endDate ? new Date(event.endDate) : new Date();
+          
+          // Validate that dates are valid
+          const validStartDate = isNaN(startDate.getTime()) ? new Date() : startDate;
+          const validEndDate = isNaN(endDate.getTime()) ? new Date() : endDate;
+          
+          return {
+            ...event,
+            startDate: validStartDate,
+            endDate: validEndDate,
+            start: validStartDate,
+            end: validEndDate,
+          };
+        });
         setEvents(eventsWithDates);
       } catch (error) {
         console.error("Errore nel caricamento degli eventi:", error);

@@ -5,6 +5,13 @@ import TaskCard from "@/components/operator/tasks/TaskCard";
 import { useOperatorTasks } from "@/hooks/useOperatorTasks";
 import { useOperatorAttendance } from "@/hooks/useOperatorAttendance";
 
+// Helper function to safely convert to Date
+const safeToDate = (dateValue: any): Date => {
+  if (!dateValue) return new Date();
+  const date = new Date(dateValue);
+  return isNaN(date.getTime()) ? new Date() : date;
+};
+
 const TasksPage: React.FC = () => {
   const { tasks, loading } = useOperatorTasks();
   
@@ -23,13 +30,20 @@ const TasksPage: React.FC = () => {
   // Select the most relevant event to display using proper prioritization
   const today = new Date();
   
+  // Ensure all task dates are properly converted
+  const validTasks = tasks.map(task => ({
+    ...task,
+    startDate: safeToDate(task.startDate),
+    endDate: safeToDate(task.endDate)
+  }));
+  
   // 1) Find event that includes today's date
-  const todayEvent = tasks.find(
+  const todayEvent = validTasks.find(
     (e) => e.startDate <= today && e.endDate >= today
   );
   
   // 2) If no today event exists, find the first upcoming event sorted by start date
-  const upcomingEvent = tasks
+  const upcomingEvent = validTasks
     .filter((e) => e.startDate > today)
     .sort((a, b) => a.startDate.getTime() - b.startDate.getTime())[0];
   
@@ -52,7 +66,7 @@ const TasksPage: React.FC = () => {
         
         {loading ? (
           <div className="p-8 text-center">Caricamento attività...</div>
-        ) : tasks.length === 0 ? (
+        ) : validTasks.length === 0 ? (
           <TaskCard 
             event={mockEvent}
             isCheckingIn={isCheckingIn}
