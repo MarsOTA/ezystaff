@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState, useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -14,6 +14,7 @@ import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { Event } from "@/types/event";
 import { Operator } from "@/types/operator";
+import OperatorFilters from "./OperatorFilters";
 
 interface OperatorsListProps {
   operators: Operator[];
@@ -32,6 +33,35 @@ const OperatorsList: React.FC<OperatorsListProps> = ({
   onDelete,
   onAssign,
 }) => {
+  const [filters, setFilters] = useState({
+    name: '',
+    surname: '',
+    email: '',
+    phone: '',
+    gender: '',
+    profession: ''
+  });
+
+  const handleFilterChange = (field: string, value: string) => {
+    setFilters(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const filteredOperators = useMemo(() => {
+    return operators.filter(operator => {
+      const nameMatch = operator.name?.toLowerCase().includes(filters.name.toLowerCase()) ?? true;
+      const surnameMatch = operator.surname?.toLowerCase().includes(filters.surname.toLowerCase()) ?? true;
+      const emailMatch = operator.email?.toLowerCase().includes(filters.email.toLowerCase()) ?? true;
+      const phoneMatch = operator.phone?.includes(filters.phone) ?? true;
+      const genderMatch = filters.gender === '' || operator.gender === filters.gender;
+      const professionMatch = filters.profession === '' || operator.profession === filters.profession;
+      
+      return nameMatch && surnameMatch && emailMatch && phoneMatch && genderMatch && professionMatch;
+    });
+  }, [operators, filters]);
+
   const getAssignedEvents = (operatorId: number) => {
     const operator = operators.find(op => op.id === operatorId);
     if (!operator || !operator.assignedEvents || operator.assignedEvents.length === 0) {
@@ -59,95 +89,115 @@ const OperatorsList: React.FC<OperatorsListProps> = ({
   };
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Nome</TableHead>
-          <TableHead>Email</TableHead>
-          <TableHead>Telefono</TableHead>
-          <TableHead>Stato</TableHead>
-          <TableHead>Eventi Assegnati</TableHead>
-          <TableHead className="text-right">Azioni</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {operators.map((operator) => (
-          <TableRow key={operator.id}>
-            <TableCell>{operator.name}</TableCell>
-            <TableCell>{operator.email}</TableCell>
-            <TableCell>{operator.phone}</TableCell>
-            <TableCell>
-              <span
-                className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                  operator.status === "active"
-                    ? "bg-green-100 text-green-800"
-                    : "bg-red-100 text-red-800"
-                }`}
-              >
-                {operator.status === "active" ? "Attivo" : "Inattivo"}
-              </span>
-            </TableCell>
-            <TableCell>
-              {getAssignedEvents(operator.id).length > 0 ? (
-                <div className="flex flex-wrap gap-1">
-                  {getAssignedEvents(operator.id).map((event) => (
-                    <span 
-                      key={event.id}
-                      className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-blue-100 text-blue-800"
-                      title={formatDateRange(event.startDate, event.endDate)}
-                    >
-                      {event.title}
-                    </span>
-                  ))}
-                </div>
-              ) : (
-                <span className="text-muted-foreground text-sm">Nessun evento</span>
-              )}
-            </TableCell>
-            <TableCell className="text-right">
-              <div className="flex justify-end gap-2">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => onStatusToggle(operator.id)}
-                  title={operator.status === "active" ? "Disattiva operatore" : "Attiva operatore"}
-                >
-                  {operator.status === "active" ? (
-                    <UserX className="h-4 w-4" />
-                  ) : (
-                    <UserCheck className="h-4 w-4" />
-                  )}
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="icon"
-                  onClick={() => onEdit(operator)}
-                  title="Modifica operatore"
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => onAssign(operator)}
-                  title="Assegna a evento"
-                >
-                  <CalendarClock className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => onDelete(operator.id)}
-                  title="Elimina operatore"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </TableCell>
+    <div className="space-y-4">
+      <OperatorFilters 
+        filters={filters}
+        onFilterChange={handleFilterChange}
+      />
+      
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Nome</TableHead>
+            <TableHead>Cognome</TableHead>
+            <TableHead>Email</TableHead>
+            <TableHead>Cell.</TableHead>
+            <TableHead>Genere</TableHead>
+            <TableHead>Professione</TableHead>
+            <TableHead>Stato</TableHead>
+            <TableHead>Eventi Assegnati</TableHead>
+            <TableHead className="text-right">Azioni</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+        <TableBody>
+          {filteredOperators.map((operator) => (
+            <TableRow key={operator.id}>
+              <TableCell>{operator.name || '-'}</TableCell>
+              <TableCell>{operator.surname || '-'}</TableCell>
+              <TableCell>{operator.email || '-'}</TableCell>
+              <TableCell>{operator.phone || '-'}</TableCell>
+              <TableCell className="capitalize">{operator.gender || '-'}</TableCell>
+              <TableCell className="capitalize">{operator.profession || '-'}</TableCell>
+              <TableCell>
+                <span
+                  className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                    operator.status === "active"
+                      ? "bg-green-100 text-green-800"
+                      : "bg-red-100 text-red-800"
+                  }`}
+                >
+                  {operator.status === "active" ? "Attivo" : "Inattivo"}
+                </span>
+              </TableCell>
+              <TableCell>
+                {getAssignedEvents(operator.id).length > 0 ? (
+                  <div className="flex flex-wrap gap-1">
+                    {getAssignedEvents(operator.id).map((event) => (
+                      <span 
+                        key={event.id}
+                        className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-blue-100 text-blue-800"
+                        title={formatDateRange(event.startDate, event.endDate)}
+                      >
+                        {event.title}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <span className="text-muted-foreground text-sm">Nessun evento</span>
+                )}
+              </TableCell>
+              <TableCell className="text-right">
+                <div className="flex justify-end gap-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => onStatusToggle(operator.id)}
+                    title={operator.status === "active" ? "Disattiva operatore" : "Attiva operatore"}
+                  >
+                    {operator.status === "active" ? (
+                      <UserX className="h-4 w-4" />
+                    ) : (
+                      <UserCheck className="h-4 w-4" />
+                    )}
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="icon"
+                    onClick={() => onEdit(operator)}
+                    title="Modifica operatore"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => onAssign(operator)}
+                    title="Assegna a evento"
+                  >
+                    <CalendarClock className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => onDelete(operator.id)}
+                    title="Elimina operatore"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+          {filteredOperators.length === 0 && (
+            <TableRow>
+              <TableCell colSpan={9} className="text-center py-4">
+                Nessun operatore trovato con i filtri applicati
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+    </div>
   );
 };
 
