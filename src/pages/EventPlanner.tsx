@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -58,6 +57,7 @@ const EventPlanner = () => {
         try {
           const parsedOperators = JSON.parse(storedOperators);
           setOperators(parsedOperators);
+          console.log("EventPlanner: Operators loaded:", parsedOperators);
         } catch (error) {
           console.error("Error loading operators:", error);
           setOperators([]);
@@ -76,6 +76,7 @@ const EventPlanner = () => {
             endDate: new Date(event.endDate),
           }));
           setEvents(eventsWithDates);
+          console.log("EventPlanner: Events loaded:", eventsWithDates);
         } catch (error) {
           console.error("Error loading events:", error);
           setEvents([]);
@@ -207,12 +208,20 @@ const EventPlanner = () => {
     setOperators(updatedOperators);
     safeLocalStorage.setItem(OPERATORS_STORAGE_KEY, JSON.stringify(updatedOperators));
     
-    console.log("Operators updated and saved:", updatedOperators);
+    console.log("EventPlanner: Assignment completed, operators updated:", updatedOperators);
+    
+    // Dispatch custom event to notify other components
+    const assignmentEvent = new CustomEvent('operatorAssigned', {
+      detail: { operatorId: selectedOperator.id, eventId }
+    });
+    window.dispatchEvent(assignmentEvent);
     
     toast.success(`${selectedOperator.name} ${selectedOperator.surname} assegnato con successo all'evento`);
     
-    // Navigate back to operators list
-    navigate("/operators");
+    // Small delay to ensure localStorage is written before navigation
+    setTimeout(() => {
+      navigate("/operators");
+    }, 100);
   };
 
   if (!selectedOperator) {

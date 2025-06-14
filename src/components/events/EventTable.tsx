@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { Event } from "@/types/event";
@@ -24,6 +24,57 @@ interface EventTableProps {
 }
 
 const EventTable = ({ events, onShowDetails, onEditEvent, onDeleteEvent }: EventTableProps) => {
+  const [operators, setOperators] = useState<any[]>([]);
+
+  // Load operators and listen for updates
+  useEffect(() => {
+    const loadOperators = () => {
+      const storedOperators = safeLocalStorage.getItem(OPERATORS_STORAGE_KEY);
+      if (storedOperators) {
+        try {
+          const parsedOperators = JSON.parse(storedOperators);
+          setOperators(parsedOperators);
+          console.log("EventTable: Operators loaded for KPI calculation:", parsedOperators);
+        } catch (error) {
+          console.error("Error parsing operators:", error);
+          setOperators([]);
+        }
+      }
+    };
+
+    // Initial load
+    loadOperators();
+
+    // Listen for operator assignment events
+    const handleOperatorAssignment = () => {
+      console.log("EventTable: Operator assignment detected, reloading operators");
+      loadOperators();
+    };
+
+    // Listen for storage changes
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === OPERATORS_STORAGE_KEY) {
+        console.log("EventTable: Operators storage changed, reloading");
+        loadOperators();
+      }
+    };
+
+    // Listen for window focus
+    const handleFocus = () => {
+      console.log("EventTable: Window focused, reloading operators");
+      loadOperators();
+    };
+
+    window.addEventListener('operatorAssigned', handleOperatorAssignment);
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      window.removeEventListener('operatorAssigned', handleOperatorAssignment);
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, []);
   
   const formatDateRange = (start: Date, end: Date) => {
     const sameDay = start.getDate() === end.getDate() && 
@@ -59,23 +110,18 @@ const EventTable = ({ events, onShowDetails, onEditEvent, onDeleteEvent }: Event
 
   // Calculate staff KPI for an event
   const calculateStaffKPI = (event: Event) => {
-    // Get current operators from localStorage to ensure fresh data
-    const storedOperators = safeLocalStorage.getItem(OPERATORS_STORAGE_KEY);
-    let operators = [];
-    
-    if (storedOperators) {
-      try {
-        operators = JSON.parse(storedOperators);
-      } catch (error) {
-        console.error("Error parsing operators:", error);
-        operators = [];
-      }
-    }
-
-    // Count assigned operators for this specific event
+    // Count assigned operators for this specific event using current operators state
     const assignedOperatorsCount = operators.filter((op: any) => 
       op.assignedEvents && op.assignedEvents.includes(event.id)
     ).length;
+
+    console.log(`EventTable: KPI calculation for event ${event.id}:`, {
+      eventId: event.id,
+      assignedOperators: operators.filter((op: any) => 
+        op.assignedEvents && op.assignedEvents.includes(event.id)
+      ),
+      assignedCount: assignedOperatorsCount
+    });
 
     // Calculate total required personnel from event data
     const totalRequired = event.personnelCounts ? 

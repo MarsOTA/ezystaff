@@ -16,15 +16,10 @@ export const useEventsData = () => {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isClosingEvent, setIsClosingEvent] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [refreshKey, setRefreshKey] = useState(0);
 
-  // Function to force refresh of events data
-  const refreshEvents = () => {
-    setRefreshKey(prev => prev + 1);
-  };
-
-  // Load events from storage - triggered by refreshKey changes
-  useEffect(() => {
+  // Load events from storage
+  const loadEvents = () => {
+    console.log("Loading events from storage...");
     const storedEvents = safeLocalStorage.getItem(EVENTS_STORAGE_KEY);
     
     if (storedEvents) {
@@ -35,6 +30,7 @@ export const useEventsData = () => {
           startDate: safeToDate(event.startDate),
           endDate: safeToDate(event.endDate)
         }));
+        console.log("Events loaded:", eventsWithDates);
         setEvents(eventsWithDates);
       } catch (error) {
         console.error("Errore nel caricamento degli eventi:", error);
@@ -43,22 +39,41 @@ export const useEventsData = () => {
     } else {
       setDefaultEvents();
     }
-  }, [refreshKey]);
+  };
 
-  // Listen for focus events to refresh data when returning to the page
+  // Initial load
   useEffect(() => {
-    const handleFocus = () => {
-      console.log("Page focused, refreshing events data");
-      refreshEvents();
+    loadEvents();
+  }, []);
+
+  // Listen for storage changes and window focus
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === EVENTS_STORAGE_KEY) {
+        console.log("Storage changed, reloading events");
+        loadEvents();
+      }
     };
 
+    const handleFocus = () => {
+      console.log("Window focused, reloading events");
+      loadEvents();
+    };
+
+    // Listen for custom events for immediate updates
+    const handleOperatorAssignment = () => {
+      console.log("Operator assignment detected, reloading events");
+      loadEvents();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
     window.addEventListener('focus', handleFocus);
-    
-    // Also refresh when the component mounts
-    refreshEvents();
+    window.addEventListener('operatorAssigned', handleOperatorAssignment);
     
     return () => {
+      window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('operatorAssigned', handleOperatorAssignment);
     };
   }, []);
   
@@ -91,32 +106,12 @@ export const useEventsData = () => {
   }, [events]);
 
   // Filter events by search query
-  useEffect(() => {
-    const storedEvents = safeLocalStorage.getItem(EVENTS_STORAGE_KEY);
-    if (storedEvents && searchQuery) {
-      try {
-        const parsedEvents = JSON.parse(storedEvents);
-        const eventsWithDates = parsedEvents.map((event: any) => ({
-          ...event,
-          startDate: safeToDate(event.startDate),
-          endDate: safeToDate(event.endDate)
-        }));
-        
-        const filteredEvents = eventsWithDates.filter(event => {
-          const titleMatch = event.title.toLowerCase().includes(searchQuery.toLowerCase());
-          const clientMatch = event.client.toLowerCase().includes(searchQuery.toLowerCase());
-          return titleMatch || clientMatch;
-        });
-        
-        setEvents(filteredEvents);
-      } catch (error) {
-        console.error("Errore nel filtraggio degli eventi:", error);
-      }
-    } else if (storedEvents && !searchQuery) {
-      // If search query is empty, load all events
-      refreshEvents();
-    }
-  }, [searchQuery]);
+  const filteredEvents = events.filter(event => {
+    if (!searchQuery) return true;
+    const titleMatch = event.title.toLowerCase().includes(searchQuery.toLowerCase());
+    const clientMatch = event.client.toLowerCase().includes(searchQuery.toLowerCase());
+    return titleMatch || clientMatch;
+  });
 
   const handleEventClick = (event: Event) => {
     setSelectedEvent(event);
@@ -130,8 +125,14 @@ export const useEventsData = () => {
     safeLocalStorage.setItem(EVENTS_STORAGE_KEY, JSON.stringify(updatedEvents));
   };
 
+  // Force refresh function
+  const refreshEvents = () => {
+    console.log("Force refreshing events...");
+    loadEvents();
+  };
+
   return {
-    events,
+    events: filteredEvents,
     setEvents,
     selectedEvent,
     setSelectedEvent,
