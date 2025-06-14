@@ -1,7 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
-import { format } from "date-fns";
-import { it } from "date-fns/locale";
+import React from 'react';
 import { Event } from "@/types/event";
 import { Button } from "@/components/ui/button";
 import { Edit, Trash2 } from "lucide-react";
@@ -13,8 +11,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { OPERATORS_STORAGE_KEY } from '@/types/operator';
-import { safeLocalStorage } from "@/utils/fileUtils";
+import { useOperatorData } from "@/hooks/useOperatorData";
+import { formatDateRange } from "@/utils/eventTableUtils";
+import StaffKPIBadge from "./StaffKPIBadge";
+import EventStatusBadge from "./EventStatusBadge";
 
 interface EventTableProps {
   events: Event[];
@@ -24,166 +24,7 @@ interface EventTableProps {
 }
 
 const EventTable = ({ events, onShowDetails, onEditEvent, onDeleteEvent }: EventTableProps) => {
-  const [operators, setOperators] = useState<any[]>([]);
-  const [updateTrigger, setUpdateTrigger] = useState(0);
-
-  // Load operators from localStorage
-  const loadOperators = () => {
-    const storedOperators = safeLocalStorage.getItem(OPERATORS_STORAGE_KEY);
-    if (storedOperators) {
-      try {
-        const parsedOperators = JSON.parse(storedOperators);
-        console.log("EventTable: Operators loaded:", parsedOperators);
-        setOperators(parsedOperators);
-        return parsedOperators;
-      } catch (error) {
-        console.error("Error parsing operators:", error);
-        setOperators([]);
-        return [];
-      }
-    }
-    setOperators([]);
-    return [];
-  };
-
-  // Force reload
-  const forceReload = () => {
-    console.log("EventTable: Forcing reload of operators");
-    loadOperators();
-    setUpdateTrigger(prev => prev + 1);
-  };
-
-  // Initial load
-  useEffect(() => {
-    loadOperators();
-  }, []);
-
-  // Listen for various events that should trigger a reload
-  useEffect(() => {
-    const handleOperatorAssignment = () => {
-      console.log("EventTable: Operator assignment detected, reloading");
-      setTimeout(forceReload, 100); // Small delay to ensure localStorage is written
-    };
-
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === OPERATORS_STORAGE_KEY) {
-        console.log("EventTable: Storage change detected, reloading");
-        forceReload();
-      }
-    };
-
-    const handleFocus = () => {
-      console.log("EventTable: Window focus detected, reloading");
-      forceReload();
-    };
-
-    const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        console.log("EventTable: Page became visible, reloading");
-        forceReload();
-      }
-    };
-
-    // Add all event listeners
-    window.addEventListener('operatorAssigned', handleOperatorAssignment);
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('focus', handleFocus);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    // Also check for updates periodically
-    const interval = setInterval(() => {
-      const currentOperators = safeLocalStorage.getItem(OPERATORS_STORAGE_KEY);
-      if (currentOperators) {
-        try {
-          const parsed = JSON.parse(currentOperators);
-          const currentString = JSON.stringify(operators);
-          const newString = JSON.stringify(parsed);
-          if (currentString !== newString) {
-            console.log("EventTable: Operators changed, updating");
-            setOperators(parsed);
-            setUpdateTrigger(prev => prev + 1);
-          }
-        } catch (error) {
-          console.error("Error checking operators:", error);
-        }
-      }
-    }, 2000); // Check every 2 seconds
-
-    return () => {
-      window.removeEventListener('operatorAssigned', handleOperatorAssignment);
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('focus', handleFocus);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      clearInterval(interval);
-    };
-  }, [operators]);
-  
-  const formatDateRange = (start: Date, end: Date) => {
-    const sameDay = start.getDate() === end.getDate() && 
-                    start.getMonth() === end.getMonth() && 
-                    start.getFullYear() === end.getFullYear();
-    
-    const startDateStr = format(start, "d MMMM yyyy", { locale: it });
-    const endDateStr = format(end, "d MMMM yyyy", { locale: it });
-    const startTimeStr = format(start, "HH:mm");
-    const endTimeStr = format(end, "HH:mm");
-    
-    if (sameDay) {
-      return `${startDateStr}, ${startTimeStr} - ${endTimeStr}`;
-    } else {
-      return `Dal ${startDateStr}, ${startTimeStr} al ${endDateStr}, ${endTimeStr}`;
-    }
-  };
-
-  // Function to get status class
-  const getStatusClass = (status?: string) => {
-    switch(status) {
-      case 'completed':
-        return 'bg-green-100 text-green-800';
-      case 'cancelled':
-        return 'bg-red-100 text-red-800';
-      case 'in-progress':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'upcoming':
-      default:
-        return 'bg-blue-100 text-blue-800';
-    }
-  };
-
-  // Calculate staff KPI for an event
-  const calculateStaffKPI = (event: Event) => {
-    // Always use the most current operators from state
-    const assignedOperatorsCount = operators.filter((op: any) => 
-      op.assignedEvents && op.assignedEvents.includes(event.id)
-    ).length;
-
-    console.log(`EventTable: KPI calculation for event ${event.id} (trigger: ${updateTrigger}):`, {
-      eventId: event.id,
-      assignedOperators: operators.filter((op: any) => 
-        op.assignedEvents && op.assignedEvents.includes(event.id)
-      ),
-      assignedCount: assignedOperatorsCount,
-      totalOperators: operators.length
-    });
-
-    // Calculate total required personnel from event data
-    const totalRequired = event.personnelCounts ? 
-      Object.values(event.personnelCounts).reduce((sum, count) => sum + count, 0) : 0;
-
-    // Return both numbers and percentage
-    return {
-      assigned: assignedOperatorsCount,
-      required: totalRequired,
-      percentage: totalRequired > 0 ? Math.round((assignedOperatorsCount / totalRequired) * 100) : 0
-    };
-  };
-
-  // Get color class for KPI based on percentage
-  const getKpiColorClass = (percentage: number) => {
-    if (percentage >= 100) return "bg-green-100 text-green-800";
-    if (percentage >= 75) return "bg-yellow-100 text-yellow-800";
-    return "bg-red-100 text-red-800";
-  };
+  const { operators, updateTrigger } = useOperatorData();
 
   return (
     <Table>
@@ -198,59 +39,52 @@ const EventTable = ({ events, onShowDetails, onEditEvent, onDeleteEvent }: Event
         </TableRow>
       </TableHeader>
       <TableBody>
-        {events.map((event) => {
-          const kpi = calculateStaffKPI(event);
-          return (
-            <TableRow 
-              key={`${event.id}-${updateTrigger}`}
-              className="cursor-pointer hover:bg-muted/50" 
-              onClick={() => onShowDetails(event)}
-            >
-              <TableCell className="font-medium">{event.title}</TableCell>
-              <TableCell>{event.client}</TableCell>
-              <TableCell>{formatDateRange(event.startDate, event.endDate)}</TableCell>
-              <TableCell>
-                <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusClass(event.status)}`}>
-                  {event.status ? (
-                    event.status === 'completed' ? 'Completato' :
-                    event.status === 'cancelled' ? 'Annullato' :
-                    event.status === 'in-progress' ? 'In corso' : 'Programmato'
-                  ) : 'Programmato'}
-                </span>
-              </TableCell>
-              <TableCell>
-                <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getKpiColorClass(kpi.percentage)}`}>
-                  {kpi.assigned} / {kpi.required} ({kpi.percentage}%)
-                </span>
-              </TableCell>
-              <TableCell className="text-right">
-                <div className="flex justify-end gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onEditEvent(e, event.id);
-                    }}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="text-red-500 hover:text-red-600" 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDeleteEvent(e, event.id);
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </TableCell>
-            </TableRow>
-          );
-        })}
+        {events.map((event) => (
+          <TableRow 
+            key={`${event.id}-${updateTrigger}`}
+            className="cursor-pointer hover:bg-muted/50" 
+            onClick={() => onShowDetails(event)}
+          >
+            <TableCell className="font-medium">{event.title}</TableCell>
+            <TableCell>{event.client}</TableCell>
+            <TableCell>{formatDateRange(event.startDate, event.endDate)}</TableCell>
+            <TableCell>
+              <EventStatusBadge status={event.status} />
+            </TableCell>
+            <TableCell>
+              <StaffKPIBadge 
+                event={event} 
+                operators={operators} 
+                updateTrigger={updateTrigger} 
+              />
+            </TableCell>
+            <TableCell className="text-right">
+              <div className="flex justify-end gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEditEvent(e, event.id);
+                  }}
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="text-red-500 hover:text-red-600" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDeleteEvent(e, event.id);
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </TableCell>
+          </TableRow>
+        ))}
       </TableBody>
     </Table>
   );
