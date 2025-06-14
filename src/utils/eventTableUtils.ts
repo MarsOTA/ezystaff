@@ -49,19 +49,20 @@ export const getStatusText = (status?: string) => {
   }
 };
 
-export const calculateStaffKPI = (event: Event, operators: any[], updateTrigger: number) => {
-  // Always use the most current operators from state
+export const calculateStaffKPI = (event: Event, operators: any[]) => {
+  // Forza il calcolo sempre aggiornato senza cache
   const assignedOperatorsCount = operators.filter((op: any) => 
     op.assignedEvents && op.assignedEvents.includes(event.id)
   ).length;
 
-  console.log(`EventTable: KPI calculation for event ${event.id} (trigger: ${updateTrigger}):`, {
+  console.log(`EventTable: KPI calculation for event ${event.id}:`, {
     eventId: event.id,
     assignedOperators: operators.filter((op: any) => 
       op.assignedEvents && op.assignedEvents.includes(event.id)
-    ),
+    ).map(op => ({ id: op.id, name: op.name, assignedEvents: op.assignedEvents })),
     assignedCount: assignedOperatorsCount,
-    totalOperators: operators.length
+    totalOperators: operators.length,
+    timestamp: new Date().toISOString()
   });
 
   // Calculate total required personnel from event data

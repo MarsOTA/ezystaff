@@ -26,6 +26,13 @@ interface EventTableProps {
 const EventTable = ({ events, onShowDetails, onEditEvent, onDeleteEvent }: EventTableProps) => {
   const { operators, updateTrigger } = useOperatorData();
 
+  console.log("EventTable render:", {
+    eventsCount: events.length,
+    operatorsCount: operators.length,
+    updateTrigger,
+    timestamp: new Date().toISOString()
+  });
+
   return (
     <Table>
       <TableHeader>

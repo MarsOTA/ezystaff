@@ -26,11 +26,16 @@ export const useOperatorData = () => {
     return [];
   };
 
-  // Force reload
+  // Force reload and trigger update
   const forceReload = () => {
     console.log("OperatorData: Forcing reload of operators");
-    loadOperators();
-    setUpdateTrigger(prev => prev + 1);
+    const newOperators = loadOperators();
+    setUpdateTrigger(prev => {
+      const newTrigger = prev + 1;
+      console.log("OperatorData: Update trigger incremented to:", newTrigger);
+      return newTrigger;
+    });
+    return newOperators;
   };
 
   // Initial load
@@ -40,14 +45,17 @@ export const useOperatorData = () => {
 
   // Listen for various events that should trigger a reload
   useEffect(() => {
-    const handleOperatorAssignment = () => {
-      console.log("OperatorData: Operator assignment detected, reloading");
-      setTimeout(forceReload, 100); // Small delay to ensure localStorage is written
+    const handleOperatorAssignment = (e: any) => {
+      console.log("OperatorData: Operator assignment event detected:", e.detail);
+      // Piccolo delay per assicurarsi che localStorage sia aggiornato
+      setTimeout(() => {
+        forceReload();
+      }, 50);
     };
 
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === OPERATORS_STORAGE_KEY) {
-        console.log("OperatorData: Storage change detected, reloading");
+        console.log("OperatorData: Storage change detected for operators");
         forceReload();
       }
     };
@@ -70,7 +78,7 @@ export const useOperatorData = () => {
     window.addEventListener('focus', handleFocus);
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
-    // Also check for updates periodically
+    // Polling più frequente per catturare cambiamenti
     const interval = setInterval(() => {
       const currentOperators = safeLocalStorage.getItem(OPERATORS_STORAGE_KEY);
       if (currentOperators) {
@@ -79,7 +87,7 @@ export const useOperatorData = () => {
           const currentString = JSON.stringify(operators);
           const newString = JSON.stringify(parsed);
           if (currentString !== newString) {
-            console.log("OperatorData: Operators changed, updating");
+            console.log("OperatorData: Operators changed via polling, updating");
             setOperators(parsed);
             setUpdateTrigger(prev => prev + 1);
           }
@@ -87,7 +95,7 @@ export const useOperatorData = () => {
           console.error("Error checking operators:", error);
         }
       }
-    }, 2000); // Check every 2 seconds
+    }, 1000); // Check ogni secondo per essere più reattivo
 
     return () => {
       window.removeEventListener('operatorAssigned', handleOperatorAssignment);
@@ -98,5 +106,5 @@ export const useOperatorData = () => {
     };
   }, [operators]);
 
-  return { operators, updateTrigger };
+  return { operators, updateTrigger, forceReload };
 };
