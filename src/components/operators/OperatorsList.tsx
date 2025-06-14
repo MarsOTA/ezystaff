@@ -38,8 +38,8 @@ const OperatorsList: React.FC<OperatorsListProps> = ({
     surname: '',
     email: '',
     phone: '',
-    gender: '',
-    profession: ''
+    gender: 'all',
+    profession: 'all'
   });
 
   const handleFilterChange = (field: string, value: string) => {
@@ -55,8 +55,8 @@ const OperatorsList: React.FC<OperatorsListProps> = ({
       const surnameMatch = operator.surname?.toLowerCase().includes(filters.surname.toLowerCase()) ?? true;
       const emailMatch = operator.email?.toLowerCase().includes(filters.email.toLowerCase()) ?? true;
       const phoneMatch = operator.phone?.includes(filters.phone) ?? true;
-      const genderMatch = filters.gender === '' || operator.gender === filters.gender;
-      const professionMatch = filters.profession === '' || operator.profession === filters.profession;
+      const genderMatch = filters.gender === 'all' || operator.gender === filters.gender;
+      const professionMatch = filters.profession === 'all' || operator.profession === filters.profession;
       
       return nameMatch && surnameMatch && emailMatch && phoneMatch && genderMatch && professionMatch;
     });

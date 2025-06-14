@@ -83,7 +83,7 @@ const OperatorFilters: React.FC<OperatorFiltersProps> = ({ filters, onFilterChan
             <SelectValue placeholder="Tutti" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Tutti</SelectItem>
+            <SelectItem value="all">Tutti</SelectItem>
             <SelectItem value="maschio">Maschio</SelectItem>
             <SelectItem value="femmina">Femmina</SelectItem>
           </SelectContent>
@@ -97,7 +97,7 @@ const OperatorFilters: React.FC<OperatorFiltersProps> = ({ filters, onFilterChan
             <SelectValue placeholder="Tutte" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Tutte</SelectItem>
+            <SelectItem value="all">Tutte</SelectItem>
             <SelectItem value="security">Security</SelectItem>
             <SelectItem value="doorman">Doorman</SelectItem>
             <SelectItem value="hostess">Hostess/Steward</SelectItem>
