@@ -39,16 +39,23 @@ const Events = () => {
       refreshEvents();
     };
 
+    const handleKPIUpdate = () => {
+      console.log("Events page: KPI update event detected, refreshing events");
+      refreshEvents();
+    };
+
     const handleFocus = () => {
       console.log("Events page: Window focused, refreshing events");
       refreshEvents();
     };
 
     window.addEventListener('operatorAssigned', handleOperatorAssignment);
+    window.addEventListener('kpiUpdate', handleKPIUpdate);
     window.addEventListener('focus', handleFocus);
 
     return () => {
       window.removeEventListener('operatorAssigned', handleOperatorAssignment);
+      window.removeEventListener('kpiUpdate', handleKPIUpdate);
       window.removeEventListener('focus', handleFocus);
     };
   }, [refreshEvents]);

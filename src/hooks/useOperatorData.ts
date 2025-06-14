@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { OPERATORS_STORAGE_KEY } from '@/types/operator';
 import { safeLocalStorage } from "@/utils/fileUtils";
 
@@ -8,7 +8,7 @@ export const useOperatorData = () => {
   const [updateTrigger, setUpdateTrigger] = useState(0);
 
   // Load operators from localStorage
-  const loadOperators = () => {
+  const loadOperators = useCallback(() => {
     const storedOperators = safeLocalStorage.getItem(OPERATORS_STORAGE_KEY);
     if (storedOperators) {
       try {
@@ -24,10 +24,10 @@ export const useOperatorData = () => {
     }
     setOperators([]);
     return [];
-  };
+  }, []);
 
   // Force reload and trigger update
-  const forceReload = () => {
+  const forceReload = useCallback(() => {
     console.log("OperatorData: Forcing reload of operators");
     const newOperators = loadOperators();
     setUpdateTrigger(prev => {
@@ -36,27 +36,29 @@ export const useOperatorData = () => {
       return newTrigger;
     });
     return newOperators;
-  };
+  }, [loadOperators]);
 
   // Initial load
   useEffect(() => {
     loadOperators();
-  }, []);
+  }, [loadOperators]);
 
   // Listen for various events that should trigger a reload
   useEffect(() => {
     const handleOperatorAssignment = (e: any) => {
       console.log("OperatorData: Operator assignment event detected:", e.detail);
-      // Piccolo delay per assicurarsi che localStorage sia aggiornato
+      // Force immediate reload
       setTimeout(() => {
         forceReload();
-      }, 50);
+      }, 10);
     };
 
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === OPERATORS_STORAGE_KEY) {
         console.log("OperatorData: Storage change detected for operators");
-        forceReload();
+        setTimeout(() => {
+          forceReload();
+        }, 10);
       }
     };
 
@@ -72,8 +74,15 @@ export const useOperatorData = () => {
       }
     };
 
+    // Add custom event listener for immediate KPI updates
+    const handleKPIUpdate = () => {
+      console.log("OperatorData: KPI update event detected, forcing reload");
+      forceReload();
+    };
+
     // Add all event listeners
     window.addEventListener('operatorAssigned', handleOperatorAssignment);
+    window.addEventListener('kpiUpdate', handleKPIUpdate);
     window.addEventListener('storage', handleStorageChange);
     window.addEventListener('focus', handleFocus);
     document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -95,16 +104,17 @@ export const useOperatorData = () => {
           console.error("Error checking operators:", error);
         }
       }
-    }, 1000); // Check ogni secondo per essere più reattivo
+    }, 500); // Check ogni 500ms per essere più reattivo
 
     return () => {
       window.removeEventListener('operatorAssigned', handleOperatorAssignment);
+      window.removeEventListener('kpiUpdate', handleKPIUpdate);
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('focus', handleFocus);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       clearInterval(interval);
     };
-  }, [operators]);
+  }, [operators, forceReload]);
 
   return { operators, updateTrigger, forceReload };
 };

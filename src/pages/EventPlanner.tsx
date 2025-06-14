@@ -91,9 +91,13 @@ const EventPlanner = () => {
     
     console.log("EventPlanner: Assignment completed, operators updated:", updatedOperators);
     
-    // Dispatch custom event to notify other components IMMEDIATELY
+    // Dispatch multiple events to ensure KPI updates
     window.dispatchEvent(new CustomEvent('operatorAssigned', {
       detail: { operatorId: selectedOperator.id, eventId }
+    }));
+    
+    window.dispatchEvent(new CustomEvent('kpiUpdate', {
+      detail: { eventId, operatorId: selectedOperator.id, action: 'assigned' }
     }));
     
     // Also dispatch a storage event manually for additional reliability
@@ -109,7 +113,7 @@ const EventPlanner = () => {
     // Navigate back after a short delay to ensure events are dispatched
     setTimeout(() => {
       navigate("/operators");
-    }, 200);
+    }, 300);
   };
 
   if (!selectedOperator) {
