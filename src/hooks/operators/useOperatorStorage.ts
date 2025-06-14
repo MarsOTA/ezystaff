@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Operator, OPERATORS_STORAGE_KEY } from "@/types/operator";
 import { Event } from "@/types/event";
@@ -26,6 +27,7 @@ export const useOperatorStorage = () => {
   ]);
 
   const [events, setEvents] = useState<Event[]>([]);
+  const [operatorsKey, setOperatorsKey] = useState<string>(Date.now().toString());
 
   useEffect(() => {
     const storedOperators = safeLocalStorage.getItem(OPERATORS_STORAGE_KEY);
@@ -48,7 +50,9 @@ export const useOperatorStorage = () => {
 
   useEffect(() => {
     safeLocalStorage.setItem(OPERATORS_STORAGE_KEY, JSON.stringify(operators));
+    // Update the key to trigger re-calculations when operators change
+    setOperatorsKey(Date.now().toString());
   }, [operators]);
 
-  return { operators, setOperators, events };
+  return { operators, setOperators, events, operatorsKey };
 };
