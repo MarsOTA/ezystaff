@@ -9,21 +9,29 @@ export const calculateGrossHours = (
   if (!startDate || !endDate) return 0;
   
   try {
-    // Parse start time
+    // Parse start and end times
     const [startHour, startMinute] = startTime.split(':').map(Number);
-    const startDateTime = new Date(startDate);
-    startDateTime.setHours(startHour, startMinute, 0, 0);
-    
-    // Parse end time
     const [endHour, endMinute] = endTime.split(':').map(Number);
-    const endDateTime = new Date(endDate);
-    endDateTime.setHours(endHour, endMinute, 0, 0);
     
-    // Calculate difference in milliseconds and convert to hours
-    const diffMs = endDateTime.getTime() - startDateTime.getTime();
-    const diffHours = diffMs / (1000 * 60 * 60);
+    // Calculate daily hours (end time - start time)
+    const startTimeMinutes = startHour * 60 + startMinute;
+    const endTimeMinutes = endHour * 60 + endMinute;
     
-    return Math.max(0, diffHours);
+    // Handle case where end time is next day (e.g., 22:00 to 06:00)
+    let dailyMinutes = endTimeMinutes - startTimeMinutes;
+    if (dailyMinutes < 0) {
+      dailyMinutes += 24 * 60; // Add 24 hours in minutes
+    }
+    
+    const dailyHours = dailyMinutes / 60;
+    
+    // Calculate number of event days
+    const eventDays = calculateEventDays(startDate, endDate);
+    
+    // Total gross hours = daily hours * number of days
+    const totalGrossHours = dailyHours * eventDays;
+    
+    return Math.max(0, totalGrossHours);
   } catch (error) {
     console.error("Error calculating gross hours:", error);
     return 0;
