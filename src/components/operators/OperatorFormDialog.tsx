@@ -24,12 +24,14 @@ interface OperatorFormDialogProps {
   onOpenChange: (open: boolean) => void;
   formData: {
     name: string;
+    surname: string;
     email: string;
     phone: string;
     status: "active" | "inactive";
   };
   setFormData: React.Dispatch<React.SetStateAction<{
     name: string;
+    surname: string;
     email: string;
     phone: string;
     status: "active" | "inactive";
@@ -64,6 +66,18 @@ const OperatorFormDialog: React.FC<OperatorFormDialogProps> = ({
                 id="name"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className="col-span-3"
+                required
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="surname" className="text-right">
+                Cognome
+              </Label>
+              <Input
+                id="surname"
+                value={formData.surname}
+                onChange={(e) => setFormData({ ...formData, surname: e.target.value })}
                 className="col-span-3"
                 required
               />

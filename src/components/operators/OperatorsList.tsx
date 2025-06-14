@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from "react";
 import {
   Table,
@@ -15,6 +14,7 @@ import { it } from "date-fns/locale";
 import { Event } from "@/types/event";
 import { Operator } from "@/types/operator";
 import OperatorFilters from "./OperatorFilters";
+import SortableTableHeader from "./SortableTableHeader";
 
 interface OperatorsListProps {
   operators: Operator[];
@@ -39,6 +39,11 @@ const OperatorsList: React.FC<OperatorsListProps> = ({
     profession: 'all'
   });
 
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' | null }>({
+    key: '',
+    direction: null
+  });
+
   const handleFilterChange = (field: string, value: string) => {
     setFilters(prev => ({
       ...prev,
@@ -46,8 +51,15 @@ const OperatorsList: React.FC<OperatorsListProps> = ({
     }));
   };
 
-  const filteredOperators = useMemo(() => {
-    return operators.filter(operator => {
+  const handleSort = (key: string) => {
+    setSortConfig(prev => ({
+      key,
+      direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc'
+    }));
+  };
+
+  const filteredAndSortedOperators = useMemo(() => {
+    let filtered = operators.filter(operator => {
       // Search filter (searches in name, surname, and phone)
       const searchTerm = filters.search.toLowerCase();
       const searchMatch = searchTerm === '' || 
@@ -60,7 +72,31 @@ const OperatorsList: React.FC<OperatorsListProps> = ({
       
       return searchMatch && genderMatch && professionMatch;
     });
-  }, [operators, filters]);
+
+    // Apply sorting
+    if (sortConfig.key && sortConfig.direction) {
+      filtered.sort((a, b) => {
+        let aValue = a[sortConfig.key as keyof Operator];
+        let bValue = b[sortConfig.key as keyof Operator];
+
+        // Handle undefined values
+        if (aValue === undefined) aValue = '';
+        if (bValue === undefined) bValue = '';
+
+        // Convert to string for comparison
+        const aStr = String(aValue).toLowerCase();
+        const bStr = String(bValue).toLowerCase();
+
+        if (sortConfig.direction === 'asc') {
+          return aStr.localeCompare(bStr);
+        } else {
+          return bStr.localeCompare(aStr);
+        }
+      });
+    }
+
+    return filtered;
+  }, [operators, filters, sortConfig]);
 
   const getAssignedEvents = (operatorId: number) => {
     const operator = operators.find(op => op.id === operatorId);
@@ -98,19 +134,33 @@ const OperatorsList: React.FC<OperatorsListProps> = ({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Nome</TableHead>
-            <TableHead>Cognome</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Cell.</TableHead>
-            <TableHead>Genere</TableHead>
-            <TableHead>Professione</TableHead>
-            <TableHead>Stato</TableHead>
+            <SortableTableHeader sortKey="name" currentSort={sortConfig} onSort={handleSort}>
+              Nome
+            </SortableTableHeader>
+            <SortableTableHeader sortKey="surname" currentSort={sortConfig} onSort={handleSort}>
+              Cognome
+            </SortableTableHeader>
+            <SortableTableHeader sortKey="email" currentSort={sortConfig} onSort={handleSort}>
+              Email
+            </SortableTableHeader>
+            <SortableTableHeader sortKey="phone" currentSort={sortConfig} onSort={handleSort}>
+              Cell.
+            </SortableTableHeader>
+            <SortableTableHeader sortKey="gender" currentSort={sortConfig} onSort={handleSort}>
+              Genere
+            </SortableTableHeader>
+            <SortableTableHeader sortKey="profession" currentSort={sortConfig} onSort={handleSort}>
+              Professione
+            </SortableTableHeader>
+            <SortableTableHeader sortKey="status" currentSort={sortConfig} onSort={handleSort}>
+              Stato
+            </SortableTableHeader>
             <TableHead>Eventi Assegnati</TableHead>
             <TableHead className="text-right">Azioni</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {filteredOperators.map((operator) => (
+          {filteredAndSortedOperators.map((operator) => (
             <TableRow key={operator.id}>
               <TableCell>{operator.name || '-'}</TableCell>
               <TableCell>{operator.surname || '-'}</TableCell>
@@ -188,7 +238,7 @@ const OperatorsList: React.FC<OperatorsListProps> = ({
               </TableCell>
             </TableRow>
           ))}
-          {filteredOperators.length === 0 && (
+          {filteredAndSortedOperators.length === 0 && (
             <TableRow>
               <TableCell colSpan={9} className="text-center py-4">
                 Nessun operatore trovato con i filtri applicati

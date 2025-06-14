@@ -13,6 +13,7 @@ export const useOperatorForm = (
   
   const [formData, setFormData] = useState({
     name: "",
+    surname: "",
     email: "",
     phone: "",
     status: "active" as "active" | "inactive",
@@ -40,6 +41,7 @@ export const useOperatorForm = (
     setEditingOperator(operator);
     setFormData({
       name: operator.name,
+      surname: operator.surname,
       email: operator.email,
       phone: operator.phone,
       status: operator.status,
@@ -51,6 +53,7 @@ export const useOperatorForm = (
     setEditingOperator(null);
     setFormData({
       name: "",
+      surname: "",
       email: "",
       phone: "",
       status: "active",
