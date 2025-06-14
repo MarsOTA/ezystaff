@@ -1,10 +1,9 @@
-
 import React from "react";
 import { useParams } from "react-router-dom";
 import Layout from "@/components/Layout";
 import OperatorHeader from "@/components/operator/OperatorHeader";
 import OperatorTabs from "@/components/operator/OperatorTabs";
-import { useOperatorData } from "@/hooks/useOperatorData";
+import { useOperatorProfile } from "@/hooks/useOperatorProfile";
 import { useOperatorOperations } from "@/hooks/useOperatorOperations";
 
 const OperatorProfile = () => {
@@ -64,7 +63,7 @@ const OperatorProfile = () => {
     setTrainingStartDate,
     trainingEndDate,
     setTrainingEndDate
-  } = useOperatorData(id);
+  } = useOperatorProfile(id);
   
   const {
     activeTab,
