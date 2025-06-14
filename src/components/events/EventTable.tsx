@@ -1,5 +1,4 @@
-
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { Event } from "@/types/event";
@@ -25,6 +24,12 @@ interface EventTableProps {
 
 const EventTable = ({ events, onShowDetails, onEditEvent, onDeleteEvent }: EventTableProps) => {
   const [operators, setOperators] = useState<any[]>([]);
+  const [forceUpdate, setForceUpdate] = useState(0);
+
+  // Force component update
+  const triggerUpdate = useCallback(() => {
+    setForceUpdate(prev => prev + 1);
+  }, []);
 
   // Load operators and listen for updates
   useEffect(() => {
@@ -49,6 +54,7 @@ const EventTable = ({ events, onShowDetails, onEditEvent, onDeleteEvent }: Event
     const handleOperatorAssignment = () => {
       console.log("EventTable: Operator assignment detected, reloading operators");
       loadOperators();
+      triggerUpdate();
     };
 
     // Listen for storage changes
@@ -56,6 +62,7 @@ const EventTable = ({ events, onShowDetails, onEditEvent, onDeleteEvent }: Event
       if (e.key === OPERATORS_STORAGE_KEY) {
         console.log("EventTable: Operators storage changed, reloading");
         loadOperators();
+        triggerUpdate();
       }
     };
 
@@ -63,6 +70,7 @@ const EventTable = ({ events, onShowDetails, onEditEvent, onDeleteEvent }: Event
     const handleFocus = () => {
       console.log("EventTable: Window focused, reloading operators");
       loadOperators();
+      triggerUpdate();
     };
 
     window.addEventListener('operatorAssigned', handleOperatorAssignment);
@@ -74,7 +82,7 @@ const EventTable = ({ events, onShowDetails, onEditEvent, onDeleteEvent }: Event
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('focus', handleFocus);
     };
-  }, []);
+  }, [triggerUpdate]);
   
   const formatDateRange = (start: Date, end: Date) => {
     const sameDay = start.getDate() === end.getDate() && 
@@ -108,14 +116,14 @@ const EventTable = ({ events, onShowDetails, onEditEvent, onDeleteEvent }: Event
     }
   };
 
-  // Calculate staff KPI for an event
-  const calculateStaffKPI = (event: Event) => {
+  // Calculate staff KPI for an event - now with dependency on forceUpdate to trigger recalculation
+  const calculateStaffKPI = useCallback((event: Event) => {
     // Count assigned operators for this specific event using current operators state
     const assignedOperatorsCount = operators.filter((op: any) => 
       op.assignedEvents && op.assignedEvents.includes(event.id)
     ).length;
 
-    console.log(`EventTable: KPI calculation for event ${event.id}:`, {
+    console.log(`EventTable: KPI calculation for event ${event.id} (update ${forceUpdate}):`, {
       eventId: event.id,
       assignedOperators: operators.filter((op: any) => 
         op.assignedEvents && op.assignedEvents.includes(event.id)
@@ -133,7 +141,7 @@ const EventTable = ({ events, onShowDetails, onEditEvent, onDeleteEvent }: Event
       required: totalRequired,
       percentage: totalRequired > 0 ? Math.round((assignedOperatorsCount / totalRequired) * 100) : 0
     };
-  };
+  }, [operators, forceUpdate]);
 
   // Get color class for KPI based on percentage
   const getKpiColorClass = (percentage: number) => {
@@ -159,7 +167,7 @@ const EventTable = ({ events, onShowDetails, onEditEvent, onDeleteEvent }: Event
           const kpi = calculateStaffKPI(event);
           return (
             <TableRow 
-              key={event.id}
+              key={`${event.id}-${forceUpdate}`}
               className="cursor-pointer hover:bg-muted/50" 
               onClick={() => onShowDetails(event)}
             >

@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
@@ -28,8 +28,30 @@ const Events = () => {
     searchQuery,
     setSearchQuery,
     handleEventClick,
-    handleDeleteEvent
+    handleDeleteEvent,
+    refreshEvents
   } = useEventsData();
+
+  // Listen for operator assignments to refresh events data
+  useEffect(() => {
+    const handleOperatorAssignment = () => {
+      console.log("Events page: Operator assignment detected, refreshing events");
+      refreshEvents();
+    };
+
+    const handleFocus = () => {
+      console.log("Events page: Window focused, refreshing events");
+      refreshEvents();
+    };
+
+    window.addEventListener('operatorAssigned', handleOperatorAssignment);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      window.removeEventListener('operatorAssigned', handleOperatorAssignment);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [refreshEvents]);
 
   const handleCreateEvent = () => {
     navigate("/events/create");
