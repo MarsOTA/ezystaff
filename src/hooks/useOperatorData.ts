@@ -15,24 +15,45 @@ export const useOperatorData = () => {
         const parsedOperators = JSON.parse(storedOperators);
         console.log("OperatorData: Operators loaded:", parsedOperators);
         setOperators(parsedOperators);
-        setUpdateTrigger(prev => prev + 1);
         return parsedOperators;
       } catch (error) {
         console.error("Error parsing operators:", error);
         setOperators([]);
-        setUpdateTrigger(prev => prev + 1);
         return [];
       }
     }
     setOperators([]);
-    setUpdateTrigger(prev => prev + 1);
     return [];
   }, []);
+
+  // Save operators to localStorage and trigger update
+  const saveOperators = useCallback((newOperators: any[]) => {
+    console.log("OperatorData: Saving operators:", newOperators);
+    safeLocalStorage.setItem(OPERATORS_STORAGE_KEY, JSON.stringify(newOperators));
+    setOperators(newOperators);
+    setUpdateTrigger(prev => prev + 1);
+    
+    // Dispatch events to notify other components
+    window.dispatchEvent(new CustomEvent('operatorAssigned'));
+    window.dispatchEvent(new StorageEvent('storage', {
+      key: OPERATORS_STORAGE_KEY,
+      newValue: JSON.stringify(newOperators)
+    }));
+  }, []);
+
+  // Update operators function that properly saves data
+  const updateOperators = useCallback((updaterFn: (operators: any[]) => any[]) => {
+    const current = loadOperators();
+    const updated = updaterFn(current);
+    saveOperators(updated);
+  }, [loadOperators, saveOperators]);
 
   // Force reload and trigger update
   const forceReload = useCallback(() => {
     console.log("OperatorData: Forcing reload of operators");
-    loadOperators();
+    const loaded = loadOperators();
+    setUpdateTrigger(prev => prev + 1);
+    return loaded;
   }, [loadOperators]);
 
   // Initial load
@@ -40,52 +61,34 @@ export const useOperatorData = () => {
     loadOperators();
   }, [loadOperators]);
 
-  // Listen for operator assignment events and storage changes
+  // Listen for storage changes and custom events
   useEffect(() => {
-    const handleOperatorAssignment = () => {
-      console.log("OperatorData: Operator assignment event detected");
-      // Piccolo ritardo per assicurarsi che il localStorage sia stato aggiornato
-      setTimeout(() => {
-        forceReload();
-      }, 100);
-    };
-
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === OPERATORS_STORAGE_KEY) {
-        console.log("OperatorData: Storage change detected for operators");
+        console.log("OperatorData: Storage change detected");
         forceReload();
       }
     };
 
-    // Polling periodico per catturare modifiche che potrebbero sfuggire agli eventi
-    const pollInterval = setInterval(() => {
-      const currentOperators = safeLocalStorage.getItem(OPERATORS_STORAGE_KEY);
-      if (currentOperators) {
-        try {
-          const parsed = JSON.parse(currentOperators);
-          const currentString = JSON.stringify(operators);
-          const newString = JSON.stringify(parsed);
-          
-          if (currentString !== newString) {
-            console.log("OperatorData: Polling detected changes");
-            setOperators(parsed);
-            setUpdateTrigger(prev => prev + 1);
-          }
-        } catch (error) {
-          console.error("Error in polling:", error);
-        }
-      }
-    }, 2000); // Poll ogni 2 secondi
+    const handleOperatorAssignment = () => {
+      console.log("OperatorData: Operator assignment event detected");
+      forceReload();
+    };
 
-    window.addEventListener('operatorAssigned', handleOperatorAssignment);
     window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('operatorAssigned', handleOperatorAssignment);
 
     return () => {
-      window.removeEventListener('operatorAssigned', handleOperatorAssignment);
       window.removeEventListener('storage', handleStorageChange);
-      clearInterval(pollInterval);
+      window.removeEventListener('operatorAssigned', handleOperatorAssignment);
     };
-  }, [forceReload, operators]);
+  }, [forceReload]);
 
-  return { operators, updateTrigger, forceReload };
+  return { 
+    operators, 
+    setOperators: saveOperators, 
+    updateTrigger, 
+    forceReload,
+    updateOperators 
+  };
 };

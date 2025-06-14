@@ -2,7 +2,8 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { Operator } from "@/types/operator";
+import { Operator, OPERATORS_STORAGE_KEY } from "@/types/operator";
+import { safeLocalStorage } from "@/utils/fileUtils";
 
 export const useOperatorForm = (
   operators: Operator[], 
@@ -21,19 +22,33 @@ export const useOperatorForm = (
 
   const navigate = useNavigate();
 
+  const saveOperatorsToStorage = (updatedOperators: Operator[]) => {
+    safeLocalStorage.setItem(OPERATORS_STORAGE_KEY, JSON.stringify(updatedOperators));
+    setOperators(updatedOperators);
+    
+    // Dispatch events to notify other components
+    window.dispatchEvent(new CustomEvent('operatorAssigned'));
+    window.dispatchEvent(new StorageEvent('storage', {
+      key: OPERATORS_STORAGE_KEY,
+      newValue: JSON.stringify(updatedOperators)
+    }));
+  };
+
   const handleStatusToggle = (id: number) => {
-    setOperators((prev) =>
-      prev.map((op) =>
-        op.id === id
-          ? { ...op, status: op.status === "active" ? "inactive" : "active" }
-          : op
-      )
+    const updatedOperators = operators.map((op) =>
+      op.id === id
+        ? { ...op, status: op.status === "active" ? "inactive" : "active" }
+        : op
     );
+    
+    console.log("Toggling operator status:", { id, updatedOperators });
+    saveOperatorsToStorage(updatedOperators);
     toast.success("Stato operatore aggiornato con successo");
   };
 
   const handleDelete = (id: number) => {
-    setOperators((prev) => prev.filter((op) => op.id !== id));
+    const updatedOperators = operators.filter((op) => op.id !== id);
+    saveOperatorsToStorage(updatedOperators);
     toast.success("Operatore eliminato con successo");
   };
 
@@ -64,24 +79,24 @@ export const useOperatorForm = (
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    let updatedOperators;
     if (editingOperator) {
-      setOperators((prev) =>
-        prev.map((op) =>
-          op.id === editingOperator.id
-            ? { ...op, ...formData }
-            : op
-        )
+      updatedOperators = operators.map((op) =>
+        op.id === editingOperator.id
+          ? { ...op, ...formData }
+          : op
       );
       toast.success("Operatore aggiornato con successo");
     } else {
       const newId = Math.max(0, ...operators.map((op) => op.id)) + 1;
-      setOperators((prev) => [
-        ...prev,
+      updatedOperators = [
+        ...operators,
         { id: newId, ...formData, assignedEvents: [] },
-      ]);
+      ];
       toast.success("Nuovo operatore aggiunto con successo");
     }
     
+    saveOperatorsToStorage(updatedOperators);
     setIsDialogOpen(false);
   };
 
