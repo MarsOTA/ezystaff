@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Event, EVENTS_STORAGE_KEY } from "@/types/event";
 import { Client } from "@/pages/Clients";
@@ -36,6 +37,37 @@ export interface EventFormData {
   hourlyRateSell: string;
   personnelCounts?: Record<string, number>;
 }
+
+// Helper function to calculate gross hours based on dates and times
+const calculateGrossHours = (
+  startDate: Date | undefined,
+  endDate: Date | undefined,
+  startTime: string,
+  endTime: string
+): number => {
+  if (!startDate || !endDate) return 0;
+  
+  try {
+    // Parse start time
+    const [startHour, startMinute] = startTime.split(':').map(Number);
+    const startDateTime = new Date(startDate);
+    startDateTime.setHours(startHour, startMinute, 0, 0);
+    
+    // Parse end time
+    const [endHour, endMinute] = endTime.split(':').map(Number);
+    const endDateTime = new Date(endDate);
+    endDateTime.setHours(endHour, endMinute, 0, 0);
+    
+    // Calculate difference in milliseconds and convert to hours
+    const diffMs = endDateTime.getTime() - startDateTime.getTime();
+    const diffHours = diffMs / (1000 * 60 * 60);
+    
+    return Math.max(0, diffHours);
+  } catch (error) {
+    console.error("Error calculating gross hours:", error);
+    return 0;
+  }
+};
 
 export function useEventForm(eventId: string | null) {
   const isEditMode = !!eventId;
@@ -123,6 +155,23 @@ export function useEventForm(eventId: string | null) {
       }
     }
   }, [eventId, isEditMode, clients]);
+  
+  // Auto-calculate gross hours when dates or times change
+  useEffect(() => {
+    const calculatedGrossHours = calculateGrossHours(
+      formData.startDate,
+      formData.endDate,
+      formData.startTime,
+      formData.endTime
+    );
+    
+    if (calculatedGrossHours > 0) {
+      setFormData(prev => ({
+        ...prev,
+        grossHours: calculatedGrossHours.toFixed(1)
+      }));
+    }
+  }, [formData.startDate, formData.endDate, formData.startTime, formData.endTime]);
   
   // Calculate net hours
   useEffect(() => {

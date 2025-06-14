@@ -45,14 +45,17 @@ const EventHoursAndCosts: React.FC<EventHoursAndCostsProps> = ({
             <Input 
               id="grossHours" 
               type="number"
-              step="0.5"
+              step="0.1"
               min="0"
-              placeholder="Inserisci ore lorde" 
+              placeholder="Calcolato automaticamente" 
               value={grossHours}
-              onChange={(e) => onGrossHoursChange(e.target.value)}
-              className="pl-10"
+              readOnly
+              className="pl-10 bg-gray-50"
             />
           </div>
+          <p className="text-sm text-muted-foreground">
+            Calcolato automaticamente in base alle date e orari dell'evento
+          </p>
         </div>
         
         <div className="space-y-2">
