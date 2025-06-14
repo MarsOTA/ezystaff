@@ -1,3 +1,4 @@
+
 import React from "react";
 import { ExtendedOperator } from "@/types/operator";
 import BasicInfoCard from "./BasicInfoCard";
@@ -73,10 +74,10 @@ const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center gap-4">
-            {imagePreviewUrls.profilePhoto && (
+            {imagePreviewUrls.profileImage && (
               <div className="relative">
                 <img 
-                  src={imagePreviewUrls.profilePhoto} 
+                  src={imagePreviewUrls.profileImage} 
                   alt="Profile" 
                   className="w-24 h-24 object-cover rounded-full"
                 />
@@ -84,24 +85,24 @@ const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
                   size="icon" 
                   variant="destructive" 
                   className="absolute -top-2 -right-2 w-6 h-6"
-                  onClick={() => removeFile("profilePhoto", "profilePhotoName")}
+                  onClick={() => removeFile("profileImage", "profileImageName")}
                 >
                   <X className="h-3 w-3" />
                 </Button>
               </div>
             )}
             <div className="flex-1">
-              <Label htmlFor="profilePhoto">Carica foto profilo</Label>
+              <Label htmlFor="profileImage">Carica foto profilo</Label>
               <Input
-                id="profilePhoto"
+                id="profileImage"
                 type="file"
                 accept="image/*"
-                onChange={handleFileChange("profilePhoto", "profilePhotoName")}
+                onChange={handleFileChange("profileImage", "profileImageName")}
                 className="mt-1"
               />
-              {operator.profilePhotoName && (
+              {operator.profileImageName && (
                 <p className="text-sm text-muted-foreground mt-1">
-                  File attuale: {operator.profilePhotoName}
+                  File attuale: {operator.profileImageName}
                 </p>
               )}
             </div>
@@ -117,20 +118,20 @@ const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="dateOfBirth">Data di Nascita</Label>
+              <Label htmlFor="birthDate">Data di Nascita</Label>
               <Input
-                id="dateOfBirth"
+                id="birthDate"
                 type="date"
-                value={operator.dateOfBirth || ""}
-                onChange={(e) => onFieldChange("dateOfBirth", e.target.value)}
+                value={operator.birthDate || ""}
+                onChange={(e) => onFieldChange("birthDate", e.target.value)}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="placeOfBirth">Luogo di Nascita</Label>
+              <Label htmlFor="birthCountry">Luogo di Nascita</Label>
               <Input
-                id="placeOfBirth"
-                value={operator.placeOfBirth || ""}
-                onChange={(e) => onFieldChange("placeOfBirth", e.target.value)}
+                id="birthCountry"
+                value={operator.birthCountry || ""}
+                onChange={(e) => onFieldChange("birthCountry", e.target.value)}
                 placeholder="Inserisci il luogo di nascita"
               />
             </div>
@@ -284,7 +285,7 @@ const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
               {clothingSizes.map((size) => (
                 <Badge
                   key={size}
-                  variant={operator.clothingSizes?.includes(size) ? "default" : "outline"}
+                  variant={operator.sizes?.includes(size) ? "default" : "outline"}
                   className="cursor-pointer"
                   onClick={() => onSizeToggle(size)}
                 >
@@ -304,53 +305,53 @@ const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="idDocument">Documento d'Identità</Label>
+              <Label htmlFor="idCardFrontImage">Documento d'Identità</Label>
               <div className="flex items-center gap-2">
                 <Input
-                  id="idDocument"
+                  id="idCardFrontImage"
                   type="file"
                   accept=".pdf,.jpg,.jpeg,.png"
-                  onChange={handleFileChange("idDocument", "idDocumentName")}
+                  onChange={handleFileChange("idCardFrontImage", "idCardFrontFileName")}
                 />
-                {operator.idDocumentName && (
+                {operator.idCardFrontFileName && (
                   <Button 
                     size="icon" 
                     variant="outline"
-                    onClick={() => removeFile("idDocument", "idDocumentName")}
+                    onClick={() => removeFile("idCardFrontImage", "idCardFrontFileName")}
                   >
                     <X className="h-4 w-4" />
                   </Button>
                 )}
               </div>
-              {operator.idDocumentName && (
+              {operator.idCardFrontFileName && (
                 <p className="text-sm text-muted-foreground">
-                  File: {operator.idDocumentName}
+                  File: {operator.idCardFrontFileName}
                 </p>
               )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="resume">Curriculum Vitae</Label>
+              <Label htmlFor="resumeFile">Curriculum Vitae</Label>
               <div className="flex items-center gap-2">
                 <Input
-                  id="resume"
+                  id="resumeFile"
                   type="file"
                   accept=".pdf,.doc,.docx"
-                  onChange={handleFileChange("resume", "resumeName")}
+                  onChange={handleFileChange("resumeFile", "resumeFileName")}
                 />
-                {operator.resumeName && (
+                {operator.resumeFileName && (
                   <Button 
                     size="icon" 
                     variant="outline"
-                    onClick={() => removeFile("resume", "resumeName")}
+                    onClick={() => removeFile("resumeFile", "resumeFileName")}
                   >
                     <X className="h-4 w-4" />
                   </Button>
                 )}
               </div>
-              {operator.resumeName && (
+              {operator.resumeFileName && (
                 <p className="text-sm text-muted-foreground">
-                  File: {operator.resumeName}
+                  File: {operator.resumeFileName}
                 </p>
               )}
             </div>
