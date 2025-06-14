@@ -35,6 +35,7 @@ export const useOperatorData = () => {
     
     // Dispatch events to notify other components
     window.dispatchEvent(new CustomEvent('operatorAssigned'));
+    window.dispatchEvent(new CustomEvent('operatorDataUpdated', { detail: newOperators }));
     window.dispatchEvent(new StorageEvent('storage', {
       key: OPERATORS_STORAGE_KEY,
       newValue: JSON.stringify(newOperators)
@@ -56,6 +57,20 @@ export const useOperatorData = () => {
     return loaded;
   }, [loadOperators]);
 
+  // Aggressive refresh function
+  const aggressiveRefresh = useCallback(() => {
+    console.log("OperatorData: Aggressive refresh");
+    setTimeout(() => {
+      forceReload();
+    }, 100);
+    setTimeout(() => {
+      forceReload();
+    }, 500);
+    setTimeout(() => {
+      forceReload();
+    }, 1000);
+  }, [forceReload]);
+
   // Initial load
   useEffect(() => {
     loadOperators();
@@ -72,23 +87,48 @@ export const useOperatorData = () => {
 
     const handleOperatorAssignment = () => {
       console.log("OperatorData: Operator assignment event detected");
+      aggressiveRefresh();
+    };
+
+    const handleOperatorDataUpdated = () => {
+      console.log("OperatorData: Operator data updated event detected");
       forceReload();
     };
 
     window.addEventListener('storage', handleStorageChange);
     window.addEventListener('operatorAssigned', handleOperatorAssignment);
+    window.addEventListener('operatorDataUpdated', handleOperatorDataUpdated);
+
+    // Periodic check every 2 seconds
+    const interval = setInterval(() => {
+      const current = safeLocalStorage.getItem(OPERATORS_STORAGE_KEY);
+      if (current) {
+        try {
+          const parsed = JSON.parse(current);
+          if (JSON.stringify(parsed) !== JSON.stringify(operators)) {
+            console.log("OperatorData: Periodic check detected changes");
+            forceReload();
+          }
+        } catch (error) {
+          console.error("Error in periodic check:", error);
+        }
+      }
+    }, 2000);
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('operatorAssigned', handleOperatorAssignment);
+      window.removeEventListener('operatorDataUpdated', handleOperatorDataUpdated);
+      clearInterval(interval);
     };
-  }, [forceReload]);
+  }, [forceReload, aggressiveRefresh, operators]);
 
   return { 
     operators, 
     setOperators: saveOperators, 
     updateTrigger, 
     forceReload,
-    updateOperators 
+    updateOperators,
+    aggressiveRefresh
   };
 };

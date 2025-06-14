@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
@@ -13,9 +12,11 @@ import EventSearch from "@/components/events/EventSearch";
 import EventActions from "@/components/events/EventActions";
 import { useEventsData } from "@/hooks/useEventsData";
 import { handleCloseEvent } from "@/components/events/EventClosingUtils";
+import { useOperatorData } from "@/hooks/useOperatorData";
 
 const Events = () => {
   const navigate = useNavigate();
+  const { aggressiveRefresh } = useOperatorData();
   const {
     events,
     setEvents,
@@ -35,16 +36,25 @@ const Events = () => {
   // Listen for operator assignments to refresh events data
   useEffect(() => {
     const handleOperatorAssignment = () => {
-      console.log("Events page: Operator assignment detected, refreshing events");
+      console.log("Events page: Operator assignment detected, refreshing events and operators");
       refreshEvents();
+      aggressiveRefresh();
+    };
+
+    const handleOperatorDataUpdated = () => {
+      console.log("Events page: Operator data updated, refreshing");
+      refreshEvents();
+      aggressiveRefresh();
     };
 
     window.addEventListener('operatorAssigned', handleOperatorAssignment);
+    window.addEventListener('operatorDataUpdated', handleOperatorDataUpdated);
 
     return () => {
       window.removeEventListener('operatorAssigned', handleOperatorAssignment);
+      window.removeEventListener('operatorDataUpdated', handleOperatorDataUpdated);
     };
-  }, [refreshEvents]);
+  }, [refreshEvents, aggressiveRefresh]);
 
   const handleCreateEvent = () => {
     navigate("/events/create");

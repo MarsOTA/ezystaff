@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -59,6 +58,28 @@ const EventPlanner = () => {
     }
   }, [selectedEvent, setShiftDate, setShiftStartTime, setShiftEndTime]);
 
+  const triggerGlobalUpdate = () => {
+    // Dispatch multiple events to ensure all components update
+    window.dispatchEvent(new CustomEvent('operatorAssigned'));
+    window.dispatchEvent(new CustomEvent('operatorDataUpdated'));
+    
+    // Force storage event
+    const storageEvent = new StorageEvent('storage', {
+      key: OPERATORS_STORAGE_KEY,
+      newValue: safeLocalStorage.getItem(OPERATORS_STORAGE_KEY)
+    });
+    window.dispatchEvent(storageEvent);
+    
+    // Additional custom event
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('operatorAssigned'));
+    }, 100);
+    
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('operatorDataUpdated'));
+    }, 500);
+  };
+
   const handleAssign = () => {
     if (!selectedOperator || !selectedEventId) {
       toast.error("Seleziona un evento per continuare");
@@ -89,26 +110,17 @@ const EventPlanner = () => {
     setOperators(updatedOperators);
     safeLocalStorage.setItem(OPERATORS_STORAGE_KEY, JSON.stringify(updatedOperators));
     
-    console.log("EventPlanner: Assignment completed, dispatching events");
+    console.log("EventPlanner: Assignment completed, triggering global update");
     
-    // Dispatch multiple events to ensure all components update
-    const assignmentEvent = new CustomEvent('operatorAssigned', {
-      detail: { operatorId: selectedOperator.id, eventId }
-    });
-    window.dispatchEvent(assignmentEvent);
-
-    // Forza anche l'aggiornamento del storage event manualmente
-    const storageEvent = new CustomEvent('storage', {
-      detail: { key: OPERATORS_STORAGE_KEY, newValue: JSON.stringify(updatedOperators) }
-    });
-    window.dispatchEvent(storageEvent);
+    // Trigger comprehensive update
+    triggerGlobalUpdate();
     
     toast.success(`${selectedOperator.name} ${selectedOperator.surname} assegnato con successo all'evento`);
     
     // Navigate back after assignment
     setTimeout(() => {
       navigate("/operators");
-    }, 1000); // Aumentato il ritardo per permettere l'aggiornamento
+    }, 1500);
   };
 
   if (!selectedOperator) {
