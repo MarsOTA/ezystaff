@@ -91,18 +91,24 @@ const EventPlanner = () => {
     
     console.log("EventPlanner: Assignment completed, dispatching events");
     
-    // Dispatch operator assignment event
+    // Dispatch multiple events to ensure all components update
     const assignmentEvent = new CustomEvent('operatorAssigned', {
       detail: { operatorId: selectedOperator.id, eventId }
     });
     window.dispatchEvent(assignmentEvent);
+
+    // Forza anche l'aggiornamento del storage event manualmente
+    const storageEvent = new CustomEvent('storage', {
+      detail: { key: OPERATORS_STORAGE_KEY, newValue: JSON.stringify(updatedOperators) }
+    });
+    window.dispatchEvent(storageEvent);
     
     toast.success(`${selectedOperator.name} ${selectedOperator.surname} assegnato con successo all'evento`);
     
     // Navigate back after assignment
     setTimeout(() => {
       navigate("/operators");
-    }, 500);
+    }, 1000); // Aumentato il ritardo per permettere l'aggiornamento
   };
 
   if (!selectedOperator) {
