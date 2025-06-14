@@ -2,7 +2,7 @@
 import React from 'react';
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { personnelTypes } from '@/hooks/useEventForm';
+import { personnelTypes } from '@/types/eventForm';
 
 interface EventPersonnelSelectProps {
   selectedPersonnel: string[];

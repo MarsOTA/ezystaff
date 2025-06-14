@@ -1,9 +1,8 @@
-
 import React from 'react';
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { MapPin, Building } from "lucide-react";
-import { PlacePrediction } from '@/hooks/useEventForm';
+import { PlacePrediction } from '@/types/eventForm';
 
 interface EventLocationFieldsProps {
   eventLocation: string;

@@ -3,71 +3,9 @@ import { useState, useEffect } from "react";
 import { Event, EVENTS_STORAGE_KEY } from "@/types/event";
 import { Client } from "@/pages/Clients";
 import { safeLocalStorage } from "@/utils/fileUtils";
-
-export const CLIENTS_STORAGE_KEY = "app_clients_data";
-
-export interface PlacePrediction {
-  description: string;
-  place_id: string;
-}
-
-export type PersonnelType = "security" | "doorman" | "hostess";
-
-export const personnelTypes = [
-  { id: "security", label: "Security" },
-  { id: "doorman", label: "Doorman" },
-  { id: "hostess", label: "Hostess/Steward" },
-];
-
-export interface EventFormData {
-  title: string;
-  client: string;
-  selectedPersonnel: string[];
-  startDate: Date | undefined;
-  endDate: Date | undefined;
-  startTime: string;
-  endTime: string;
-  eventLocation: string;
-  eventAddress: string;
-  grossHours: string;
-  breakStartTime: string;
-  breakEndTime: string;
-  netHours: string;
-  hourlyRateCost: string;
-  hourlyRateSell: string;
-  personnelCounts?: Record<string, number>;
-}
-
-// Helper function to calculate gross hours based on dates and times
-const calculateGrossHours = (
-  startDate: Date | undefined,
-  endDate: Date | undefined,
-  startTime: string,
-  endTime: string
-): number => {
-  if (!startDate || !endDate) return 0;
-  
-  try {
-    // Parse start time
-    const [startHour, startMinute] = startTime.split(':').map(Number);
-    const startDateTime = new Date(startDate);
-    startDateTime.setHours(startHour, startMinute, 0, 0);
-    
-    // Parse end time
-    const [endHour, endMinute] = endTime.split(':').map(Number);
-    const endDateTime = new Date(endDate);
-    endDateTime.setHours(endHour, endMinute, 0, 0);
-    
-    // Calculate difference in milliseconds and convert to hours
-    const diffMs = endDateTime.getTime() - startDateTime.getTime();
-    const diffHours = diffMs / (1000 * 60 * 60);
-    
-    return Math.max(0, diffHours);
-  } catch (error) {
-    console.error("Error calculating gross hours:", error);
-    return 0;
-  }
-};
+import { EventFormData, CLIENTS_STORAGE_KEY } from "@/types/eventForm";
+import { calculateGrossHours, calculateNetHours } from "@/utils/eventCalculations";
+import { useEventSuggestions } from "./useEventSuggestions";
 
 export function useEventForm(eventId: string | null) {
   const isEditMode = !!eventId;
@@ -92,10 +30,7 @@ export function useEventForm(eventId: string | null) {
   });
   
   const [clients, setClients] = useState<Client[]>([]);
-  const [locationSuggestions, setLocationSuggestions] = useState<PlacePrediction[]>([]);
-  const [addressSuggestions, setAddressSuggestions] = useState<PlacePrediction[]>([]);
-  const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
-  const [showAddressSuggestions, setShowAddressSuggestions] = useState(false);
+  const suggestions = useEventSuggestions();
   
   // Load clients
   useEffect(() => {
@@ -175,23 +110,19 @@ export function useEventForm(eventId: string | null) {
   
   // Calculate net hours
   useEffect(() => {
-    if (formData.grossHours) {
-      const breakStart = formData.breakStartTime.split(':').map(Number);
-      const breakEnd = formData.breakEndTime.split(':').map(Number);
-      
-      const breakStartMinutes = breakStart[0] * 60 + breakStart[1];
-      const breakEndMinutes = breakEnd[0] * 60 + breakEnd[1];
-      
-      const breakDurationHours = (breakEndMinutes - breakStartMinutes) / 60;
-      
-      const netHoursValue = Math.max(0, Number(formData.grossHours) - breakDurationHours);
-      
+    const netHours = calculateNetHours(
+      formData.grossHours,
+      formData.breakStartTime,
+      formData.breakEndTime
+    );
+    
+    if (netHours !== formData.netHours) {
       setFormData(prev => ({
         ...prev,
-        netHours: netHoursValue.toFixed(2)
+        netHours
       }));
     }
-  }, [formData.grossHours, formData.breakStartTime, formData.breakEndTime]);
+  }, [formData.grossHours, formData.breakStartTime, formData.breakEndTime, formData.netHours]);
   
   const handlePersonnelChange = (personnelId: string) => {
     setFormData(prev => {
@@ -223,13 +154,6 @@ export function useEventForm(eventId: string | null) {
     clients,
     isEditMode,
     handlePersonnelChange,
-    locationSuggestions,
-    setLocationSuggestions,
-    addressSuggestions,
-    setAddressSuggestions,
-    showLocationSuggestions,
-    setShowLocationSuggestions,
-    showAddressSuggestions,
-    setShowAddressSuggestions
+    ...suggestions
   };
 }
