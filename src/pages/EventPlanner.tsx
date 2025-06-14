@@ -1,0 +1,318 @@
+
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CalendarIcon, ArrowLeft, Plus, X } from "lucide-react";
+import { format } from "date-fns";
+import { it } from "date-fns/locale";
+import { cn } from "@/lib/utils";
+import Layout from "@/components/Layout";
+import { useOperatorStorage } from "@/hooks/operators/useOperatorStorage";
+import { Operator } from "@/types/operator";
+import { Event } from "@/types/event";
+
+interface Shift {
+  id: string;
+  date: Date;
+  startTime: string;
+  endTime: string;
+}
+
+const EventPlanner = () => {
+  const { operatorId } = useParams<{ operatorId: string }>();
+  const navigate = useNavigate();
+  const { operators, setOperators, events } = useOperatorStorage();
+  
+  const [selectedOperator, setSelectedOperator] = useState<Operator | null>(null);
+  const [selectedEventId, setSelectedEventId] = useState<string>("");
+  const [shifts, setShifts] = useState<Shift[]>([]);
+  const [notes, setNotes] = useState("");
+  
+  // New shift form state
+  const [shiftDate, setShiftDate] = useState<Date | undefined>(undefined);
+  const [shiftStartTime, setShiftStartTime] = useState("09:00");
+  const [shiftEndTime, setShiftEndTime] = useState("18:00");
+
+  useEffect(() => {
+    if (operatorId && operators.length > 0) {
+      const operator = operators.find(op => op.id === parseInt(operatorId));
+      setSelectedOperator(operator || null);
+    }
+  }, [operatorId, operators]);
+
+  const getAssignedEvents = () => {
+    if (!selectedOperator || !selectedOperator.assignedEvents) return [];
+    
+    return events.filter(event => 
+      selectedOperator.assignedEvents?.includes(event.id)
+    );
+  };
+
+  const formatDateRange = (start: Date, end: Date) => {
+    const sameDay = start.getDate() === end.getDate() && 
+                    start.getMonth() === end.getMonth() && 
+                    start.getFullYear() === end.getFullYear();
+    
+    const startDateStr = format(start, "d MMMM yyyy", { locale: it });
+    const endDateStr = format(end, "d MMMM yyyy", { locale: it });
+    const startTimeStr = format(start, "HH:mm");
+    const endTimeStr = format(end, "HH:mm");
+    
+    if (sameDay) {
+      return `${startDateStr}, ${startTimeStr} - ${endTimeStr}`;
+    } else {
+      return `Dal ${startDateStr}, ${startTimeStr} al ${endDateStr}, ${endTimeStr}`;
+    }
+  };
+
+  const addShift = () => {
+    if (!shiftDate) return;
+    
+    const newShift: Shift = {
+      id: Date.now().toString(),
+      date: shiftDate,
+      startTime: shiftStartTime,
+      endTime: shiftEndTime
+    };
+    
+    setShifts([...shifts, newShift]);
+    setShiftDate(undefined);
+    setShiftStartTime("09:00");
+    setShiftEndTime("18:00");
+  };
+
+  const removeShift = (shiftId: string) => {
+    setShifts(shifts.filter(shift => shift.id !== shiftId));
+  };
+
+  const handleAssign = () => {
+    if (!selectedOperator || !selectedEventId) return;
+
+    const updatedOperators = operators.map(operator => {
+      if (operator.id === selectedOperator.id) {
+        const currentEvents = operator.assignedEvents || [];
+        const eventId = parseInt(selectedEventId);
+        
+        if (!currentEvents.includes(eventId)) {
+          return {
+            ...operator,
+            assignedEvents: [...currentEvents, eventId]
+          };
+        }
+      }
+      return operator;
+    });
+
+    setOperators(updatedOperators);
+    navigate("/operators");
+  };
+
+  if (!selectedOperator) {
+    return (
+      <Layout>
+        <div className="text-center py-8">
+          <p>Operatore non trovato</p>
+          <Button onClick={() => navigate("/operators")} className="mt-4">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Torna alla Lista Operatori
+          </Button>
+        </div>
+      </Layout>
+    );
+  }
+
+  return (
+    <Layout>
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <Button variant="outline" onClick={() => navigate("/operators")}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Torna alla Lista
+          </Button>
+          <h1 className="text-2xl font-bold">Event Planner</h1>
+        </div>
+
+        {/* Event Selection */}
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              Seleziona l'evento a cui vuoi assegnare {selectedOperator.name} {selectedOperator.surname}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Select value={selectedEventId} onValueChange={setSelectedEventId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Seleziona un evento" />
+              </SelectTrigger>
+              <SelectContent>
+                {events.length > 0 ? (
+                  events.map((event) => (
+                    <SelectItem key={event.id} value={event.id.toString()}>
+                      {event.title} - {event.client}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <SelectItem value="no-events" disabled>
+                    Nessun evento disponibile
+                  </SelectItem>
+                )}
+              </SelectContent>
+            </Select>
+          </CardContent>
+        </Card>
+
+        {/* Already Assigned Events */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Eventi già assegnati</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {getAssignedEvents().length > 0 ? (
+              <div className="space-y-3">
+                {getAssignedEvents().map((event) => (
+                  <div key={event.id} className="p-3 bg-muted rounded-md">
+                    <div className="font-medium">{event.title}</div>
+                    <div className="text-sm text-muted-foreground">
+                      {formatDateRange(event.startDate, event.endDate)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-muted-foreground">Nessun evento assegnato</p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Shifts Management */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Imposta i turni</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Add New Shift */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 border rounded-md">
+              <div className="space-y-2">
+                <Label>Data turno</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !shiftDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {shiftDate ? format(shiftDate, "d MMMM yyyy", { locale: it }) : "Seleziona data"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={shiftDate}
+                      onSelect={setShiftDate}
+                      locale={it}
+                      className="pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Ora inizio</Label>
+                <Input
+                  type="time"
+                  value={shiftStartTime}
+                  onChange={(e) => setShiftStartTime(e.target.value)}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Ora fine</Label>
+                <Input
+                  type="time"
+                  value={shiftEndTime}
+                  onChange={(e) => setShiftEndTime(e.target.value)}
+                />
+              </div>
+              
+              <div className="flex items-end">
+                <Button onClick={addShift} disabled={!shiftDate} className="w-full">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Aggiungi turno
+                </Button>
+              </div>
+            </div>
+
+            {/* Shifts List */}
+            {shifts.length > 0 && (
+              <div className="space-y-2">
+                <Label>Turni programmati</Label>
+                {shifts.map((shift) => (
+                  <div key={shift.id} className="flex items-center justify-between p-3 bg-muted rounded-md">
+                    <div>
+                      <span className="font-medium">
+                        {format(shift.date, "d MMMM yyyy", { locale: it })}
+                      </span>
+                      <span className="ml-4 text-muted-foreground">
+                        {shift.startTime} - {shift.endTime}
+                      </span>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => removeShift(shift.id)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Notes */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Note</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Textarea
+              placeholder="Scrivi eventuali note per questo operatore..."
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              className="min-h-[100px]"
+            />
+          </CardContent>
+        </Card>
+
+        {/* Action Buttons */}
+        <div className="flex gap-4 justify-end">
+          <Button variant="outline" onClick={() => navigate("/operators")}>
+            Annulla
+          </Button>
+          <Button onClick={handleAssign} disabled={!selectedEventId}>
+            Assegna Operatore
+          </Button>
+        </div>
+      </div>
+    </Layout>
+  );
+};
+
+export default EventPlanner;

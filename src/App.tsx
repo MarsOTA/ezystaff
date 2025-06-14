@@ -7,6 +7,7 @@ import Events from "./pages/Events";
 import Calendar from "./pages/Calendar";
 import Operators from "./pages/Operators";
 import OperatorProfile from "./pages/OperatorProfile";
+import EventPlanner from "./pages/EventPlanner";
 import Clients from "./pages/Clients";
 import ClientCreate from "./pages/ClientCreate";
 import ClientDetail from "./pages/ClientDetail";
@@ -48,6 +49,10 @@ function App() {
       <Route
         path="/operator-profile/:id"
         element={<ProtectedRoute component={OperatorProfile} />}
+      />
+      <Route
+        path="/event-planner/:operatorId"
+        element={<ProtectedRoute component={EventPlanner} />}
       />
       <Route
         path="/clients"

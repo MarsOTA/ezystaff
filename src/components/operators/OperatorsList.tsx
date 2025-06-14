@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Table,
   TableBody,
@@ -33,6 +34,8 @@ const OperatorsList: React.FC<OperatorsListProps> = ({
   onDelete,
   onAssign,
 }) => {
+  const navigate = useNavigate();
+  
   const [filters, setFilters] = useState({
     search: '',
     gender: 'all',
@@ -122,6 +125,10 @@ const OperatorsList: React.FC<OperatorsListProps> = ({
     } else {
       return `Dal ${startDateStr}, ${startTimeStr} al ${endDateStr}, ${endTimeStr}`;
     }
+  };
+
+  const handleAssignClick = (operator: Operator) => {
+    navigate(`/event-planner/${operator.id}`);
   };
 
   return (
@@ -219,7 +226,7 @@ const OperatorsList: React.FC<OperatorsListProps> = ({
                   <Button
                     variant="outline"
                     size="icon"
-                    onClick={() => onAssign(operator)}
+                    onClick={() => handleAssignClick(operator)}
                     title="Assegna a evento"
                   >
                     <CalendarClock className="h-4 w-4" />
