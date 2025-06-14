@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Minus } from "lucide-react";
-import { personnelTypes } from '@/hooks/useEventForm';
+import { personnelTypes } from '@/types/eventForm';
 
 interface PersonnelTypesProps {
   selectedPersonnel: string[];
