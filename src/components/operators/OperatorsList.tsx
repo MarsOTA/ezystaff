@@ -143,9 +143,7 @@ const OperatorsList: React.FC<OperatorsListProps> = ({
             <SortableTableHeader sortKey="email" currentSort={sortConfig} onSort={handleSort}>
               Email
             </SortableTableHeader>
-            <SortableTableHeader sortKey="phone" currentSort={sortConfig} onSort={handleSort}>
-              Cell.
-            </SortableTableHeader>
+            <TableHead>Cell.</TableHead>
             <SortableTableHeader sortKey="gender" currentSort={sortConfig} onSort={handleSort}>
               Genere
             </SortableTableHeader>
