@@ -8,6 +8,7 @@ import Layout from "@/components/Layout";
 import { Event, EVENTS_STORAGE_KEY } from "@/types/event";
 import { safeLocalStorage } from "@/utils/fileUtils";
 import EventDetailDialog from "@/components/events/EventDetailDialog";
+import { handleCloseEvent } from "@/components/events/EventClosingUtils";
 
 const localizer = momentLocalizer(moment);
 
@@ -62,14 +63,15 @@ const Calendar = () => {
     }
   };
 
-  const handleCloseEvent = (eventId: number) => {
-    // Implement event closing logic or navigate to edit
-    setIsClosingEvent(true);
-    setTimeout(() => {
-      navigate(`/events/create?id=${eventId}`);
-      setIsClosingEvent(false);
-      setIsDetailsOpen(false);
-    }, 500);
+  const onEventClose = (eventId: number) => {
+    handleCloseEvent(
+      eventId, 
+      events, 
+      setEvents, 
+      setIsClosingEvent, 
+      setIsDetailsOpen, 
+      setSelectedEvent
+    );
   };
 
   return (
@@ -89,7 +91,7 @@ const Calendar = () => {
         event={selectedEvent}
         isOpen={isDetailsOpen}
         onOpenChange={setIsDetailsOpen}
-        onEventClose={handleCloseEvent}
+        onEventClose={onEventClose}
         isClosingEvent={isClosingEvent}
       />
     </Layout>

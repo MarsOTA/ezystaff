@@ -13,6 +13,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { useOperatorStorage } from "@/hooks/operators/useOperatorStorage";
 
 interface EventDetailDialogProps {
   event: Event | null;
@@ -30,6 +31,7 @@ const EventDetailDialog = ({
   isClosingEvent 
 }: EventDetailDialogProps) => {
   const navigate = useNavigate();
+  const { operators } = useOperatorStorage();
   
   // Helper function to format date range
   const formatDateRange = (start: Date, end: Date) => {
@@ -49,7 +51,18 @@ const EventDetailDialog = ({
     }
   };
 
+  // Get assigned operators for this event
+  const getAssignedOperators = () => {
+    if (!event) return [];
+    
+    return operators.filter(operator => 
+      operator.assignedEvents && operator.assignedEvents.includes(event.id)
+    );
+  };
+
   if (!event) return null;
+
+  const assignedOperators = getAssignedOperators();
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -99,6 +112,25 @@ const EventDetailDialog = ({
                 </span>
               ))}
             </div>
+          </div>
+
+          {/* Assigned Operators Section */}
+          <div>
+            <h4 className="text-sm font-medium text-muted-foreground">Operatori Assegnati</h4>
+            {assignedOperators.length > 0 ? (
+              <div className="flex flex-wrap gap-1 mt-1">
+                {assignedOperators.map((operator) => (
+                  <span 
+                    key={operator.id}
+                    className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-green-100 text-green-800"
+                  >
+                    {operator.name} {operator.surname}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground mt-1">Nessun operatore assegnato</p>
+            )}
           </div>
           
           {(event.grossHours || event.netHours) && (

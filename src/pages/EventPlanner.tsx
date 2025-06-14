@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, ArrowLeft, Plus, X } from "lucide-react";
+import { CalendarIcon, ArrowLeft, Plus, X, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -23,6 +23,8 @@ import Layout from "@/components/Layout";
 import { useOperatorStorage } from "@/hooks/operators/useOperatorStorage";
 import { Operator } from "@/types/operator";
 import { Event } from "@/types/event";
+import { toast } from "sonner";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface Shift {
   id: string;
@@ -38,6 +40,7 @@ const EventPlanner = () => {
   
   const [selectedOperator, setSelectedOperator] = useState<Operator | null>(null);
   const [selectedEventId, setSelectedEventId] = useState<string>("");
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [notes, setNotes] = useState("");
   
@@ -52,6 +55,26 @@ const EventPlanner = () => {
       setSelectedOperator(operator || null);
     }
   }, [operatorId, operators]);
+
+  // Update selected event and auto-populate shift date when event is selected
+  useEffect(() => {
+    if (selectedEventId && events.length > 0) {
+      const event = events.find(e => e.id === parseInt(selectedEventId));
+      if (event) {
+        setSelectedEvent(event);
+        // Auto-populate shift date with event start date
+        setShiftDate(event.startDate);
+        // Set default times based on event times
+        const startTime = format(event.startDate, "HH:mm");
+        const endTime = format(event.endDate, "HH:mm");
+        setShiftStartTime(startTime);
+        setShiftEndTime(endTime);
+      }
+    } else {
+      setSelectedEvent(null);
+      setShiftDate(undefined);
+    }
+  }, [selectedEventId, events]);
 
   const getAssignedEvents = () => {
     if (!selectedOperator || !selectedOperator.assignedEvents) return [];
@@ -78,8 +101,27 @@ const EventPlanner = () => {
     }
   };
 
+  const isDateInEventRange = (date: Date, event: Event) => {
+    const eventStart = new Date(event.startDate);
+    const eventEnd = new Date(event.endDate);
+    
+    // Reset time for date comparison
+    const checkDate = new Date(date);
+    checkDate.setHours(0, 0, 0, 0);
+    eventStart.setHours(0, 0, 0, 0);
+    eventEnd.setHours(0, 0, 0, 0);
+    
+    return checkDate >= eventStart && checkDate <= eventEnd;
+  };
+
   const addShift = () => {
-    if (!shiftDate) return;
+    if (!shiftDate || !selectedEvent) return;
+    
+    // Validate that shift date is within event date range
+    if (!isDateInEventRange(shiftDate, selectedEvent)) {
+      toast.error("La data del turno deve essere compresa nel periodo dell'evento");
+      return;
+    }
     
     const newShift: Shift = {
       id: Date.now().toString(),
@@ -89,17 +131,19 @@ const EventPlanner = () => {
     };
     
     setShifts([...shifts, newShift]);
-    setShiftDate(undefined);
-    setShiftStartTime("09:00");
-    setShiftEndTime("18:00");
+    toast.success("Turno aggiunto con successo");
   };
 
   const removeShift = (shiftId: string) => {
     setShifts(shifts.filter(shift => shift.id !== shiftId));
+    toast.success("Turno rimosso");
   };
 
   const handleAssign = () => {
-    if (!selectedOperator || !selectedEventId) return;
+    if (!selectedOperator || !selectedEventId) {
+      toast.error("Seleziona un evento per continuare");
+      return;
+    }
 
     const updatedOperators = operators.map(operator => {
       if (operator.id === selectedOperator.id) {
@@ -111,12 +155,16 @@ const EventPlanner = () => {
             ...operator,
             assignedEvents: [...currentEvents, eventId]
           };
+        } else {
+          toast.info("Operatore già assegnato a questo evento");
+          return operator;
         }
       }
       return operator;
     });
 
     setOperators(updatedOperators);
+    toast.success(`${selectedOperator.name} ${selectedOperator.surname} assegnato con successo all'evento`);
     navigate("/operators");
   };
 
@@ -201,87 +249,107 @@ const EventPlanner = () => {
         <Card>
           <CardHeader>
             <CardTitle>Imposta i turni</CardTitle>
+            {selectedEvent && (
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  I turni devono essere compresi nel periodo dell'evento: {formatDateRange(selectedEvent.startDate, selectedEvent.endDate)}
+                </AlertDescription>
+              </Alert>
+            )}
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* Add New Shift */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 border rounded-md">
-              <div className="space-y-2">
-                <Label>Data turno</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !shiftDate && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {shiftDate ? format(shiftDate, "d MMMM yyyy", { locale: it }) : "Seleziona data"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={shiftDate}
-                      onSelect={setShiftDate}
-                      locale={it}
-                      className="pointer-events-auto"
+            {selectedEvent ? (
+              <>
+                {/* Add New Shift */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 border rounded-md">
+                  <div className="space-y-2">
+                    <Label>Data turno</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !shiftDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {shiftDate ? format(shiftDate, "d MMMM yyyy", { locale: it }) : "Seleziona data"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={shiftDate}
+                          onSelect={setShiftDate}
+                          locale={it}
+                          className="pointer-events-auto"
+                          disabled={(date) => !isDateInEventRange(date, selectedEvent)}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>Ora inizio</Label>
+                    <Input
+                      type="time"
+                      value={shiftStartTime}
+                      onChange={(e) => setShiftStartTime(e.target.value)}
                     />
-                  </PopoverContent>
-                </Popover>
-              </div>
-              
-              <div className="space-y-2">
-                <Label>Ora inizio</Label>
-                <Input
-                  type="time"
-                  value={shiftStartTime}
-                  onChange={(e) => setShiftStartTime(e.target.value)}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label>Ora fine</Label>
-                <Input
-                  type="time"
-                  value={shiftEndTime}
-                  onChange={(e) => setShiftEndTime(e.target.value)}
-                />
-              </div>
-              
-              <div className="flex items-end">
-                <Button onClick={addShift} disabled={!shiftDate} className="w-full">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Aggiungi turno
-                </Button>
-              </div>
-            </div>
-
-            {/* Shifts List */}
-            {shifts.length > 0 && (
-              <div className="space-y-2">
-                <Label>Turni programmati</Label>
-                {shifts.map((shift) => (
-                  <div key={shift.id} className="flex items-center justify-between p-3 bg-muted rounded-md">
-                    <div>
-                      <span className="font-medium">
-                        {format(shift.date, "d MMMM yyyy", { locale: it })}
-                      </span>
-                      <span className="ml-4 text-muted-foreground">
-                        {shift.startTime} - {shift.endTime}
-                      </span>
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => removeShift(shift.id)}
-                    >
-                      <X className="h-4 w-4" />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>Ora fine</Label>
+                    <Input
+                      type="time"
+                      value={shiftEndTime}
+                      onChange={(e) => setShiftEndTime(e.target.value)}
+                    />
+                  </div>
+                  
+                  <div className="flex items-end">
+                    <Button onClick={addShift} disabled={!shiftDate} className="w-full">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Aggiungi turno
                     </Button>
                   </div>
-                ))}
-              </div>
+                </div>
+
+                {/* Shifts List */}
+                {shifts.length > 0 && (
+                  <div className="space-y-2">
+                    <Label>Turni programmati</Label>
+                    {shifts.map((shift) => (
+                      <div key={shift.id} className="flex items-center justify-between p-3 bg-muted rounded-md">
+                        <div>
+                          <span className="font-medium">
+                            {format(shift.date, "d MMMM yyyy", { locale: it })}
+                          </span>
+                          <span className="ml-4 text-muted-foreground">
+                            {shift.startTime} - {shift.endTime}
+                          </span>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => removeShift(shift.id)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            ) : (
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  Seleziona prima un evento per impostare i turni
+                </AlertDescription>
+              </Alert>
             )}
           </CardContent>
         </Card>
