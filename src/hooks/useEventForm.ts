@@ -108,12 +108,14 @@ export function useEventForm(eventId: string | null) {
     }
   }, [formData.startDate, formData.endDate, formData.startTime, formData.endTime]);
   
-  // Calculate net hours
+  // Calculate net hours with dates consideration for multi-day events
   useEffect(() => {
     const netHours = calculateNetHours(
       formData.grossHours,
       formData.breakStartTime,
-      formData.breakEndTime
+      formData.breakEndTime,
+      formData.startDate,
+      formData.endDate
     );
     
     if (netHours !== formData.netHours) {
@@ -122,7 +124,7 @@ export function useEventForm(eventId: string | null) {
         netHours
       }));
     }
-  }, [formData.grossHours, formData.breakStartTime, formData.breakEndTime, formData.netHours]);
+  }, [formData.grossHours, formData.breakStartTime, formData.breakEndTime, formData.startDate, formData.endDate, formData.netHours]);
   
   const handlePersonnelChange = (personnelId: string) => {
     setFormData(prev => {
