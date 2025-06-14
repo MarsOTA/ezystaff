@@ -2,7 +2,7 @@
 export interface Operator {
   id: number;
   name: string;
-  surname?: string; // Add surname as optional property
+  surname: string; // Make surname required
   email: string;
   phone: string;
   status: 'active' | 'inactive';

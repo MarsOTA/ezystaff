@@ -34,10 +34,7 @@ const OperatorsList: React.FC<OperatorsListProps> = ({
   onAssign,
 }) => {
   const [filters, setFilters] = useState({
-    name: '',
-    surname: '',
-    email: '',
-    phone: '',
+    search: '',
     gender: 'all',
     profession: 'all'
   });
@@ -51,14 +48,17 @@ const OperatorsList: React.FC<OperatorsListProps> = ({
 
   const filteredOperators = useMemo(() => {
     return operators.filter(operator => {
-      const nameMatch = operator.name?.toLowerCase().includes(filters.name.toLowerCase()) ?? true;
-      const surnameMatch = operator.surname?.toLowerCase().includes(filters.surname.toLowerCase()) ?? true;
-      const emailMatch = operator.email?.toLowerCase().includes(filters.email.toLowerCase()) ?? true;
-      const phoneMatch = operator.phone?.includes(filters.phone) ?? true;
+      // Search filter (searches in name, surname, and phone)
+      const searchTerm = filters.search.toLowerCase();
+      const searchMatch = searchTerm === '' || 
+        operator.name?.toLowerCase().includes(searchTerm) ||
+        operator.surname?.toLowerCase().includes(searchTerm) ||
+        operator.phone?.includes(searchTerm);
+      
       const genderMatch = filters.gender === 'all' || operator.gender === filters.gender;
       const professionMatch = filters.profession === 'all' || operator.profession === filters.profession;
       
-      return nameMatch && surnameMatch && emailMatch && phoneMatch && genderMatch && professionMatch;
+      return searchMatch && genderMatch && professionMatch;
     });
   }, [operators, filters]);
 

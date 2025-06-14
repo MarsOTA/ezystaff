@@ -7,10 +7,7 @@ import { Search } from "lucide-react";
 
 interface OperatorFiltersProps {
   filters: {
-    name: string;
-    surname: string;
-    email: string;
-    phone: string;
+    search: string;
     gender: string;
     profession: string;
   };
@@ -19,58 +16,16 @@ interface OperatorFiltersProps {
 
 const OperatorFilters: React.FC<OperatorFiltersProps> = ({ filters, onFilterChange }) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-4 p-4 border rounded-lg bg-gray-50">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 p-4 border rounded-lg bg-gray-50">
       <div className="space-y-2">
-        <Label htmlFor="filter-name">Nome</Label>
+        <Label htmlFor="filter-search">Cerca</Label>
         <div className="relative">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            id="filter-name"
-            placeholder="Filtra per nome"
-            value={filters.name}
-            onChange={(e) => onFilterChange('name', e.target.value)}
-            className="pl-8"
-          />
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="filter-surname">Cognome</Label>
-        <div className="relative">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            id="filter-surname"
-            placeholder="Filtra per cognome"
-            value={filters.surname}
-            onChange={(e) => onFilterChange('surname', e.target.value)}
-            className="pl-8"
-          />
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="filter-email">Email</Label>
-        <div className="relative">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            id="filter-email"
-            placeholder="Filtra per email"
-            value={filters.email}
-            onChange={(e) => onFilterChange('email', e.target.value)}
-            className="pl-8"
-          />
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="filter-phone">Cell.</Label>
-        <div className="relative">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            id="filter-phone"
-            placeholder="Filtra per cellulare"
-            value={filters.phone}
-            onChange={(e) => onFilterChange('phone', e.target.value)}
+            id="filter-search"
+            placeholder="Cerca per nome, cognome o cellulare..."
+            value={filters.search}
+            onChange={(e) => onFilterChange('search', e.target.value)}
             className="pl-8"
           />
         </div>
