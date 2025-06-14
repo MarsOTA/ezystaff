@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -37,7 +36,7 @@ export const useOperatorForm = (
   const handleStatusToggle = (id: number) => {
     const updatedOperators = operators.map((op) =>
       op.id === id
-        ? { ...op, status: op.status === "active" ? "inactive" : "active" }
+        ? { ...op, status: (op.status === "active" ? "inactive" : "active") as "active" | "inactive" }
         : op
     );
     
