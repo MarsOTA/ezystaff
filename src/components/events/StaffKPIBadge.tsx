@@ -10,17 +10,12 @@ interface StaffKPIBadgeProps {
 }
 
 const StaffKPIBadge = ({ event, operators, updateTrigger }: StaffKPIBadgeProps) => {
-  // Forza il ricalcolo ad ogni updateTrigger per garantire l'aggiornamento
-  const kpi = React.useMemo(() => {
-    console.log(`StaffKPIBadge: Calculating KPI for event ${event.id}, trigger: ${updateTrigger}`);
-    return calculateStaffKPI(event, operators);
-  }, [event, operators, updateTrigger]);
+  const kpi = calculateStaffKPI(event, operators);
   
-  console.log(`StaffKPIBadge render for event ${event.id}, trigger: ${updateTrigger}, KPI:`, kpi);
+  console.log(`StaffKPIBadge render for event ${event.id}, KPI:`, kpi);
   
   return (
     <span 
-      key={`kpi-${event.id}-${updateTrigger}-${kpi.assigned}-${kpi.required}`}
       className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getKpiColorClass(kpi.percentage)}`}
     >
       {kpi.assigned} / {kpi.required} ({kpi.percentage}%)

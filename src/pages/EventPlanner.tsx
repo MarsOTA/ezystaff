@@ -89,31 +89,20 @@ const EventPlanner = () => {
     setOperators(updatedOperators);
     safeLocalStorage.setItem(OPERATORS_STORAGE_KEY, JSON.stringify(updatedOperators));
     
-    console.log("EventPlanner: Assignment completed, operators updated:", updatedOperators);
+    console.log("EventPlanner: Assignment completed, dispatching events");
     
-    // Dispatch multiple events to ensure KPI updates
-    window.dispatchEvent(new CustomEvent('operatorAssigned', {
+    // Dispatch operator assignment event
+    const assignmentEvent = new CustomEvent('operatorAssigned', {
       detail: { operatorId: selectedOperator.id, eventId }
-    }));
-    
-    window.dispatchEvent(new CustomEvent('kpiUpdate', {
-      detail: { eventId, operatorId: selectedOperator.id, action: 'assigned' }
-    }));
-    
-    // Also dispatch a storage event manually for additional reliability
-    window.dispatchEvent(new StorageEvent('storage', {
-      key: OPERATORS_STORAGE_KEY,
-      newValue: JSON.stringify(updatedOperators),
-      oldValue: JSON.stringify(operators),
-      storageArea: localStorage
-    }));
+    });
+    window.dispatchEvent(assignmentEvent);
     
     toast.success(`${selectedOperator.name} ${selectedOperator.surname} assegnato con successo all'evento`);
     
-    // Navigate back after a short delay to ensure events are dispatched
+    // Navigate back after assignment
     setTimeout(() => {
       navigate("/operators");
-    }, 300);
+    }, 500);
   };
 
   if (!selectedOperator) {
