@@ -210,18 +210,25 @@ const EventPlanner = () => {
     
     console.log("EventPlanner: Assignment completed, operators updated:", updatedOperators);
     
-    // Dispatch custom event to notify other components
-    const assignmentEvent = new CustomEvent('operatorAssigned', {
+    // Dispatch custom event to notify other components IMMEDIATELY
+    window.dispatchEvent(new CustomEvent('operatorAssigned', {
       detail: { operatorId: selectedOperator.id, eventId }
-    });
-    window.dispatchEvent(assignmentEvent);
+    }));
+    
+    // Also dispatch a storage event manually for additional reliability
+    window.dispatchEvent(new StorageEvent('storage', {
+      key: OPERATORS_STORAGE_KEY,
+      newValue: JSON.stringify(updatedOperators),
+      oldValue: JSON.stringify(operators),
+      storageArea: localStorage
+    }));
     
     toast.success(`${selectedOperator.name} ${selectedOperator.surname} assegnato con successo all'evento`);
     
-    // Small delay to ensure localStorage is written before navigation
+    // Navigate back after a short delay to ensure events are dispatched
     setTimeout(() => {
       navigate("/operators");
-    }, 100);
+    }, 200);
   };
 
   if (!selectedOperator) {

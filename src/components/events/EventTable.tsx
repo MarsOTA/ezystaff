@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useCallback } from 'react';
+
+import React, { useEffect, useState } from 'react';
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { Event } from "@/types/event";
@@ -24,65 +25,98 @@ interface EventTableProps {
 
 const EventTable = ({ events, onShowDetails, onEditEvent, onDeleteEvent }: EventTableProps) => {
   const [operators, setOperators] = useState<any[]>([]);
-  const [forceUpdate, setForceUpdate] = useState(0);
+  const [updateTrigger, setUpdateTrigger] = useState(0);
 
-  // Force component update
-  const triggerUpdate = useCallback(() => {
-    setForceUpdate(prev => prev + 1);
+  // Load operators from localStorage
+  const loadOperators = () => {
+    const storedOperators = safeLocalStorage.getItem(OPERATORS_STORAGE_KEY);
+    if (storedOperators) {
+      try {
+        const parsedOperators = JSON.parse(storedOperators);
+        console.log("EventTable: Operators loaded:", parsedOperators);
+        setOperators(parsedOperators);
+        return parsedOperators;
+      } catch (error) {
+        console.error("Error parsing operators:", error);
+        setOperators([]);
+        return [];
+      }
+    }
+    setOperators([]);
+    return [];
+  };
+
+  // Force reload
+  const forceReload = () => {
+    console.log("EventTable: Forcing reload of operators");
+    loadOperators();
+    setUpdateTrigger(prev => prev + 1);
+  };
+
+  // Initial load
+  useEffect(() => {
+    loadOperators();
   }, []);
 
-  // Load operators and listen for updates
+  // Listen for various events that should trigger a reload
   useEffect(() => {
-    const loadOperators = () => {
-      const storedOperators = safeLocalStorage.getItem(OPERATORS_STORAGE_KEY);
-      if (storedOperators) {
-        try {
-          const parsedOperators = JSON.parse(storedOperators);
-          setOperators(parsedOperators);
-          console.log("EventTable: Operators loaded for KPI calculation:", parsedOperators);
-        } catch (error) {
-          console.error("Error parsing operators:", error);
-          setOperators([]);
-        }
-      }
-    };
-
-    // Initial load
-    loadOperators();
-
-    // Listen for operator assignment events
     const handleOperatorAssignment = () => {
-      console.log("EventTable: Operator assignment detected, reloading operators");
-      loadOperators();
-      triggerUpdate();
+      console.log("EventTable: Operator assignment detected, reloading");
+      setTimeout(forceReload, 100); // Small delay to ensure localStorage is written
     };
 
-    // Listen for storage changes
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === OPERATORS_STORAGE_KEY) {
-        console.log("EventTable: Operators storage changed, reloading");
-        loadOperators();
-        triggerUpdate();
+        console.log("EventTable: Storage change detected, reloading");
+        forceReload();
       }
     };
 
-    // Listen for window focus
     const handleFocus = () => {
-      console.log("EventTable: Window focused, reloading operators");
-      loadOperators();
-      triggerUpdate();
+      console.log("EventTable: Window focus detected, reloading");
+      forceReload();
     };
 
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        console.log("EventTable: Page became visible, reloading");
+        forceReload();
+      }
+    };
+
+    // Add all event listeners
     window.addEventListener('operatorAssigned', handleOperatorAssignment);
     window.addEventListener('storage', handleStorageChange);
     window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Also check for updates periodically
+    const interval = setInterval(() => {
+      const currentOperators = safeLocalStorage.getItem(OPERATORS_STORAGE_KEY);
+      if (currentOperators) {
+        try {
+          const parsed = JSON.parse(currentOperators);
+          const currentString = JSON.stringify(operators);
+          const newString = JSON.stringify(parsed);
+          if (currentString !== newString) {
+            console.log("EventTable: Operators changed, updating");
+            setOperators(parsed);
+            setUpdateTrigger(prev => prev + 1);
+          }
+        } catch (error) {
+          console.error("Error checking operators:", error);
+        }
+      }
+    }, 2000); // Check every 2 seconds
 
     return () => {
       window.removeEventListener('operatorAssigned', handleOperatorAssignment);
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      clearInterval(interval);
     };
-  }, [triggerUpdate]);
+  }, [operators]);
   
   const formatDateRange = (start: Date, end: Date) => {
     const sameDay = start.getDate() === end.getDate() && 
@@ -116,19 +150,20 @@ const EventTable = ({ events, onShowDetails, onEditEvent, onDeleteEvent }: Event
     }
   };
 
-  // Calculate staff KPI for an event - now with dependency on forceUpdate to trigger recalculation
-  const calculateStaffKPI = useCallback((event: Event) => {
-    // Count assigned operators for this specific event using current operators state
+  // Calculate staff KPI for an event
+  const calculateStaffKPI = (event: Event) => {
+    // Always use the most current operators from state
     const assignedOperatorsCount = operators.filter((op: any) => 
       op.assignedEvents && op.assignedEvents.includes(event.id)
     ).length;
 
-    console.log(`EventTable: KPI calculation for event ${event.id} (update ${forceUpdate}):`, {
+    console.log(`EventTable: KPI calculation for event ${event.id} (trigger: ${updateTrigger}):`, {
       eventId: event.id,
       assignedOperators: operators.filter((op: any) => 
         op.assignedEvents && op.assignedEvents.includes(event.id)
       ),
-      assignedCount: assignedOperatorsCount
+      assignedCount: assignedOperatorsCount,
+      totalOperators: operators.length
     });
 
     // Calculate total required personnel from event data
@@ -141,7 +176,7 @@ const EventTable = ({ events, onShowDetails, onEditEvent, onDeleteEvent }: Event
       required: totalRequired,
       percentage: totalRequired > 0 ? Math.round((assignedOperatorsCount / totalRequired) * 100) : 0
     };
-  }, [operators, forceUpdate]);
+  };
 
   // Get color class for KPI based on percentage
   const getKpiColorClass = (percentage: number) => {
@@ -167,7 +202,7 @@ const EventTable = ({ events, onShowDetails, onEditEvent, onDeleteEvent }: Event
           const kpi = calculateStaffKPI(event);
           return (
             <TableRow 
-              key={`${event.id}-${forceUpdate}`}
+              key={`${event.id}-${updateTrigger}`}
               className="cursor-pointer hover:bg-muted/50" 
               onClick={() => onShowDetails(event)}
             >
