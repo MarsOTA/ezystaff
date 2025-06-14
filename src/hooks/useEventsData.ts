@@ -16,8 +16,14 @@ export const useEventsData = () => {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isClosingEvent, setIsClosingEvent] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  // Load events from storage
+  // Function to force refresh of events data
+  const refreshEvents = () => {
+    setRefreshKey(prev => prev + 1);
+  };
+
+  // Load events from storage - triggered by refreshKey changes
   useEffect(() => {
     const storedEvents = safeLocalStorage.getItem(EVENTS_STORAGE_KEY);
     
@@ -37,6 +43,23 @@ export const useEventsData = () => {
     } else {
       setDefaultEvents();
     }
+  }, [refreshKey]);
+
+  // Listen for focus events to refresh data when returning to the page
+  useEffect(() => {
+    const handleFocus = () => {
+      console.log("Page focused, refreshing events data");
+      refreshEvents();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    
+    // Also refresh when the component mounts
+    refreshEvents();
+    
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
   }, []);
   
   const setDefaultEvents = () => {
@@ -91,17 +114,7 @@ export const useEventsData = () => {
       }
     } else if (storedEvents && !searchQuery) {
       // If search query is empty, load all events
-      try {
-        const parsedEvents = JSON.parse(storedEvents);
-        const eventsWithDates = parsedEvents.map((event: any) => ({
-          ...event,
-          startDate: safeToDate(event.startDate),
-          endDate: safeToDate(event.endDate)
-        }));
-        setEvents(eventsWithDates);
-      } catch (error) {
-        console.error("Errore nel caricamento degli eventi:", error);
-      }
+      refreshEvents();
     }
   }, [searchQuery]);
 
@@ -129,6 +142,7 @@ export const useEventsData = () => {
     searchQuery,
     setSearchQuery,
     handleEventClick,
-    handleDeleteEvent
+    handleDeleteEvent,
+    refreshEvents
   };
 };

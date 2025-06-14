@@ -20,11 +20,11 @@ import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import Layout from "@/components/Layout";
-import { useOperatorStorage } from "@/hooks/operators/useOperatorStorage";
-import { Operator } from "@/types/operator";
-import { Event } from "@/types/event";
+import { Operator, OPERATORS_STORAGE_KEY } from "@/types/operator";
+import { Event, EVENTS_STORAGE_KEY } from "@/types/event";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { safeLocalStorage } from "@/utils/fileUtils";
 
 interface Shift {
   id: string;
@@ -36,8 +36,9 @@ interface Shift {
 const EventPlanner = () => {
   const { operatorId } = useParams<{ operatorId: string }>();
   const navigate = useNavigate();
-  const { operators, setOperators, events } = useOperatorStorage();
   
+  const [operators, setOperators] = useState<Operator[]>([]);
+  const [events, setEvents] = useState<Event[]>([]);
   const [selectedOperator, setSelectedOperator] = useState<Operator | null>(null);
   const [selectedEventId, setSelectedEventId] = useState<string>("");
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
@@ -48,6 +49,43 @@ const EventPlanner = () => {
   const [shiftDate, setShiftDate] = useState<Date | undefined>(undefined);
   const [shiftStartTime, setShiftStartTime] = useState("09:00");
   const [shiftEndTime, setShiftEndTime] = useState("18:00");
+
+  // Load operators and events from localStorage
+  useEffect(() => {
+    const loadOperators = () => {
+      const storedOperators = safeLocalStorage.getItem(OPERATORS_STORAGE_KEY);
+      if (storedOperators) {
+        try {
+          const parsedOperators = JSON.parse(storedOperators);
+          setOperators(parsedOperators);
+        } catch (error) {
+          console.error("Error loading operators:", error);
+          setOperators([]);
+        }
+      }
+    };
+
+    const loadEvents = () => {
+      const storedEvents = safeLocalStorage.getItem(EVENTS_STORAGE_KEY);
+      if (storedEvents) {
+        try {
+          const parsedEvents = JSON.parse(storedEvents);
+          const eventsWithDates = parsedEvents.map((event: any) => ({
+            ...event,
+            startDate: new Date(event.startDate),
+            endDate: new Date(event.endDate),
+          }));
+          setEvents(eventsWithDates);
+        } catch (error) {
+          console.error("Error loading events:", error);
+          setEvents([]);
+        }
+      }
+    };
+
+    loadOperators();
+    loadEvents();
+  }, []);
 
   useEffect(() => {
     if (operatorId && operators.length > 0) {
@@ -145,10 +183,12 @@ const EventPlanner = () => {
       return;
     }
 
+    const eventId = parseInt(selectedEventId);
+    
+    // Update operators with new assignment
     const updatedOperators = operators.map(operator => {
       if (operator.id === selectedOperator.id) {
         const currentEvents = operator.assignedEvents || [];
-        const eventId = parseInt(selectedEventId);
         
         if (!currentEvents.includes(eventId)) {
           return {
@@ -163,8 +203,15 @@ const EventPlanner = () => {
       return operator;
     });
 
+    // Save updated operators to localStorage
     setOperators(updatedOperators);
+    safeLocalStorage.setItem(OPERATORS_STORAGE_KEY, JSON.stringify(updatedOperators));
+    
+    console.log("Operators updated and saved:", updatedOperators);
+    
     toast.success(`${selectedOperator.name} ${selectedOperator.surname} assegnato con successo all'evento`);
+    
+    // Navigate back to operators list
     navigate("/operators");
   };
 

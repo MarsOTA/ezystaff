@@ -13,7 +13,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useOperatorStorage } from '@/hooks/operators/useOperatorStorage';
+import { OPERATORS_STORAGE_KEY } from '@/types/operator';
+import { safeLocalStorage } from "@/utils/fileUtils";
 
 interface EventTableProps {
   events: Event[];
@@ -23,7 +24,6 @@ interface EventTableProps {
 }
 
 const EventTable = ({ events, onShowDetails, onEditEvent, onDeleteEvent }: EventTableProps) => {
-  const { operators, operatorsKey } = useOperatorStorage();
   
   const formatDateRange = (start: Date, end: Date) => {
     const sameDay = start.getDate() === end.getDate() && 
@@ -57,10 +57,23 @@ const EventTable = ({ events, onShowDetails, onEditEvent, onDeleteEvent }: Event
     }
   };
 
-  // Calculate staff KPI for an event - force re-calculation with operatorsKey
-  const calculateStaffKPI = (event: Event, _operatorsKey: string) => {
+  // Calculate staff KPI for an event
+  const calculateStaffKPI = (event: Event) => {
+    // Get current operators from localStorage to ensure fresh data
+    const storedOperators = safeLocalStorage.getItem(OPERATORS_STORAGE_KEY);
+    let operators = [];
+    
+    if (storedOperators) {
+      try {
+        operators = JSON.parse(storedOperators);
+      } catch (error) {
+        console.error("Error parsing operators:", error);
+        operators = [];
+      }
+    }
+
     // Count assigned operators for this specific event
-    const assignedOperatorsCount = operators.filter(op => 
+    const assignedOperatorsCount = operators.filter((op: any) => 
       op.assignedEvents && op.assignedEvents.includes(event.id)
     ).length;
 
@@ -97,10 +110,10 @@ const EventTable = ({ events, onShowDetails, onEditEvent, onDeleteEvent }: Event
       </TableHeader>
       <TableBody>
         {events.map((event) => {
-          const kpi = calculateStaffKPI(event, operatorsKey);
+          const kpi = calculateStaffKPI(event);
           return (
             <TableRow 
-              key={`${event.id}-${operatorsKey}`}
+              key={event.id}
               className="cursor-pointer hover:bg-muted/50" 
               onClick={() => onShowDetails(event)}
             >
