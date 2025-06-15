@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -125,15 +124,15 @@ const OperatorProfileOverlay: React.FC<OperatorProfileOverlayProps> = ({
       return (
         <div className="space-y-4">
           <div className="font-semibold">Contratto firmato:</div>
-          {operator.signedContractFileName && (
+          {operator.contractPdfName && (
             <div>
               <a
-                href={operator.signedContractFile}
+                href={operator.contractPdf}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="underline text-primary mr-2"
               >
-                {operator.signedContractFileName}
+                {operator.contractPdfName}
               </a>
             </div>
           )}
