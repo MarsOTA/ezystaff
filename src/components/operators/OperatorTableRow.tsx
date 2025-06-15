@@ -5,28 +5,10 @@ import { TableCell, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Pencil, UserCheck, UserX, CalendarClock } from "lucide-react";
 import { Event } from "@/types/event";
-import { Operator, ExtendedOperator } from "@/types/operator";
+import { Operator } from "@/types/operator";
 import { formatGender } from "./utils/operatorDisplayUtils";
 import OperatorProfileOverlay from "./OperatorProfileOverlay";
-
-// Smart conversion from Operator to ExtendedOperator (best effort for display)
-const operatorToExtended = (operator: Operator): ExtendedOperator => {
-  return {
-    ...operator,
-    name: operator.name,
-    surname: operator.surname,
-    email: operator.email,
-    phone: operator.phone,
-    gender: (operator as any).gender,
-    profession: (operator as any).profession,
-    nationality: (operator as any).nationality,
-    fiscalCode: (operator as any).fiscalCode,
-    birthDate: (operator as any).birthDate,
-    address: (operator as any).address,
-    profileImage: (operator as any).profileImage,
-    // Potrebbero esserci altri campi, ma prendiamo solo i principali se già salvati
-  };
-};
+import { operatorToExtended } from "./utils/operatorConversionUtils";
 
 interface OperatorTableRowProps {
   operator: Operator;
@@ -62,13 +44,11 @@ const OperatorTableRow: React.FC<OperatorTableRowProps> = ({
 
   const assignedEventsCount = getAssignedEventsCount(operator.id);
 
-  // Nuovo handler: al click sul nome, apri overlay con profilo
   const handleProfileClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsOverlayOpen(true);
   };
 
-  // Porta alla pagina dettaglio operatore già presente
   const handleGoToProfileEdit = (operatorId: number) => {
     setIsOverlayOpen(false);
     navigate(`/operator-profile/${operatorId}`);
@@ -84,8 +64,8 @@ const OperatorTableRow: React.FC<OperatorTableRowProps> = ({
       />
       <TableRow>
         <TableCell>
-          <span 
-            onClick={handleProfileClick} 
+          <span
+            onClick={handleProfileClick}
             className="text-primary underline cursor-pointer hover:text-primary/80">
             {operator.name || '-'}
           </span>
