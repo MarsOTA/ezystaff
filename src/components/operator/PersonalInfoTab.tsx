@@ -56,9 +56,10 @@ const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
     "Weekend", "Festivi", "Disponibilità completa"
   ];
 
+  // AGGIORNATO: elenco lingue ampliato come richiesto
   const languages = [
-    "Inglese", "Francese", "Spagnolo", "Tedesco", 
-    "Russo", "Cinese", "Arabo", "Altro"
+    "Italiano", "Inglese", "Francese", "Spagnolo", "Tedesco", 
+    "Russo", "Cinese", "Arabo", "Giapponese", "Turco", "Portoghese", "Singalese", "Altro"
   ];
 
   const clothingSizes = ["XS", "S", "M", "L", "XL", "XXL", "XXXL"];
