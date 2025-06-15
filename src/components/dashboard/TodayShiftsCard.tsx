@@ -29,7 +29,7 @@ const TodayShiftsCard: React.FC<TodayShiftsCardProps> = ({ events, operators }) 
           const operator = operators.find(op => op.id === shift.operatorId);
           todayShifts.push({
             shift,
-            operatorName: operator ? `${operator.firstName} ${operator.lastName}` : 'Operatore non trovato',
+            operatorName: operator ? `${operator.name} ${operator.surname}` : 'Operatore non trovato',
             eventTitle: event.title
           });
         }
