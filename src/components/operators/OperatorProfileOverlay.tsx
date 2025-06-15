@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ExtendedOperator } from "@/types/operator";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import ImageLightbox from "@/components/ui/image-lightbox";
-import { User, FileText } from "lucide-react";
+import { User, FileText, GalleryHorizontal } from "lucide-react";
 
 // Utility per età
 function calculateAge(birthDateStr?: string): number | null {
@@ -17,15 +17,23 @@ function calculateAge(birthDateStr?: string): number | null {
   if (m < 0 || (m === 0 && today.getDate() < date.getDate())) age--;
   return age;
 }
-const sideMenu = [{
-  key: "info",
-  title: "Info Operatore",
-  icon: User
-}, {
-  key: "contract",
-  title: "Contrattualistica",
-  icon: FileText
-}];
+const sideMenu = [
+  {
+    key: "info",
+    title: "Info Operatore",
+    icon: User
+  },
+  {
+    key: "contract",
+    title: "Contrattualistica",
+    icon: FileText
+  },
+  {
+    key: "gallery",
+    title: "Gallery",
+    icon: GalleryHorizontal
+  }
+];
 interface OperatorProfileOverlayProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -69,7 +77,21 @@ const OperatorProfileOverlay: React.FC<OperatorProfileOverlayProps> = ({
     src: operator.idCardBackImage
   }].filter(img => img.src);
 
-  // ---- Render Tabs ----
+  // Raccolta immagini per la gallery
+  const galleryImages: { label: string; src: string }[] = [
+    ...(operator.profileImage ? [{ label: "Profilo", src: operator.profileImage }] : []),
+    ...(operator.fullBodyPhotoFile ? [{ label: "Figura intera", src: operator.fullBodyPhotoFile }] : []),
+    ...(operator.bustPhotoFile ? [{ label: "Mezzo busto", src: operator.bustPhotoFile }] : []),
+    ...(operator.idCardFrontImage ? [{ label: "Documento (fronte)", src: operator.idCardFrontImage }] : []),
+    ...(operator.idCardBackImage ? [{ label: "Documento (retro)", src: operator.idCardBackImage }] : []),
+    ...(operator.healthCardFrontImage ? [{ label: "Tessera sanitaria (fronte)", src: operator.healthCardFrontImage }] : []),
+    ...(operator.healthCardBackImage ? [{ label: "Tessera sanitaria (retro)", src: operator.healthCardBackImage }] : []),
+    ...(operator.facePhotoFile ? [{ label: "Primo piano", src: operator.facePhotoFile }] : []),
+    ...(operator.resumeFile ? [{ label: "CV", src: operator.resumeFile }] : []),
+    ...(operator.residencePermitPhoto ? [{ label: "Permesso di soggiorno", src: operator.residencePermitPhoto }] : []),
+  ].filter((img) => !!img.src);
+
+  // ---- Render Tabs / Main Content ----
   function renderTabContent() {
     if (activeTab === "info") {
       return <div className="space-y-2">
@@ -272,82 +294,133 @@ const OperatorProfileOverlay: React.FC<OperatorProfileOverlayProps> = ({
             </div>}
         </div>;
     }
+    if (activeTab === "gallery") {
+      return (
+        <div className="w-full flex flex-col items-center justify-center gap-6 pt-2">
+          {galleryImages.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 w-full">
+              {galleryImages.map((img, idx) => (
+                <div
+                  key={idx}
+                  className="flex flex-col items-center group"
+                >
+                  <img
+                    src={img.src}
+                    alt={img.label}
+                    className="rounded-lg border shadow-lg object-cover w-[225px] h-[225px] cursor-pointer transition-transform group-hover:scale-105"
+                    style={{ aspectRatio: "1/1" }}
+                    onClick={() => {
+                      setLightboxImg(img.src!);
+                      setLightboxOpen(true);
+                    }}
+                  />
+                  <span className="mt-2 text-xs text-gray-700 font-medium">{img.label}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-muted-foreground text-sm py-12">Nessuna foto da mostrare</div>
+          )}
+        </div>
+      );
+    }
     return null;
   }
-  return <Dialog open={open} onOpenChange={onOpenChange}>
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-full max-w-5xl p-0 rounded-lg overflow-hidden shadow-2xl">
-        <DialogHeader>
-          
-          
-        </DialogHeader>
+        <DialogHeader></DialogHeader>
         <div className="flex flex-col md:flex-row h-[80vh]">
           {/* Sidebar */}
           <div className="bg-muted w-full md:w-64 flex-shrink-0 p-6 space-y-8 border-r py-[4px]">
             <div>
               <h2 className="text-lg font-bold mb-6">Profilo</h2>
               <nav className="space-y-2">
-                {sideMenu.map(section => <button key={section.key} className={`block text-left w-full py-2 px-3 rounded hover:bg-primary/10 focus:outline-none font-medium ${activeTab === section.key ? "bg-primary/10 text-primary" : "text-muted-foreground"}`} onClick={() => setActiveTab(section.key)}>
+                {sideMenu.map((section) => (
+                  <button
+                    key={section.key}
+                    className={`block text-left w-full py-2 px-3 rounded hover:bg-primary/10 focus:outline-none font-medium ${activeTab === section.key
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground"
+                      }`}
+                    onClick={() => setActiveTab(section.key)}
+                  >
                     <section.icon className="inline-block mr-2 mb-1 h-4 w-4" />
                     {section.title}
-                  </button>)}
+                  </button>
+                ))}
               </nav>
             </div>
           </div>
           {/* Main content */}
           <div className="flex-1 flex flex-col p-8 overflow-auto">
-            {/* Header con immagine profilo e dati anagrafici allineati */}
-            <div className="flex items-start mb-8 gap-6">
-              {/* Immagine profilo ridotta */}
-              {operator.profileImage ? (
-                <img
-                  src={operator.profileImage}
-                  alt="Profile"
-                  className="rounded-full object-cover border-4 border-background shadow"
-                  onClick={() => {
-                    setLightboxImg(operator.profileImage!);
-                    setLightboxOpen(true);
-                  }}
-                  style={{
-                    cursor: "pointer",
-                    width: 175,
-                    height: 175,
-                  }}
-                />
-              ) : (
-                <div
-                  className="rounded-full bg-gray-200 flex items-center justify-center text-3xl font-bold text-gray-500 border-4 border-background shadow"
-                  style={{
-                    width: 175,
-                    height: 175,
-                  }}
-                >
-                  {getInitials(operator.name, operator.surname)}
-                </div>
-              )}
-
-              {/* Nome e cognome a destra */}
-              <div className="flex flex-col justify-center ml-0" style={{ minWidth: 0, flex: 1 }}>
-                <div className="text-3xl font-bold break-words">{operator.name} {operator.surname}</div>
-                {/* Ulteriori dettagli anagrafici, se necessari */}
+            {/* Header: nome e cognome centrati sull'immagine */}
+            <div className="flex items-center mb-8 gap-0 flex-col relative w-full">
+              <div className="relative flex items-center justify-center w-[175px] h-[175px] mx-auto">
+                {operator.profileImage ? (
+                  <>
+                    <img
+                      src={operator.profileImage}
+                      alt="Profile"
+                      className="rounded-full object-cover border-4 border-background shadow w-[175px] h-[175px]"
+                      style={{ cursor: "pointer" }}
+                      onClick={() => {
+                        setLightboxImg(operator.profileImage!);
+                        setLightboxOpen(true);
+                      }}
+                    />
+                    {/* Nome e cognome sovrapposti all'immagine */}
+                    <div
+                      className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                    >
+                      <span className="text-white text-2xl font-bold drop-shadow-lg bg-black/30 px-4 py-2 rounded-full">
+                        {operator.name} {operator.surname}
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div
+                      className="rounded-full bg-gray-200 flex items-center justify-center text-3xl font-bold text-gray-500 border-4 border-background shadow w-[175px] h-[175px]"
+                    >
+                      {getInitials(operator.name, operator.surname)}
+                    </div>
+                    <div
+                      className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                    >
+                      <span className="text-gray-700 text-2xl font-bold px-4 py-2 rounded-full bg-white/50">
+                        {operator.name} {operator.surname}
+                      </span>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
-            {/* Carosello immagini secondarie */}
+            {/* Carosello immagini secondarie, SOLO se ha senso mostrarlo fuori da Gallery */}
             {profileImages.length > 1 &&
-              <div className="w-full max-w-xs mb-6">
-                <Carousel opts={{ align: "start" }}>
-                  <CarouselContent>
-                    {profileImages.map((img, idx) => <CarouselItem key={idx} className="basis-1/3 flex">
-                        <img src={img.src!} alt={img.label} className="w-20 h-20 rounded object-cover border mr-2 cursor-pointer" onClick={() => {
-                      setLightboxImg(img.src!);
-                      setLightboxOpen(true);
-                    }} />
-                      </CarouselItem>)}
-                  </CarouselContent>
-                  <CarouselPrevious />
-                  <CarouselNext />
-                </Carousel>
-              </div>
-            }
+              activeTab !== "gallery" && (
+                <div className="w-full max-w-xs mb-6">
+                  <Carousel opts={{ align: "start" }}>
+                    <CarouselContent>
+                      {profileImages.map((img, idx) => (
+                        <CarouselItem key={idx} className="basis-1/3 flex">
+                          <img
+                            src={img.src!}
+                            alt={img.label}
+                            className="w-20 h-20 rounded object-cover border mr-2 cursor-pointer"
+                            onClick={() => {
+                              setLightboxImg(img.src!);
+                              setLightboxOpen(true);
+                            }}
+                          />
+                        </CarouselItem>
+                      ))}
+                    </CarouselContent>
+                    <CarouselPrevious />
+                    <CarouselNext />
+                  </Carousel>
+                </div>
+              )}
 
             <div className="flex-1">{renderTabContent()}</div>
             <div className="flex justify-end mt-8 gap-2">
@@ -362,6 +435,7 @@ const OperatorProfileOverlay: React.FC<OperatorProfileOverlayProps> = ({
           </div>
         </div>
       </DialogContent>
-    </Dialog>;
+    </Dialog>
+  );
 };
 export default OperatorProfileOverlay;
