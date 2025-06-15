@@ -54,30 +54,6 @@ const OperatorHeader: React.FC<OperatorHeaderProps> = ({
         </Button>
         <div className="flex gap-2 mb-4">
           <Button onClick={onSave}>Salva modifiche</Button>
-          {onDelete && (
-            <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-              <AlertDialogTrigger asChild>
-                <Button variant="destructive">
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Cancella operatore
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Sei sicuro di voler cancellare l'operatore?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Tutti i dati e gli eventi a lui legati saranno persi! Questa azione non può essere annullata.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Annulla</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                    Cancella operatore
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          )}
         </div>
       </div>
       
@@ -105,6 +81,34 @@ const OperatorHeader: React.FC<OperatorHeaderProps> = ({
           </CardDescription>
         </CardHeader>
       </Card>
+
+      {/* Delete button moved to bottom left */}
+      <div className="mt-8 flex justify-start">
+        {onDelete && (
+          <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive">
+                <Trash2 className="mr-2 h-4 w-4" />
+                Cancella operatore
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Sei sicuro di voler cancellare l'operatore?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Tutti i dati e gli eventi a lui legati saranno persi! Questa azione non può essere annullata.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Annulla</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                  Cancella operatore
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
+      </div>
     </>
   );
 };
