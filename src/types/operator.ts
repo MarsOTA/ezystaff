@@ -1,4 +1,3 @@
-
 export interface Operator {
   id: number;
   name: string;
@@ -11,6 +10,7 @@ export interface Operator {
   profession?: string;
   rating?: number;
   occupation?: string; // Add occupation as an alternative to profession
+  nationality?: string; // <--- Added this line
 }
 
 export interface ExtendedOperator extends Operator {
