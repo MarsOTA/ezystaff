@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { CalendarIcon, Plus, X, AlertCircle } from "lucide-react";
+import { CalendarIcon, Plus, X, AlertCircle, TriangleAlert } from "lucide-react";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -26,6 +26,7 @@ interface ShiftManagerProps {
   addShift: () => void;
   removeShift: (shiftId: string) => void;
   isDateInEventRange: (date: Date, event: Event) => boolean;
+  assignedEvents?: Event[];
 }
 
 const ShiftManager: React.FC<ShiftManagerProps> = ({
@@ -39,7 +40,8 @@ const ShiftManager: React.FC<ShiftManagerProps> = ({
   setShiftEndTime,
   addShift,
   removeShift,
-  isDateInEventRange
+  isDateInEventRange,
+  assignedEvents = []
 }) => {
   const formatDateRange = (start: Date, end: Date) => {
     const sameDay = start.getDate() === end.getDate() && 
@@ -58,6 +60,35 @@ const ShiftManager: React.FC<ShiftManagerProps> = ({
     }
   };
 
+  // Check for date overlaps between selected event and assigned events
+  const checkDateOverlap = (selectedEvent: Event, assignedEvents: Event[]) => {
+    if (!selectedEvent || assignedEvents.length === 0) return false;
+
+    const selectedStart = new Date(selectedEvent.startDate);
+    const selectedEnd = new Date(selectedEvent.endDate);
+    
+    // Reset time for date comparison
+    selectedStart.setHours(0, 0, 0, 0);
+    selectedEnd.setHours(0, 0, 0, 0);
+
+    return assignedEvents.some(assignedEvent => {
+      // Skip if it's the same event
+      if (assignedEvent.id === selectedEvent.id) return false;
+      
+      const assignedStart = new Date(assignedEvent.startDate);
+      const assignedEnd = new Date(assignedEvent.endDate);
+      
+      // Reset time for date comparison
+      assignedStart.setHours(0, 0, 0, 0);
+      assignedEnd.setHours(0, 0, 0, 0);
+
+      // Check if date ranges overlap
+      return selectedStart <= assignedEnd && selectedEnd >= assignedStart;
+    });
+  };
+
+  const hasDateOverlap = selectedEvent ? checkDateOverlap(selectedEvent, assignedEvents) : false;
+
   return (
     <Card>
       <CardHeader>
@@ -67,6 +98,14 @@ const ShiftManager: React.FC<ShiftManagerProps> = ({
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
               I turni devono essere compresi nel periodo dell'evento: {formatDateRange(selectedEvent.startDate, selectedEvent.endDate)}
+            </AlertDescription>
+          </Alert>
+        )}
+        {hasDateOverlap && (
+          <Alert variant="destructive">
+            <TriangleAlert className="h-4 w-4" />
+            <AlertDescription>
+              Attenzione possibile sovrapposizione!
             </AlertDescription>
           </Alert>
         )}

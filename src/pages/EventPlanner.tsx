@@ -250,6 +250,7 @@ const EventPlanner = () => {
           addShift={addShift}
           removeShift={removeShift}
           isDateInEventRange={isDateInEventRange}
+          assignedEvents={getAssignedEvents()}
         />
 
         {/* Notes */}
