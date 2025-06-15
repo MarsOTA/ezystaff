@@ -14,7 +14,7 @@ function calculateAge(birthDateStr?: string): number | null {
   const today = new Date();
   let age = today.getFullYear() - date.getFullYear();
   const m = today.getMonth() - date.getMonth();
-  if (m < 0 || m === 0 && today.getDate() < date.getDate()) age--;
+  if (m < 0 || (m === 0 && today.getDate() < date.getDate())) age--;
   return age;
 }
 const sideMenu = [{
@@ -295,36 +295,60 @@ const OperatorProfileOverlay: React.FC<OperatorProfileOverlayProps> = ({
           </div>
           {/* Main content */}
           <div className="flex-1 flex flex-col p-8 overflow-auto">
-            <div className="flex flex-col items-center space-y-3 mb-6">
-              {/* Profilo */}
-              {operator.profileImage ? <img src={operator.profileImage} alt="Profile" className="w-24 h-24 rounded-full object-cover border-4 border-background shadow" onClick={() => {
-              setLightboxImg(operator.profileImage!);
-              setLightboxOpen(true);
-            }} style={{
-              cursor: "pointer"
-            }} /> : <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center text-2xl font-bold text-gray-500 border-4 border-background shadow">
+            {/* Header con immagine profilo e dati anagrafici allineati */}
+            <div className="flex items-start mb-8 gap-8">
+              {/* Immagine profilo */}
+              {operator.profileImage ? (
+                <img
+                  src={operator.profileImage}
+                  alt="Profile"
+                  className="rounded-full object-cover border-4 border-background shadow"
+                  onClick={() => {
+                    setLightboxImg(operator.profileImage!);
+                    setLightboxOpen(true);
+                  }}
+                  style={{
+                    cursor: "pointer",
+                    width: 350,
+                    height: 350,
+                  }}
+                />
+              ) : (
+                <div
+                  className="rounded-full bg-gray-200 flex items-center justify-center text-5xl font-bold text-gray-500 border-4 border-background shadow"
+                  style={{
+                    width: 350,
+                    height: 350,
+                  }}
+                >
                   {getInitials(operator.name, operator.surname)}
-                </div>}
-              {/* Carosello immagini */}
-              {profileImages.length > 1 && <div className="w-full max-w-xs">
-                  <Carousel opts={{
-                align: "start"
-              }}>
-                    <CarouselContent>
-                      {profileImages.map((img, idx) => <CarouselItem key={idx} className="basis-1/3 flex">
-                          <img src={img.src!} alt={img.label} className="w-20 h-20 rounded object-cover border mr-2 cursor-pointer" onClick={() => {
+                </div>
+              )}
+
+              {/* Nome e cognome a destra */}
+              <div className="flex flex-col justify-center ml-0" style={{ minWidth: 0, flex: 1 }}>
+                <div className="text-3xl font-bold break-words">{operator.name} {operator.surname}</div>
+                {/* Se vuoi altri dettagli anagrafici qui, aggiungili qui */}
+              </div>
+            </div>
+            {/* Carosello immagini secondarie */}
+            {profileImages.length > 1 &&
+              <div className="w-full max-w-xs mb-6">
+                <Carousel opts={{ align: "start" }}>
+                  <CarouselContent>
+                    {profileImages.map((img, idx) => <CarouselItem key={idx} className="basis-1/3 flex">
+                        <img src={img.src!} alt={img.label} className="w-20 h-20 rounded object-cover border mr-2 cursor-pointer" onClick={() => {
                       setLightboxImg(img.src!);
                       setLightboxOpen(true);
                     }} />
-                        </CarouselItem>)}
-                    </CarouselContent>
-                    <CarouselPrevious />
-                    <CarouselNext />
-                  </Carousel>
-                </div>}
-              <div className="text-xl font-bold">{operator.name} {operator.surname}</div>
-              {/* Professione rimossa */}
-            </div>
+                      </CarouselItem>)}
+                  </CarouselContent>
+                  <CarouselPrevious />
+                  <CarouselNext />
+                </Carousel>
+              </div>
+            }
+
             <div className="flex-1">{renderTabContent()}</div>
             <div className="flex justify-end mt-8 gap-2">
               <DialogClose asChild>
