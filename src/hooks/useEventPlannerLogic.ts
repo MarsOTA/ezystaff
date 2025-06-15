@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { OPERATORS_STORAGE_KEY } from "@/types/operator";
+import { EVENTS_STORAGE_KEY } from "@/types/event";
 import { safeLocalStorage } from "@/utils/fileUtils";
 import { useEventPlannerData } from "@/hooks/useEventPlannerData";
 import { useShiftManagement } from "@/hooks/useShiftManagement";
@@ -17,6 +18,7 @@ export const useEventPlannerLogic = (operatorId: string | undefined) => {
     operators,
     setOperators,
     events,
+    setEvents,
     selectedOperator,
     selectedEventId,
     setSelectedEventId,
@@ -24,8 +26,12 @@ export const useEventPlannerLogic = (operatorId: string | undefined) => {
     getAssignedEvents
   } = useEventPlannerData(operatorId);
 
+  // Get existing shifts for selected event
+  const existingShifts = selectedEvent?.shifts?.filter(shift => shift.operatorId === selectedOperator?.id) || [];
+
   const {
     shifts,
+    setShifts,
     shiftDate,
     setShiftDate,
     shiftStartTime,
@@ -35,7 +41,7 @@ export const useEventPlannerLogic = (operatorId: string | undefined) => {
     addShift,
     removeShift,
     isDateInEventRange
-  } = useShiftManagement(selectedEvent);
+  } = useShiftManagement(selectedEvent, existingShifts);
 
   // Auto-populate shift times when event is selected
   useEffect(() => {
@@ -45,10 +51,15 @@ export const useEventPlannerLogic = (operatorId: string | undefined) => {
       const endTime = format(selectedEvent.endDate, "HH:mm");
       setShiftStartTime(startTime);
       setShiftEndTime(endTime);
+      
+      // Load existing shifts for this operator and event
+      const operatorShifts = selectedEvent.shifts?.filter(shift => shift.operatorId === selectedOperator?.id) || [];
+      setShifts(operatorShifts);
     } else {
       setShiftDate(undefined);
+      setShifts([]);
     }
-  }, [selectedEvent, setShiftDate, setShiftStartTime, setShiftEndTime]);
+  }, [selectedEvent, selectedOperator, setShiftDate, setShiftStartTime, setShiftEndTime, setShifts]);
 
   const sendEmailNotification = async (operatorEmail: string, operatorName: string, eventTitle: string, eventDate: string, type: 'removal' | 'assignment') => {
     try {
@@ -75,6 +86,36 @@ export const useEventPlannerLogic = (operatorId: string | undefined) => {
     }
   };
 
+  const updateEventShifts = (eventId: number, operatorId: number, newShifts: any[], remove: boolean = false) => {
+    const updatedEvents = events.map(event => {
+      if (event.id === eventId) {
+        let updatedShifts = event.shifts || [];
+        
+        if (remove) {
+          // Remove all shifts for this operator
+          updatedShifts = updatedShifts.filter(shift => shift.operatorId !== operatorId);
+        } else {
+          // Remove existing shifts for this operator and add new ones
+          updatedShifts = updatedShifts.filter(shift => shift.operatorId !== operatorId);
+          const shiftsWithOperator = newShifts.map(shift => ({
+            ...shift,
+            operatorId
+          }));
+          updatedShifts = [...updatedShifts, ...shiftsWithOperator];
+        }
+        
+        return {
+          ...event,
+          shifts: updatedShifts
+        };
+      }
+      return event;
+    });
+
+    setEvents(updatedEvents);
+    safeLocalStorage.setItem(EVENTS_STORAGE_KEY, JSON.stringify(updatedEvents));
+  };
+
   const handleRemoveEvent = async (eventId: number) => {
     if (!selectedOperator) return;
 
@@ -99,6 +140,9 @@ export const useEventPlannerLogic = (operatorId: string | undefined) => {
     // Save updated operators to localStorage
     setOperators(updatedOperators);
     safeLocalStorage.setItem(OPERATORS_STORAGE_KEY, JSON.stringify(updatedOperators));
+
+    // Remove shifts for this operator from the event
+    updateEventShifts(eventId, selectedOperator.id, [], true);
 
     // Send email notification
     if (selectedOperator.email) {
@@ -166,6 +210,11 @@ export const useEventPlannerLogic = (operatorId: string | undefined) => {
     setOperators(updatedOperators);
     safeLocalStorage.setItem(OPERATORS_STORAGE_KEY, JSON.stringify(updatedOperators));
     
+    // Save shifts for this operator to the event
+    if (shifts.length > 0) {
+      updateEventShifts(eventId, selectedOperator.id, shifts);
+    }
+    
     console.log("EventPlanner: Assignment completed, triggering global update");
     
     // Trigger comprehensive update
@@ -191,6 +240,22 @@ export const useEventPlannerLogic = (operatorId: string | undefined) => {
     }, 1500);
   };
 
+  // Enhanced addShift that updates events
+  const handleAddShift = () => {
+    const newShifts = addShift();
+    if (newShifts && selectedOperator && selectedEventId) {
+      updateEventShifts(parseInt(selectedEventId), selectedOperator.id, newShifts);
+    }
+  };
+
+  // Enhanced removeShift that updates events
+  const handleRemoveShift = (shiftId: string) => {
+    const newShifts = removeShift(shiftId);
+    if (newShifts && selectedOperator && selectedEventId) {
+      updateEventShifts(parseInt(selectedEventId), selectedOperator.id, newShifts);
+    }
+  };
+
   return {
     // Data
     events,
@@ -210,8 +275,8 @@ export const useEventPlannerLogic = (operatorId: string | undefined) => {
     setShiftStartTime,
     shiftEndTime,
     setShiftEndTime,
-    addShift,
-    removeShift,
+    addShift: handleAddShift,
+    removeShift: handleRemoveShift,
     isDateInEventRange,
     
     // Actions

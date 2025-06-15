@@ -1,17 +1,10 @@
 
 import { useState } from "react";
-import { Event } from "@/types/event";
+import { Event, Shift } from "@/types/event";
 import { toast } from "sonner";
 
-export interface Shift {
-  id: string;
-  date: Date;
-  startTime: string;
-  endTime: string;
-}
-
-export const useShiftManagement = (selectedEvent: Event | null) => {
-  const [shifts, setShifts] = useState<Shift[]>([]);
+export const useShiftManagement = (selectedEvent: Event | null, initialShifts: Shift[] = []) => {
+  const [shifts, setShifts] = useState<Shift[]>(initialShifts);
   const [shiftDate, setShiftDate] = useState<Date | undefined>(undefined);
   const [shiftStartTime, setShiftStartTime] = useState("09:00");
   const [shiftEndTime, setShiftEndTime] = useState("18:00");
@@ -45,17 +38,24 @@ export const useShiftManagement = (selectedEvent: Event | null) => {
       endTime: shiftEndTime
     };
     
-    setShifts([...shifts, newShift]);
+    const updatedShifts = [...shifts, newShift];
+    setShifts(updatedShifts);
     toast.success("Turno aggiunto con successo");
+    
+    return updatedShifts;
   };
 
   const removeShift = (shiftId: string) => {
-    setShifts(shifts.filter(shift => shift.id !== shiftId));
+    const updatedShifts = shifts.filter(shift => shift.id !== shiftId);
+    setShifts(updatedShifts);
     toast.success("Turno rimosso");
+    
+    return updatedShifts;
   };
 
   return {
     shifts,
+    setShifts,
     shiftDate,
     setShiftDate,
     shiftStartTime,

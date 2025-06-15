@@ -28,7 +28,11 @@ export const useEventsData = () => {
         const eventsWithDates = parsedEvents.map((event: any) => ({
           ...event,
           startDate: safeToDate(event.startDate),
-          endDate: safeToDate(event.endDate)
+          endDate: safeToDate(event.endDate),
+          shifts: event.shifts ? event.shifts.map((shift: any) => ({
+            ...shift,
+            date: safeToDate(shift.date)
+          })) : []
         }));
         console.log("Events loaded:", eventsWithDates);
         setEvents(eventsWithDates);
@@ -86,6 +90,7 @@ export const useEventsData = () => {
         startDate: new Date(2023, 6, 15, 18, 0),
         endDate: new Date(2023, 6, 15, 23, 30),
         personnelTypes: ["security", "doorman", "hostess/steward"],
+        shifts: []
       },
       {
         id: 2,
@@ -94,6 +99,7 @@ export const useEventsData = () => {
         startDate: new Date(2023, 7, 10, 9, 0),
         endDate: new Date(2023, 7, 12, 19, 0),
         personnelTypes: ["security", "hostess/steward"],
+        shifts: []
       },
     ]);
   };

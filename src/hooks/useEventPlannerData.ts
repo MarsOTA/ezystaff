@@ -36,6 +36,10 @@ export const useEventPlannerData = (operatorId: string | undefined) => {
             ...event,
             startDate: new Date(event.startDate),
             endDate: new Date(event.endDate),
+            shifts: event.shifts ? event.shifts.map((shift: any) => ({
+              ...shift,
+              date: new Date(shift.date)
+            })) : []
           }));
           setEvents(eventsWithDates);
           console.log("EventPlanner: Events loaded:", eventsWithDates);
@@ -79,6 +83,7 @@ export const useEventPlannerData = (operatorId: string | undefined) => {
     operators,
     setOperators,
     events,
+    setEvents,
     selectedOperator,
     selectedEventId,
     setSelectedEventId,
