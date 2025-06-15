@@ -1,7 +1,6 @@
 
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar } from "@/components/ui/calendar";
 import { Users, Calendar as CalendarIcon, Briefcase, TrendingUp } from "lucide-react";
 import Layout from "@/components/Layout";
 import TodayEventsCard from "@/components/dashboard/TodayEventsCard";
@@ -10,7 +9,6 @@ import TodayShiftsCard from "@/components/dashboard/TodayShiftsCard";
 import { useDashboardData } from "@/hooks/useDashboardData";
 
 const Dashboard = () => {
-  const [date, setDate] = React.useState<Date | undefined>(new Date());
   const { events, operators, isLoading } = useDashboardData();
 
   if (isLoading) {
@@ -84,25 +82,10 @@ const Dashboard = () => {
         </div>
 
         {/* Detailed Cards Row */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-2">
           <TodayEventsCard events={events} />
           
           <TodayShiftsCard events={events} operators={operators} />
-
-          <Card className="animate-slide-up [animation-delay:400ms]">
-            <CardHeader>
-              <CardTitle className="text-sm font-medium">Calendario</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Calendar
-                mode="single"
-                selected={date}
-                onSelect={setDate}
-                className="rounded-md border"
-                locale={undefined}
-              />
-            </CardContent>
-          </Card>
         </div>
       </div>
     </Layout>
