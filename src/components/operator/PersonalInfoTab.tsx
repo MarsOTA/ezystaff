@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { ExtendedOperator } from "@/types/operator";
 import BasicInfoCard from "./BasicInfoCard";
@@ -197,6 +198,52 @@ const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
                 placeholder="Inserisci la professione"
               />
             </div>
+
+            {/* CAMPI AGGIUNTI */}
+            <div className="space-y-2">
+              <Label htmlFor="height">Altezza (cm)</Label>
+              <Input
+                id="height"
+                type="number"
+                min={0}
+                value={operator.height || ""}
+                onChange={(e) => onFieldChange("height", e.target.value ? Number(e.target.value) : "")}
+                placeholder="Es: 180"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="weight">Peso (kg)</Label>
+              <Input
+                id="weight"
+                type="number"
+                min={0}
+                value={operator.weight || ""}
+                onChange={(e) => onFieldChange("weight", e.target.value ? Number(e.target.value) : "")}
+                placeholder="Es: 75"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="shoeSize">N° di Scarpe</Label>
+              <Input
+                id="shoeSize"
+                type="number"
+                min={0}
+                value={operator.shoeSize || ""}
+                onChange={(e) => onFieldChange("shoeSize", e.target.value ? Number(e.target.value) : "")}
+                placeholder="Es: 43"
+              />
+            </div>
+            <div className="space-y-2 flex items-center gap-2 mt-6">
+              <Checkbox
+                id="visibleTattoos"
+                checked={!!operator.visibleTattoos}
+                onCheckedChange={(checked) => onFieldChange("visibleTattoos", checked === true)}
+              />
+              <Label htmlFor="visibleTattoos" className="mb-0">
+                Presenza di tatuaggi visibili
+              </Label>
+            </div>
+            {/* FINE CAMPI AGGIUNTI */}
           </div>
           
           <div className="space-y-2">
