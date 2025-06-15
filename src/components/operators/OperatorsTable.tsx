@@ -1,4 +1,3 @@
-
 import React from "react";
 import {
   Table,
@@ -14,6 +13,7 @@ import SortableTableHeader from "./SortableTableHeader";
 import OperatorTableRow from "./OperatorTableRow";
 import { getOperatorProfileCompletion } from "./utils/operatorProfileCompletion";
 import { Progress } from "@/components/ui/progress";
+import { operatorToExtended } from "./utils/operatorConversionUtils";
 
 interface OperatorsTableProps {
   operators: Operator[];
@@ -63,7 +63,9 @@ const OperatorsTable: React.FC<OperatorsTableProps> = ({
       </TableHeader>
       <TableBody>
         {operators.map((operator) => {
-          const { percent } = getOperatorProfileCompletion(operator as any);
+          // Converte operator in ExtendedOperator per il calcolo
+          const extendedOperator = operatorToExtended(operator);
+          const { percent } = getOperatorProfileCompletion(extendedOperator);
           return (
             <OperatorTableRow
               key={operator.id}
