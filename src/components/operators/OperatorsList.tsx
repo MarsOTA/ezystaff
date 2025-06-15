@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -131,6 +132,22 @@ const OperatorsList: React.FC<OperatorsListProps> = ({
     navigate(`/event-planner/${operator.id}`);
   };
 
+  const formatGender = (gender: string | undefined): string => {
+    if (!gender) return '-';
+    switch (gender.toLowerCase()) {
+      case 'maschio':
+      case 'male':
+      case 'm':
+        return 'M';
+      case 'femmina':
+      case 'female':
+      case 'f':
+        return 'F';
+      default:
+        return gender.charAt(0).toUpperCase();
+    }
+  };
+
   return (
     <div className="space-y-4">
       <OperatorFilters 
@@ -171,7 +188,7 @@ const OperatorsList: React.FC<OperatorsListProps> = ({
               <TableCell>{operator.surname || '-'}</TableCell>
               <TableCell>{operator.email || '-'}</TableCell>
               <TableCell>{operator.phone || '-'}</TableCell>
-              <TableCell className="capitalize">{operator.gender || '-'}</TableCell>
+              <TableCell>{formatGender(operator.gender)}</TableCell>
               <TableCell className="capitalize">{operator.profession || '-'}</TableCell>
               <TableCell>
                 <span
