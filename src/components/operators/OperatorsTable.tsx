@@ -44,9 +44,6 @@ const OperatorsTable: React.FC<OperatorsTableProps> = ({
           <SortableTableHeader sortKey="surname" currentSort={sortConfig} onSort={onSort}>
             Cognome
           </SortableTableHeader>
-          <SortableTableHeader sortKey="email" currentSort={sortConfig} onSort={onSort}>
-            Email
-          </SortableTableHeader>
           <TableHead>Cell.</TableHead>
           <SortableTableHeader sortKey="gender" currentSort={sortConfig} onSort={onSort}>
             Genere
@@ -75,7 +72,7 @@ const OperatorsTable: React.FC<OperatorsTableProps> = ({
         ))}
         {operators.length === 0 && (
           <TableRow>
-            <TableCell colSpan={9} className="text-center py-4">
+            <TableCell colSpan={8} className="text-center py-4">
               Nessun operatore trovato con i filtri applicati
             </TableCell>
           </TableRow>
