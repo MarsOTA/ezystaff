@@ -1,3 +1,4 @@
+
 import React from "react";
 import {
   Table,
@@ -63,7 +64,7 @@ const OperatorsTable: React.FC<OperatorsTableProps> = ({
       </TableHeader>
       <TableBody>
         {operators.map((operator) => {
-          // Converte operator in ExtendedOperator per il calcolo
+          // Converti SEMPRE in ExtendedOperator per tutte le logiche
           const extendedOperator = operatorToExtended(operator);
           const { percent } = getOperatorProfileCompletion(extendedOperator);
           return (
