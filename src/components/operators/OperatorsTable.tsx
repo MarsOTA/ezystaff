@@ -1,4 +1,3 @@
-
 import React from "react";
 import {
   Table,
@@ -12,6 +11,8 @@ import { Event } from "@/types/event";
 import { Operator } from "@/types/operator";
 import SortableTableHeader from "./SortableTableHeader";
 import OperatorTableRow from "./OperatorTableRow";
+import { getOperatorProfileCompletion } from "./utils/operatorProfileCompletion";
+import { Progress } from "@/components/ui/progress";
 
 interface OperatorsTableProps {
   operators: Operator[];
@@ -55,24 +56,29 @@ const OperatorsTable: React.FC<OperatorsTableProps> = ({
             Stato
           </SortableTableHeader>
           <TableHead>Eventi Assegnati</TableHead>
+          <TableHead>Profilo</TableHead>
           <TableHead className="text-right">Azioni</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
-        {operators.map((operator) => (
-          <OperatorTableRow
-            key={operator.id}
-            operator={operator}
-            events={events}
-            operators={allOperators}
-            onStatusToggle={onStatusToggle}
-            onEdit={onEdit}
-            onDelete={onDelete}
-          />
-        ))}
+        {operators.map((operator) => {
+          const { percent } = getOperatorProfileCompletion(operator as any); // will be ExtendedOperator at runtime if possible
+          return (
+            <OperatorTableRow
+              key={operator.id}
+              operator={operator}
+              events={events}
+              operators={allOperators}
+              onStatusToggle={onStatusToggle}
+              onEdit={onEdit}
+              onDelete={onDelete}
+              profileCompletion={percent}
+            />
+          );
+        })}
         {operators.length === 0 && (
           <TableRow>
-            <TableCell colSpan={8} className="text-center py-4">
+            <TableCell colSpan={9} className="text-center py-4">
               Nessun operatore trovato con i filtri applicati
             </TableCell>
           </TableRow>

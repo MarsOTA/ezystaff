@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { TableCell, TableRow } from "@/components/ui/table";
@@ -9,6 +8,7 @@ import { Operator } from "@/types/operator";
 import { formatGender } from "./utils/operatorDisplayUtils";
 import OperatorProfileOverlay from "./OperatorProfileOverlay";
 import { operatorToExtended } from "./utils/operatorConversionUtils";
+import { Progress } from "@/components/ui/progress";
 
 interface OperatorTableRowProps {
   operator: Operator;
@@ -17,6 +17,7 @@ interface OperatorTableRowProps {
   onStatusToggle: (id: number) => void;
   onEdit: (operator: Operator) => void;
   onDelete: (id: number) => void;
+  profileCompletion?: number;
 }
 
 const OperatorTableRow: React.FC<OperatorTableRowProps> = ({
@@ -26,6 +27,7 @@ const OperatorTableRow: React.FC<OperatorTableRowProps> = ({
   onStatusToggle,
   onEdit,
   onDelete,
+  profileCompletion
 }) => {
   const navigate = useNavigate();
   const [isOverlayOpen, setIsOverlayOpen] = useState(false);
@@ -89,6 +91,12 @@ const OperatorTableRow: React.FC<OperatorTableRowProps> = ({
           <span className="text-sm font-medium">
             {assignedEventsCount}
           </span>
+        </TableCell>
+        <TableCell>
+          <div className="w-20 flex flex-col items-center">
+            <Progress value={profileCompletion || 0} className="h-2 mb-1" />
+            <span className="text-xs font-semibold">{profileCompletion || 0}%</span>
+          </div>
         </TableCell>
         <TableCell className="text-right">
           <div className="flex justify-end gap-2">
