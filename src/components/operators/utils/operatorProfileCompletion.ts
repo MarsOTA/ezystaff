@@ -1,4 +1,3 @@
-
 import { Operator } from "@/types/operator";
 import { ExtendedOperator } from "@/types/operator";
 
@@ -11,8 +10,8 @@ export function getOperatorProfileCompletion(operator: ExtendedOperator | Operat
     !!operator.email &&
     !!operator.gender &&
     !!operator.nationality &&
-    !!operator.birthDate &&
-    !!operator.address;
+    ("birthDate" in operator ? !!operator.birthDate : false) &&
+    ("address" in operator ? !!operator.address : false);
 
   const hasServices =
     Array.isArray((operator as ExtendedOperator).service) &&
