@@ -6,11 +6,18 @@ interface UseOperatorsListProps {
   operators: Operator[];
 }
 
+const getNationalityOptions = (operators: Operator[]): string[] => {
+  const unique = Array.from(new Set(operators.map(op => op.nationality).filter(Boolean)));
+  unique.sort();
+  return unique;
+};
+
 export const useOperatorsList = ({ operators }: UseOperatorsListProps) => {
   const [filters, setFilters] = useState({
     search: '',
     gender: 'all',
-    profession: 'all'
+    profession: 'all',
+    nationality: 'all'
   });
 
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' | null }>({
@@ -32,19 +39,22 @@ export const useOperatorsList = ({ operators }: UseOperatorsListProps) => {
     }));
   };
 
+  const nationalityOptions = useMemo(() => getNationalityOptions(operators), [operators]);
+
   const filteredAndSortedOperators = useMemo(() => {
     let filtered = operators.filter(operator => {
       // Search filter (searches in name, surname, and phone)
       const searchTerm = filters.search.toLowerCase();
-      const searchMatch = searchTerm === '' || 
+      const searchMatch = searchTerm === '' ||
         operator.name?.toLowerCase().includes(searchTerm) ||
         operator.surname?.toLowerCase().includes(searchTerm) ||
         operator.phone?.includes(searchTerm);
-      
+
       const genderMatch = filters.gender === 'all' || operator.gender === filters.gender;
       const professionMatch = filters.profession === 'all' || operator.profession === filters.profession;
-      
-      return searchMatch && genderMatch && professionMatch;
+      const nationalityMatch = filters.nationality === 'all' || (operator.nationality || '') === filters.nationality;
+
+      return searchMatch && genderMatch && professionMatch && nationalityMatch;
     });
 
     // Apply sorting
@@ -77,6 +87,7 @@ export const useOperatorsList = ({ operators }: UseOperatorsListProps) => {
     sortConfig,
     filteredAndSortedOperators,
     handleFilterChange,
-    handleSort
+    handleSort,
+    nationalityOptions
   };
 };

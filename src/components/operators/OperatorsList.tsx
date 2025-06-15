@@ -28,16 +28,18 @@ const OperatorsList: React.FC<OperatorsListProps> = ({
     sortConfig,
     filteredAndSortedOperators,
     handleFilterChange,
-    handleSort
+    handleSort,
+    nationalityOptions
   } = useOperatorsList({ operators });
 
   return (
     <div className="space-y-4">
-      <OperatorFilters 
+      <OperatorFilters
         filters={filters}
         onFilterChange={handleFilterChange}
+        nationalityOptions={nationalityOptions}
       />
-      
+
       <OperatorsTable
         operators={filteredAndSortedOperators}
         events={events}
