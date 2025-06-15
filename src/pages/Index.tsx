@@ -1,17 +1,13 @@
-
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { ShieldCheck, User } from "lucide-react";
-
 const Index = () => {
   const navigate = useNavigate();
-  
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+  return <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-4xl">
-        <h1 className="text-4xl font-bold text-center mb-8">Security Management System</h1>
+        <h1 className="text-4xl font-bold text-center mb-8">EZYSTAFF</h1>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card className="shadow-md hover:shadow-lg transition-shadow">
@@ -31,11 +27,7 @@ const Index = () => {
               </p>
             </CardContent>
             <CardFooter>
-              <Button 
-                className="w-full" 
-                size="lg" 
-                onClick={() => navigate("/login")}
-              >
+              <Button className="w-full" size="lg" onClick={() => navigate("/login")}>
                 Login come Admin
               </Button>
             </CardFooter>
@@ -59,20 +51,13 @@ const Index = () => {
               </p>
             </CardContent>
             <CardFooter>
-              <Button 
-                className="w-full" 
-                size="lg" 
-                variant="outline"
-                onClick={() => navigate("/login")}
-              >
+              <Button className="w-full" size="lg" variant="outline" onClick={() => navigate("/login")}>
                 Login come Operatore
               </Button>
             </CardFooter>
           </Card>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default Index;
