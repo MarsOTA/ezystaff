@@ -134,17 +134,27 @@ const ContractTab: React.FC<ContractTabProps> = ({
 }) => {
   // Stato per il contratto firmato
   const [signedContractFile, setSignedContractFile] = React.useState<File | null>(null);
+  // Stato per il file UNILAV
+  const [unilavFile, setUnilavFile] = React.useState<File | null>(null);
 
   // Callback caricamento contratto firmato
   const handleSignedContractUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] || null;
     setSignedContractFile(file);
     if (file && typeof window !== "undefined") {
-      // Passa il file al parent, ci si aspetta che la logica sia implementata nell'onFileUpload (vedi sotto)
       if (typeof onTemplateUpload === "function") {
         onTemplateUpload(file);
       }
     }
+  };
+
+  // Callback caricamento UNILAV
+  const handleUnilavUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] || null;
+    setUnilavFile(file);
+    // Eventuale logica di gestione upload va qui
+    // Se vuoi salvare nel profilo operatore, devi estendere la logica di salvataggio!
+    // Per ora solo locale/preview.
   };
 
   return (
@@ -499,6 +509,7 @@ const ContractTab: React.FC<ContractTabProps> = ({
         </div>
       </div>
 
+      {/* Contratto firmato */}
       <div>
         <label className="block mb-1 font-semibold">
           Carica contratto firmato (.pdf)
@@ -510,6 +521,21 @@ const ContractTab: React.FC<ContractTabProps> = ({
         />
         {signedContractFile && (
           <span className="ml-2 text-sm text-primary">{signedContractFile.name}</span>
+        )}
+      </div>
+
+      {/* Upload campo UNILAV */}
+      <div>
+        <label className="block mb-1 font-semibold">
+          Carica UNILAV (.pdf)
+        </label>
+        <input
+          type="file"
+          accept=".pdf"
+          onChange={handleUnilavUpload}
+        />
+        {unilavFile && (
+          <span className="ml-2 text-sm text-primary">{unilavFile.name}</span>
         )}
       </div>
 
