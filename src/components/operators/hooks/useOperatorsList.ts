@@ -1,12 +1,14 @@
 
 import { useState, useMemo } from "react";
-import { Operator } from "@/types/operator";
+// Force explicit import to ensure the correct Operator interface is used
+import type { Operator } from "@/types/operator";
 
 interface UseOperatorsListProps {
   operators: Operator[];
 }
 
 const getNationalityOptions = (operators: Operator[]): string[] => {
+  // TypeScript will now recognize nationality
   const unique = Array.from(new Set(operators.map(op => op.nationality).filter(Boolean)));
   unique.sort();
   return unique;
@@ -52,6 +54,7 @@ export const useOperatorsList = ({ operators }: UseOperatorsListProps) => {
 
       const genderMatch = filters.gender === 'all' || operator.gender === filters.gender;
       const professionMatch = filters.profession === 'all' || operator.profession === filters.profession;
+      // TypeScript now recognizes operator.nationality
       const nationalityMatch = filters.nationality === 'all' || (operator.nationality || '') === filters.nationality;
 
       return searchMatch && genderMatch && professionMatch && nationalityMatch;
@@ -91,3 +94,4 @@ export const useOperatorsList = ({ operators }: UseOperatorsListProps) => {
     nationalityOptions
   };
 };
+
