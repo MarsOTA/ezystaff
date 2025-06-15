@@ -1,9 +1,8 @@
-
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { LogOut, Briefcase, User } from "lucide-react";
+import { LogOut, Briefcase, User, ListChecks, CalendarDays } from "lucide-react";
 
 const OperatorLayout = ({ children }: { children: React.ReactNode }) => {
   const { logout, user } = useAuth();
@@ -25,7 +24,23 @@ const OperatorLayout = ({ children }: { children: React.ReactNode }) => {
                 variant={location.pathname === "/operator/tasks" ? "default" : "outline"}
               >
                 <Briefcase className="mr-2 h-4 w-4" />
-                Task
+                Task oggi
+              </Button>
+            </Link>
+            <Link to="/operator/future-assignments">
+              <Button
+                variant={location.pathname === "/operator/future-assignments" ? "default" : "outline"}
+              >
+                <CalendarDays className="mr-2 h-4 w-4" />
+                Incarichi futuri
+              </Button>
+            </Link>
+            <Link to="/operator/all-assignments">
+              <Button
+                variant={location.pathname === "/operator/all-assignments" ? "default" : "outline"}
+              >
+                <ListChecks className="mr-2 h-4 w-4" />
+                Tutti gli incarichi
               </Button>
             </Link>
             <Link to="/operator/profile">
@@ -33,7 +48,7 @@ const OperatorLayout = ({ children }: { children: React.ReactNode }) => {
                 variant={location.pathname === "/operator/profile" ? "default" : "outline"}
               >
                 <User className="mr-2 h-4 w-4" />
-                My Profile
+                Profilo
               </Button>
             </Link>
             <Button variant="outline" onClick={logout}>

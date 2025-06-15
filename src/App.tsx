@@ -1,4 +1,3 @@
-
 import { Routes, Route } from "react-router-dom";
 import "./App.css";
 import Index from "./pages/Index";
@@ -19,6 +18,8 @@ import TasksPage from "./pages/operator/TasksPage";
 import ProfilePage from "./pages/operator/ProfilePage";
 import AttendancePage from "./pages/operator/AttendancePage";
 import AdminAttendancePage from "./pages/AdminAttendancePage";
+import FutureAssignmentsPage from "./pages/operator/FutureAssignmentsPage";
+import AllAssignmentsPage from "./pages/operator/AllAssignmentsPage";
 
 function App() {
   return (
@@ -77,12 +78,16 @@ function App() {
         element={<OperatorRoute component={TasksPage} />}
       />
       <Route
-        path="/operator/profile"
-        element={<OperatorRoute component={ProfilePage} />}
+        path="/operator/future-assignments"
+        element={<OperatorRoute component={FutureAssignmentsPage} />}
       />
       <Route
-        path="/operator/attendance"
-        element={<OperatorRoute component={AttendancePage} />}
+        path="/operator/all-assignments"
+        element={<OperatorRoute component={AllAssignmentsPage} />}
+      />
+      <Route
+        path="/operator/profile"
+        element={<OperatorRoute component={ProfilePage} />}
       />
     </Routes>
   );

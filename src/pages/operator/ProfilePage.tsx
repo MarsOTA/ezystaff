@@ -1,9 +1,9 @@
-
 import React from "react";
 import OperatorLayout from "@/components/OperatorLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useOperatorProfile } from "@/hooks/useOperatorProfile";
 
 const ProfilePage: React.FC = () => {
   const { user } = useAuth();
@@ -18,6 +18,13 @@ const ProfilePage: React.FC = () => {
     employeeId: "SEC-" + Math.floor(1000 + Math.random() * 9000)
   };
   
+  // Estrazione dettagli aggiuntivi fittizi
+  const contractSummary = "Contratto a tempo indeterminato, Livello 4, CCNL Vigilanza Privata, attivo dal 01/03/2024.";
+  const uploadedFiles = [
+    { fileName: "Contratto.pdf", url: "#" },
+    { fileName: "Patente.pdf", url: "#" }
+  ];
+
   return (
     <OperatorLayout>
       <div className="space-y-6">
@@ -69,6 +76,41 @@ const ProfilePage: React.FC = () => {
               </div>
             </CardContent>
           </Card>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Riepilogo Contratti */}
+          <div className="col-span-1">
+            <div className="bg-muted rounded-lg p-6 mb-2">
+              <h2 className="text-lg font-bold mb-2">Riepilogo Contrattualistica</h2>
+              <p className="text-base">{contractSummary}</p>
+              <ul className="mt-2">
+                {uploadedFiles.map(file => (
+                  <li key={file.fileName}>
+                    <a
+                      href={file.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline text-primary hover:text-primary/80"
+                    >
+                      {file.fileName}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+          {/* Altri dettagli personali o documenti aggiuntivi */}
+          <div className="col-span-1">
+            <div className="bg-muted rounded-lg p-6">
+              <h2 className="text-lg font-bold mb-2">Documenti caricati</h2>
+              <ul>
+                {uploadedFiles.map(f => (
+                  <li key={f.fileName} className="text-sm">{f.fileName}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
         </div>
       </div>
     </OperatorLayout>
