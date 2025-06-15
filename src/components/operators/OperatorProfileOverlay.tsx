@@ -4,6 +4,22 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from "@/components/ui/button";
 import { ExtendedOperator } from "@/types/operator";
 
+/**
+ * Utility per calcolare età da stringa YYYY-MM-DD (o simili)
+ */
+function calculateAge(birthDateStr?: string): number | null {
+  if (!birthDateStr) return null;
+  const date = new Date(birthDateStr);
+  if (isNaN(date.getTime())) return null;
+  const today = new Date();
+  let age = today.getFullYear() - date.getFullYear();
+  const m = today.getMonth() - date.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < date.getDate())) {
+    age--;
+  }
+  return age;
+}
+
 interface OperatorProfileOverlayProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -30,6 +46,8 @@ const OperatorProfileOverlay: React.FC<OperatorProfileOverlayProps> = ({
   // Avatar fallback lettera
   const getInitials = (name: string, surname: string) =>
     ((name?.[0] || "") + (surname?.[0] || "")).toUpperCase();
+
+  const eta = calculateAge(operator.birthDate);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -92,12 +110,36 @@ const OperatorProfileOverlay: React.FC<OperatorProfileOverlayProps> = ({
                   <div className="font-medium">{operator.birthDate || "-"}</div>
                 </div>
                 <div>
+                  <div className="text-xs text-muted-foreground">Età</div>
+                  <div className="font-medium">{eta !== null ? eta : "-"}</div>
+                </div>
+                <div>
                   <div className="text-xs text-muted-foreground">Nazionalità</div>
                   <div className="font-medium">{operator.nationality || "-"}</div>
                 </div>
                 <div>
                   <div className="text-xs text-muted-foreground">Indirizzo</div>
                   <div className="font-medium">{operator.address || "-"}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground">Altezza (cm)</div>
+                  <div className="font-medium">{operator.height ? operator.height : "-"}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground">Peso (kg)</div>
+                  <div className="font-medium">{operator.weight ? operator.weight : "-"}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground">N° Scarpe</div>
+                  <div className="font-medium">{operator.shoeSize ? operator.shoeSize : "-"}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground">Tatuaggi visibili</div>
+                  <div className="font-medium">
+                    {typeof operator.visibleTattoos === "boolean"
+                      ? operator.visibleTattoos ? "Sì" : "No"
+                      : "-"}
+                  </div>
                 </div>
               </div>
             </div>
