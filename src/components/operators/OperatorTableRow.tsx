@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { TableCell, TableRow } from "@/components/ui/table";
@@ -18,6 +19,7 @@ interface OperatorTableRowProps {
   onEdit: (operator: Operator) => void;
   onDelete: (id: number) => void;
   profileCompletion?: number;
+  profileStage?: string;
 }
 
 const OperatorTableRow: React.FC<OperatorTableRowProps> = ({
@@ -27,7 +29,8 @@ const OperatorTableRow: React.FC<OperatorTableRowProps> = ({
   onStatusToggle,
   onEdit,
   onDelete,
-  profileCompletion
+  profileCompletion,
+  profileStage
 }) => {
   const navigate = useNavigate();
   const [isOverlayOpen, setIsOverlayOpen] = useState(false);
@@ -93,9 +96,10 @@ const OperatorTableRow: React.FC<OperatorTableRowProps> = ({
           </span>
         </TableCell>
         <TableCell>
-          <div className="w-20 flex flex-col items-center">
+          <div className="w-24 flex flex-col items-center">
             <Progress value={profileCompletion || 0} className="h-2 mb-1" />
             <span className="text-xs font-semibold">{profileCompletion || 0}%</span>
+            <span className="text-[0.7rem] text-muted-foreground">{profileStage ? profileStage : ""}</span>
           </div>
         </TableCell>
         <TableCell className="text-right">

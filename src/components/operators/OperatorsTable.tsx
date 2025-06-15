@@ -66,7 +66,8 @@ const OperatorsTable: React.FC<OperatorsTableProps> = ({
         {operators.map((operator) => {
           // Converti SEMPRE in ExtendedOperator per tutte le logiche
           const extendedOperator = operatorToExtended(operator);
-          const { percent } = getOperatorProfileCompletion(extendedOperator);
+          const { percent, stage } = getOperatorProfileCompletion(extendedOperator);
+
           return (
             <OperatorTableRow
               key={operator.id}
@@ -77,6 +78,7 @@ const OperatorsTable: React.FC<OperatorsTableProps> = ({
               onEdit={onEdit}
               onDelete={onDelete}
               profileCompletion={percent}
+              profileStage={stage}
             />
           );
         })}
