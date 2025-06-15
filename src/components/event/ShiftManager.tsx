@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,8 +10,7 @@ import { CalendarIcon, Plus, X, AlertCircle, TriangleAlert } from "lucide-react"
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { cn } from "@/lib/utils";
-import { Event } from "@/types/event";
-import { Shift } from "@/hooks/useShiftManagement";
+import { Event, Shift } from "@/types/event";
 
 interface ShiftManagerProps {
   selectedEvent: Event | null;
