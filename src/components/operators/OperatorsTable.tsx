@@ -1,3 +1,4 @@
+
 import React from "react";
 import {
   Table,
@@ -56,13 +57,13 @@ const OperatorsTable: React.FC<OperatorsTableProps> = ({
             Stato
           </SortableTableHeader>
           <TableHead>Eventi Assegnati</TableHead>
-          <TableHead>Profilo</TableHead>
+          <TableHead>%Profilo</TableHead>
           <TableHead className="text-right">Azioni</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {operators.map((operator) => {
-          const { percent } = getOperatorProfileCompletion(operator as any); // will be ExtendedOperator at runtime if possible
+          const { percent } = getOperatorProfileCompletion(operator as any);
           return (
             <OperatorTableRow
               key={operator.id}

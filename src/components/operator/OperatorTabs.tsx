@@ -1,10 +1,11 @@
+
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, FileText, DollarSign } from "lucide-react";
+import { User, FileText } from "lucide-react";
 import { ExtendedOperator } from "@/types/operator";
 import PersonalInfoTab from "@/components/operator/PersonalInfoTab";
 import ContractTab from "@/components/operator/ContractTab";
-import PayrollTab from "@/components/operator/PayrollTab";
+// import PayrollTab from "@/components/operator/PayrollTab";
 
 interface OperatorTabsProps {
   operator: ExtendedOperator;
@@ -139,7 +140,7 @@ const OperatorTabs: React.FC<OperatorTabsProps> = ({
 }) => {
   return (
     <Tabs defaultValue="info" value={activeTab} onValueChange={setActiveTab} className="w-full">
-      <TabsList className="w-full grid grid-cols-3">
+      <TabsList className="w-full grid grid-cols-2">
         <TabsTrigger value="info" className="text-base py-3">
           <User className="mr-2 h-4 w-4" />
           Info Operatore
@@ -147,10 +148,6 @@ const OperatorTabs: React.FC<OperatorTabsProps> = ({
         <TabsTrigger value="contract" className="text-base py-3">
           <FileText className="mr-2 h-4 w-4" />
           Contrattualistica
-        </TabsTrigger>
-        <TabsTrigger value="payroll" className="text-base py-3">
-          <DollarSign className="mr-2 h-4 w-4" />
-          Payroll
         </TabsTrigger>
       </TabsList>
       
@@ -224,10 +221,6 @@ const OperatorTabs: React.FC<OperatorTabsProps> = ({
           onTemplateUpload={onTemplateUpload}
           templateFile={templateFile}
         />
-      </TabsContent>
-
-      <TabsContent value="payroll" className="space-y-6 mt-6">
-        <PayrollTab operator={operator} />
       </TabsContent>
     </Tabs>
   );
