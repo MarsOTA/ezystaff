@@ -108,6 +108,18 @@ export interface ExtendedOperator extends Operator {
     trainingStartDate?: string; // New field for "Inizio formazione"
     trainingEndDate?: string; // New field for "Fine formazione"
   };
+  citizenship?: "Italiana" | "Straniera";
+  residencePermitNumber?: string;
+  residencePermitType?: "lavoro" | "rifugiato" | "attesa occupazione" | "studio";
+  driversLicense?: boolean;
+  driversLicenseNumber?: string;
+  hasVehicle?: boolean;
+  fullBodyPhotoFile?: string | null;
+  fullBodyPhotoFileName?: string;
+  bustPhotoFile?: string | null;
+  bustPhotoFileName?: string;
+  residencePermitPhoto?: string | null;
+  residencePermitPhotoName?: string;
 }
 
 export const OPERATORS_STORAGE_KEY = "app_operators_data";

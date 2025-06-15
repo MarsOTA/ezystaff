@@ -8,21 +8,22 @@ interface ServicesCardProps {
   onServiceToggle: (service: string) => void;
 }
 
-const services = [
+// Cambiamo l'etichetta in "Mansione" con servizi aggiornati?
+const occupations = [
   "Security", "Steward", "Hostess", "Controllo Accessi", 
   "Vigilanza", "Antitaccheggio", "Bodyguard", "Altro"
 ];
 
 const ServicesCard: React.FC<ServicesCardProps> = ({ operator, onServiceToggle }) => (
   <div className="flex flex-wrap gap-2">
-    {services.map((service) => (
+    {occupations.map((mansione) => (
       <Badge
-        key={service}
-        variant={operator.services?.includes(service) ? "default" : "outline"}
+        key={mansione}
+        variant={operator.services?.includes(mansione) ? "default" : "outline"}
         className="cursor-pointer"
-        onClick={() => onServiceToggle(service)}
+        onClick={() => onServiceToggle(mansione)}
       >
-        {service}
+        {mansione}
       </Badge>
     ))}
   </div>

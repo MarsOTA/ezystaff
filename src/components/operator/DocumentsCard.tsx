@@ -23,6 +23,8 @@ const DocumentsCard: React.FC<DocumentsCardProps> = ({ operator, onFileUpload })
     onFileUpload(field, fileNameField, null);
   };
 
+  const isStraniera = operator.citizenship === "Straniera";
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div className="space-y-2">
@@ -75,6 +77,34 @@ const DocumentsCard: React.FC<DocumentsCardProps> = ({ operator, onFileUpload })
           </p>
         )}
       </div>
+      {/* Permesso di soggiorno (immagine) */}
+      {isStraniera && (
+        <div className="space-y-2 md:col-span-2">
+          <Label htmlFor="residencePermitPhoto">Immagine permesso di soggiorno</Label>
+          <div className="flex items-center gap-2">
+            <Input
+              id="residencePermitPhoto"
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange("residencePermitPhoto", "residencePermitPhotoName")}
+            />
+            {operator.residencePermitPhotoName && (
+              <Button 
+                size="icon" 
+                variant="outline"
+                onClick={() => removeFile("residencePermitPhoto", "residencePermitPhotoName")}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+          {operator.residencePermitPhotoName && (
+            <p className="text-sm text-muted-foreground">
+              File: {operator.residencePermitPhotoName}
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 };

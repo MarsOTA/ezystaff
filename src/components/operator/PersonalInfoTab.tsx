@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { ExtendedOperator } from "@/types/operator";
 import BasicInfoCard from "./BasicInfoCard";
@@ -49,13 +48,21 @@ const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
 }) => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  // Gestione foto profilo solo in questa tab
-  const handleProfileImageRemove = () => {
-    onFileUpload("profileImage", "profileImageName", null);
-  };
+  // Gestione foto profilo, figura intero, mezzo busto
+  const handleProfileImageRemove = () => { onFileUpload("profileImage", "profileImageName", null); };
   const handleProfileImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] || null;
     onFileUpload("profileImage", "profileImageName", file);
+  };
+  const handleFullBodyImageRemove = () => { onFileUpload("fullBodyPhotoFile", "fullBodyPhotoFileName", null); };
+  const handleFullBodyImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] || null;
+    onFileUpload("fullBodyPhotoFile", "fullBodyPhotoFileName", file);
+  };
+  const handleBustImageRemove = () => { onFileUpload("bustPhotoFile", "bustPhotoFileName", null); };
+  const handleBustImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] || null;
+    onFileUpload("bustPhotoFile", "bustPhotoFileName", file);
   };
 
   const handleDelete = () => {
@@ -71,32 +78,24 @@ const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
         onFieldChange={onFieldChange}
       />
 
-      {/* Foto Profilo */}
+      {/* Foto Profilo + Extra */}
       <Card>
         <CardHeader>
           <CardTitle>Foto Profilo</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center gap-4">
-            {imagePreviewUrls.profileImage && (
+          <div className="flex flex-wrap gap-8 items-center">
+            {/* Foto Profilo */}
+            <div>
               <div className="relative">
-                <img 
-                  src={imagePreviewUrls.profileImage} 
-                  alt="Profile" 
-                  className="w-24 h-24 object-cover rounded-full"
-                />
-                <Button 
-                  size="icon" 
-                  variant="destructive" 
-                  className="absolute -top-2 -right-2 w-6 h-6"
-                  onClick={handleProfileImageRemove}
-                >
-                  &times;
-                </Button>
+                {imagePreviewUrls.profileImage && (
+                  <>
+                    <img src={imagePreviewUrls.profileImage} alt="Profile" className="w-24 h-24 object-cover rounded-full" />
+                    <Button size="icon" variant="destructive" className="absolute -top-2 -right-2 w-6 h-6" onClick={handleProfileImageRemove}>&times;</Button>
+                  </>
+                )}
               </div>
-            )}
-            <div className="flex-1">
-              <label htmlFor="profileImage" className="block text-sm font-medium">Carica foto profilo</label>
+              <label htmlFor="profileImage" className="block text-sm font-medium mt-2">Carica foto profilo</label>
               <input
                 id="profileImage"
                 type="file"
@@ -104,11 +103,47 @@ const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
                 onChange={handleProfileImageChange}
                 className="mt-1"
               />
-              {operator.profileImageName && (
-                <p className="text-sm text-muted-foreground mt-1">
-                  File attuale: {operator.profileImageName}
-                </p>
-              )}
+              {operator.profileImageName && <p className="text-sm text-muted-foreground mt-1">File attuale: {operator.profileImageName}</p>}
+            </div>
+            {/* Figura intero */}
+            <div>
+              <div className="relative">
+                {imagePreviewUrls.fullBodyPhotoFile && (
+                  <>
+                    <img src={imagePreviewUrls.fullBodyPhotoFile} alt="Figura intero" className="w-24 h-24 object-cover rounded" />
+                    <Button size="icon" variant="destructive" className="absolute -top-2 -right-2 w-6 h-6" onClick={handleFullBodyImageRemove}>&times;</Button>
+                  </>
+                )}
+              </div>
+              <label htmlFor="fullBodyPhotoFile" className="block text-sm font-medium mt-2">Carica foto figura intero</label>
+              <input
+                id="fullBodyPhotoFile"
+                type="file"
+                accept="image/*"
+                onChange={handleFullBodyImageChange}
+                className="mt-1"
+              />
+              {operator.fullBodyPhotoFileName && <p className="text-sm text-muted-foreground mt-1">File attuale: {operator.fullBodyPhotoFileName}</p>}
+            </div>
+            {/* Mezzo busto */}
+            <div>
+              <div className="relative">
+                {imagePreviewUrls.bustPhotoFile && (
+                  <>
+                    <img src={imagePreviewUrls.bustPhotoFile} alt="Mezzo busto" className="w-24 h-24 object-cover rounded" />
+                    <Button size="icon" variant="destructive" className="absolute -top-2 -right-2 w-6 h-6" onClick={handleBustImageRemove}>&times;</Button>
+                  </>
+                )}
+              </div>
+              <label htmlFor="bustPhotoFile" className="block text-sm font-medium mt-2">Carica foto mezzo busto</label>
+              <input
+                id="bustPhotoFile"
+                type="file"
+                accept="image/*"
+                onChange={handleBustImageChange}
+                className="mt-1"
+              />
+              {operator.bustPhotoFileName && <p className="text-sm text-muted-foreground mt-1">File attuale: {operator.bustPhotoFileName}</p>}
             </div>
           </div>
         </CardContent>
@@ -124,10 +159,10 @@ const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
         </CardContent>
       </Card>
 
-      {/* Servizi Offerti */}
+      {/* ManSione */}
       <Card>
         <CardHeader>
-          <CardTitle>Servizi Offerti</CardTitle>
+          <CardTitle>Mansione</CardTitle>
         </CardHeader>
         <CardContent>
           <ServicesCard operator={operator} onServiceToggle={onServiceToggle}/>
