@@ -12,6 +12,7 @@ import {
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ExtendedOperator } from "@/types/operator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface ContractTabProps {
   operator: ExtendedOperator;
@@ -68,6 +69,13 @@ interface ContractTabProps {
   onTemplateUpload?: (file: File | null) => void;
   templateFile?: File | null;
 }
+
+const contractTypes = [
+  { value: "a-chiamata", label: "A chiamata" },
+  { value: "determinato", label: "A tempo determinato" },
+  { value: "indeterminato", label: "A tempo indeterminato" },
+  { value: "prestazione-occasionale", label: "Prestazione occasionale" }
+];
 
 const ContractTab: React.FC<ContractTabProps> = ({
   operator,
@@ -143,12 +151,18 @@ const ContractTab: React.FC<ContractTabProps> = ({
     <div className="space-y-6">
       <div>
         <Label htmlFor="contractType">Tipo di Contratto</Label>
-        <Input
-          type="text"
-          id="contractType"
-          value={contractType}
-          onChange={(e) => onContractTypeChange(e.target.value)}
-        />
+        <Select value={contractType} onValueChange={onContractTypeChange}>
+          <SelectTrigger>
+            <SelectValue placeholder="Seleziona tipo di contratto" />
+          </SelectTrigger>
+          <SelectContent>
+            {contractTypes.map((c) => (
+              <SelectItem key={c.value} value={c.value}>
+                {c.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div>

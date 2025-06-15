@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { TableCell, TableRow } from "@/components/ui/table";
@@ -47,6 +46,10 @@ const OperatorTableRow: React.FC<OperatorTableRowProps> = ({
     navigate(`/event-planner/${operator.id}`);
   };
 
+  const getMansione = () => {
+    return operator.occupation || operator.profession || "-";
+  };
+
   const assignedEventsCount = getAssignedEventsCount(operator.id);
 
   const handleProfileClick = (e: React.MouseEvent) => {
@@ -78,7 +81,8 @@ const OperatorTableRow: React.FC<OperatorTableRowProps> = ({
         <TableCell>{operator.surname || '-'}</TableCell>
         <TableCell>{operator.phone || '-'}</TableCell>
         <TableCell>{formatGender(operator.gender)}</TableCell>
-        <TableCell className="capitalize">{operator.profession || '-'}</TableCell>
+        {/* Mostra "Mansione" */}
+        <TableCell className="capitalize">{getMansione()}</TableCell>
         <TableCell>
           <span
             className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${

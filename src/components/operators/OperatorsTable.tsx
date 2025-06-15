@@ -51,8 +51,9 @@ const OperatorsTable: React.FC<OperatorsTableProps> = ({
           <SortableTableHeader sortKey="gender" currentSort={sortConfig} onSort={onSort}>
             Genere
           </SortableTableHeader>
-          <SortableTableHeader sortKey="profession" currentSort={sortConfig} onSort={onSort}>
-            Professione
+          {/* Cambia da Professione a Mansione */}
+          <SortableTableHeader sortKey="occupation" currentSort={sortConfig} onSort={onSort}>
+            Mansione
           </SortableTableHeader>
           <SortableTableHeader sortKey="status" currentSort={sortConfig} onSort={onSort}>
             Stato
@@ -64,7 +65,6 @@ const OperatorsTable: React.FC<OperatorsTableProps> = ({
       </TableHeader>
       <TableBody>
         {operators.map((operator) => {
-          // Converti SEMPRE in ExtendedOperator per tutte le logiche
           const extendedOperator = operatorToExtended(operator);
           const { percent, stage } = getOperatorProfileCompletion(extendedOperator);
 
