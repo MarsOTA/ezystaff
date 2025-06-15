@@ -5,7 +5,7 @@ import { User, FileText } from "lucide-react";
 import { ExtendedOperator } from "@/types/operator";
 import PersonalInfoTab from "@/components/operator/PersonalInfoTab";
 import ContractTab from "@/components/operator/ContractTab";
-// import PayrollTab from "@/components/operator/PayrollTab";
+import PayrollTab from "@/components/operator/PayrollTab"; // NUOVO: import
 
 interface OperatorTabsProps {
   operator: ExtendedOperator;
@@ -140,7 +140,7 @@ const OperatorTabs: React.FC<OperatorTabsProps> = ({
 }) => {
   return (
     <Tabs defaultValue="info" value={activeTab} onValueChange={setActiveTab} className="w-full">
-      <TabsList className="w-full grid grid-cols-2">
+      <TabsList className="w-full grid grid-cols-3">
         <TabsTrigger value="info" className="text-base py-3">
           <User className="mr-2 h-4 w-4" />
           Info Operatore
@@ -148,6 +148,12 @@ const OperatorTabs: React.FC<OperatorTabsProps> = ({
         <TabsTrigger value="contract" className="text-base py-3">
           <FileText className="mr-2 h-4 w-4" />
           Contrattualistica
+        </TabsTrigger>
+        <TabsTrigger value="payroll" className="text-base py-3">
+          <span className="mr-2">
+            <svg width={16} height={16} viewBox="0 0 20 20" fill="none"><rect x="2" y="6" width="16" height="12" rx="2" fill="#cbd5e1"/><rect x="4.5" y="8.5" width="11" height="7" rx="1.5" stroke="#334155" strokeWidth="1.5"/><rect x="7" y="11" width="6" height="2" rx="1" fill="#334155"/></svg>
+          </span>
+          Payroll
         </TabsTrigger>
       </TabsList>
       
@@ -221,6 +227,10 @@ const OperatorTabs: React.FC<OperatorTabsProps> = ({
           onTemplateUpload={onTemplateUpload}
           templateFile={templateFile}
         />
+      </TabsContent>
+
+      <TabsContent value="payroll" className="space-y-6 mt-6">
+        <PayrollTab operator={operator} />
       </TabsContent>
     </Tabs>
   );
