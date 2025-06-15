@@ -1,3 +1,4 @@
+
 export interface Operator {
   id: number;
   name: string;
@@ -11,12 +12,13 @@ export interface Operator {
   rating?: number;
   occupation?: string; // Add occupation as an alternative to profession
   nationality?: string; // <--- Added this line
+  hasVehicle?: boolean;
+  residencePermitNumber?: string;
 }
 
 export interface ExtendedOperator extends Operator {
   birthDate?: string;
   birthCountry?: string;
-  nationality?: string;
   address?: string;
   city?: string;
   province?: string;
@@ -31,7 +33,6 @@ export interface ExtendedOperator extends Operator {
   occupation?: string;
   availability?: string[];
   drivingLicense?: boolean;
-  hasVehicle?: boolean;
   fluentLanguages?: string[];
   basicLanguages?: string[];
   sizes?: string[];
@@ -47,7 +48,7 @@ export interface ExtendedOperator extends Operator {
   hipsSize?: number;
   visibleTattoos?: boolean;
   idCardNumber?: string;
-  residencePermitNumber?: string;
+  residencePermitType?: "lavoro" | "rifugiato" | "attesa occupazione" | "studio";
   profileImage?: string | null;
   profileImageName?: string;
   idCardFront?: string | null;
@@ -109,17 +110,10 @@ export interface ExtendedOperator extends Operator {
     trainingEndDate?: string; // New field for "Fine formazione"
   };
   citizenship?: "Italiana" | "Straniera";
-  residencePermitNumber?: string;
-  residencePermitType?: "lavoro" | "rifugiato" | "attesa occupazione" | "studio";
-  driversLicense?: boolean;
-  driversLicenseNumber?: string;
-  hasVehicle?: boolean;
-  fullBodyPhotoFile?: string | null;
-  fullBodyPhotoFileName?: string;
-  bustPhotoFile?: string | null;
-  bustPhotoFileName?: string;
   residencePermitPhoto?: string | null;
   residencePermitPhotoName?: string;
+  driversLicense?: boolean;
+  driversLicenseNumber?: string;
 }
 
 export const OPERATORS_STORAGE_KEY = "app_operators_data";
@@ -204,3 +198,4 @@ export const JOB_TYPES = [
   { value: "hostess-steward", label: "Hostess/Steward" },
   { value: "porterage", label: "Porterage" }
 ];
+
