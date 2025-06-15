@@ -296,8 +296,8 @@ const OperatorProfileOverlay: React.FC<OperatorProfileOverlayProps> = ({
           {/* Main content */}
           <div className="flex-1 flex flex-col p-8 overflow-auto">
             {/* Header con immagine profilo e dati anagrafici allineati */}
-            <div className="flex items-start mb-8 gap-8">
-              {/* Immagine profilo */}
+            <div className="flex items-start mb-8 gap-6">
+              {/* Immagine profilo ridotta */}
               {operator.profileImage ? (
                 <img
                   src={operator.profileImage}
@@ -309,16 +309,16 @@ const OperatorProfileOverlay: React.FC<OperatorProfileOverlayProps> = ({
                   }}
                   style={{
                     cursor: "pointer",
-                    width: 350,
-                    height: 350,
+                    width: 175,
+                    height: 175,
                   }}
                 />
               ) : (
                 <div
-                  className="rounded-full bg-gray-200 flex items-center justify-center text-5xl font-bold text-gray-500 border-4 border-background shadow"
+                  className="rounded-full bg-gray-200 flex items-center justify-center text-3xl font-bold text-gray-500 border-4 border-background shadow"
                   style={{
-                    width: 350,
-                    height: 350,
+                    width: 175,
+                    height: 175,
                   }}
                 >
                   {getInitials(operator.name, operator.surname)}
@@ -328,7 +328,7 @@ const OperatorProfileOverlay: React.FC<OperatorProfileOverlayProps> = ({
               {/* Nome e cognome a destra */}
               <div className="flex flex-col justify-center ml-0" style={{ minWidth: 0, flex: 1 }}>
                 <div className="text-3xl font-bold break-words">{operator.name} {operator.surname}</div>
-                {/* Se vuoi altri dettagli anagrafici qui, aggiungili qui */}
+                {/* Ulteriori dettagli anagrafici, se necessari */}
               </div>
             </div>
             {/* Carosello immagini secondarie */}
