@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
@@ -167,7 +166,6 @@ const OperatorProfile = () => {
           operator={operator} 
           onRatingChange={(value) => handleChange("rating", value)}
           onSave={handleSave}
-          onDelete={handleDelete}
         />
         
         <OperatorTabs
@@ -183,6 +181,7 @@ const OperatorProfile = () => {
           onFileUpload={handleFileUpload}
           onSave={handleSave}
           onGenerateContract={generateContract}
+          onDelete={handleDelete}
           contractType={contractType}
           setContractType={setContractType}
           ccnl={ccnl}

@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { User, FileText, DollarSign } from "lucide-react";
@@ -20,6 +19,7 @@ interface OperatorTabsProps {
   onFileUpload: (field: keyof ExtendedOperator, fileNameField: keyof ExtendedOperator, file: File | null) => void;
   onSave: () => void;
   onGenerateContract: () => void;
+  onDelete?: (id: number) => void;
   contractType: string;
   setContractType: (value: string) => void;
   ccnl: string;
@@ -85,6 +85,7 @@ const OperatorTabs: React.FC<OperatorTabsProps> = ({
   onFileUpload,
   onSave,
   onGenerateContract,
+  onDelete,
   contractType,
   setContractType,
   ccnl,
@@ -163,6 +164,7 @@ const OperatorTabs: React.FC<OperatorTabsProps> = ({
           onLanguageToggle={onLanguageToggle}
           onSizeToggle={onSizeToggle}
           onFileUpload={onFileUpload}
+          onDelete={onDelete}
         />
       </TabsContent>
       

@@ -1,5 +1,4 @@
-
-import React from "react";
+import React, { useState } from "react";
 import { ExtendedOperator } from "@/types/operator";
 import BasicInfoCard from "./BasicInfoCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,7 +8,18 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Upload, X } from "lucide-react";
+import { Upload, X, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface PersonalInfoTabProps {
   operator: ExtendedOperator;
@@ -20,6 +30,7 @@ interface PersonalInfoTabProps {
   onLanguageToggle: (language: string, type: 'fluent' | 'basic') => void;
   onSizeToggle: (size: string) => void;
   onFileUpload: (field: keyof ExtendedOperator, fileNameField: keyof ExtendedOperator, file: File | null) => void;
+  onDelete?: (id: number) => void;
 }
 
 const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
@@ -30,8 +41,11 @@ const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
   onAvailabilityToggle,
   onLanguageToggle,
   onSizeToggle,
-  onFileUpload
+  onFileUpload,
+  onDelete
 }) => {
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
   const services = [
     "Security", "Steward", "Hostess", "Controllo Accessi", 
     "Vigilanza", "Antitaccheggio", "Bodyguard", "Altro"
@@ -58,6 +72,12 @@ const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
 
   const removeFile = (field: keyof ExtendedOperator, fileNameField: keyof ExtendedOperator) => {
     onFileUpload(field, fileNameField, null);
+  };
+
+  const handleDelete = () => {
+    if (onDelete) {
+      onDelete(operator.id);
+    }
   };
 
   return (
@@ -373,6 +393,34 @@ const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
           />
         </CardContent>
       </Card>
+
+      {/* Delete button positioned after Notes */}
+      <div className="flex justify-start">
+        {onDelete && (
+          <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive">
+                <Trash2 className="mr-2 h-4 w-4" />
+                Cancella operatore
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Sei sicuro di voler cancellare l'operatore?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Tutti i dati e gli eventi a lui legati saranno persi! Questa azione non può essere annullata.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Annulla</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                  Cancella operatore
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
+      </div>
     </div>
   );
 };
