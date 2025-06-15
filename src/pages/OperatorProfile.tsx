@@ -1,13 +1,19 @@
+
 import React from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import OperatorHeader from "@/components/operator/OperatorHeader";
 import OperatorTabs from "@/components/operator/OperatorTabs";
 import { useOperatorProfile } from "@/hooks/useOperatorProfile";
 import { useOperatorOperations } from "@/hooks/useOperatorOperations";
+import { OPERATORS_STORAGE_KEY } from "@/types/operator";
+import { safeLocalStorage } from "@/utils/fileUtils";
+import { useToast } from "@/hooks/use-toast";
 
 const OperatorProfile = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const { toast } = useToast();
   
   const {
     operator,
@@ -107,6 +113,32 @@ const OperatorProfile = () => {
     trainingStartDate,
     trainingEndDate
   );
+
+  const handleDelete = (operatorId: number) => {
+    try {
+      const storedOperators = safeLocalStorage.getItem(OPERATORS_STORAGE_KEY);
+      if (storedOperators) {
+        const operators = JSON.parse(storedOperators);
+        const updatedOperators = operators.filter((op: any) => op.id !== operatorId);
+        safeLocalStorage.setItem(OPERATORS_STORAGE_KEY, JSON.stringify(updatedOperators));
+        
+        toast({
+          title: "Operatore cancellato",
+          description: "L'operatore è stato rimosso con successo.",
+        });
+        
+        // Navigate back to operators list
+        navigate("/operators");
+      }
+    } catch (error) {
+      console.error("Error deleting operator:", error);
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore durante la cancellazione dell'operatore.",
+        variant: "destructive",
+      });
+    }
+  };
   
   if (loading) {
     return (
@@ -135,6 +167,7 @@ const OperatorProfile = () => {
           operator={operator} 
           onRatingChange={(value) => handleChange("rating", value)}
           onSave={handleSave}
+          onDelete={handleDelete}
         />
         
         <OperatorTabs

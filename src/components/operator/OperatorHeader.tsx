@@ -1,24 +1,45 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ExtendedOperator } from "@/types/operator";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { ChevronLeft, Star } from "lucide-react";
+import { ChevronLeft, Star, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface OperatorHeaderProps {
   operator: ExtendedOperator;
   onRatingChange: (rating: number) => void;
   onSave: () => void;
+  onDelete?: (id: number) => void;
 }
 
 const OperatorHeader: React.FC<OperatorHeaderProps> = ({ 
   operator, 
   onRatingChange,
-  onSave
+  onSave,
+  onDelete
 }) => {
   const navigate = useNavigate();
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
+  const handleDelete = () => {
+    if (onDelete) {
+      onDelete(operator.id);
+      navigate("/operators");
+    }
+  };
 
   return (
     <>
@@ -31,7 +52,33 @@ const OperatorHeader: React.FC<OperatorHeaderProps> = ({
           <ChevronLeft className="mr-2 h-4 w-4" />
           Torna alla lista
         </Button>
-        <Button onClick={onSave}>Salva modifiche</Button>
+        <div className="flex gap-2 mb-4">
+          <Button onClick={onSave}>Salva modifiche</Button>
+          {onDelete && (
+            <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive">
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Cancella operatore
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Sei sicuro di voler cancellare l'operatore?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Tutti i dati e gli eventi a lui legati saranno persi! Questa azione non può essere annullata.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Annulla</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                    Cancella operatore
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
+        </div>
       </div>
       
       <Card>
