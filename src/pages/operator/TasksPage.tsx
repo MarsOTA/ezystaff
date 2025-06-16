@@ -15,6 +15,8 @@ const safeToDate = (dateValue: any): Date => {
 const TasksPage: React.FC = () => {
   const { tasks, loading } = useOperatorTasks();
   
+  console.log("useOperatorTasks result:", { tasks, loading, tasksLength: tasks?.length });
+  
   // Mock event for demonstration when no tasks are available - SET FOR TODAY
   const today = new Date();
   const mockEvent = {
@@ -31,11 +33,13 @@ const TasksPage: React.FC = () => {
   // Select the most relevant event to display using proper prioritization
   
   // Ensure all task dates are properly converted
-  const validTasks = tasks.map(task => ({
+  const validTasks = Array.isArray(tasks) ? tasks.map(task => ({
     ...task,
     startDate: safeToDate(task.startDate),
     endDate: safeToDate(task.endDate)
-  }));
+  })) : [];
+  
+  console.log("Valid tasks after processing:", validTasks);
   
   // 1) Find event that includes today's date
   const todayEvent = validTasks.find(
@@ -56,6 +60,18 @@ const TasksPage: React.FC = () => {
   // Use today's event if available, otherwise upcoming event, finally fallback to mock
   const currentEvent = todayEvent ?? upcomingEvent ?? mockEvent;
   
+  console.log("Selected event:", {
+    todayEvent: !!todayEvent,
+    upcomingEvent: !!upcomingEvent,
+    usingMock: !todayEvent && !upcomingEvent,
+    currentEvent: {
+      id: currentEvent.id,
+      title: currentEvent.title,
+      startDate: currentEvent.startDate,
+      endDate: currentEvent.endDate
+    }
+  });
+  
   const {
     isCheckingIn,
     locationStatus,
@@ -65,14 +81,16 @@ const TasksPage: React.FC = () => {
     handleCheckAction
   } = useOperatorAttendance({ eventId: currentEvent.id });
 
-  console.log("Current event being displayed:", {
-    id: currentEvent.id,
-    title: currentEvent.title,
-    startDate: currentEvent.startDate.toISOString(),
-    endDate: currentEvent.endDate.toISOString()
+  console.log("Attendance hook result:", {
+    isCheckingIn,
+    locationStatus,
+    loadingLocation,
+    lastCheckTime,
+    locationAccuracy
   });
 
   if (loading) {
+    console.log("Showing loading state");
     return (
       <OperatorLayout>
         <div className="space-y-6">
@@ -82,6 +100,8 @@ const TasksPage: React.FC = () => {
       </OperatorLayout>
     );
   }
+
+  console.log("Rendering TaskCard with:", { currentEvent });
 
   return (
     <OperatorLayout>

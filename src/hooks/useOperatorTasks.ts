@@ -24,9 +24,12 @@ export const useOperatorTasks = () => {
     const loadTasks = async () => {
       try {
         setLoading(true);
+        console.log("Loading tasks for user:", user);
         
         if (!user) {
+          console.log("No user found, setting empty tasks");
           setTasks([]);
+          setLoading(false);
           return;
         }
 
@@ -46,6 +49,7 @@ export const useOperatorTasks = () => {
           
           console.log("Setting Mare nostro event for Mario");
           setTasks([mareNostroEvent]);
+          setLoading(false);
           return;
         }
         
@@ -53,27 +57,39 @@ export const useOperatorTasks = () => {
         const storedEvents = localStorage.getItem("app_events_data");
         const storedOperators = localStorage.getItem("app_operators_data");
         
+        console.log("Stored events:", storedEvents ? "found" : "not found");
+        console.log("Stored operators:", storedOperators ? "found" : "not found");
+        
         if (!storedEvents || !storedOperators) {
+          console.log("No stored data found, setting empty tasks");
           setTasks([]);
+          setLoading(false);
           return;
         }
         
         const events = JSON.parse(storedEvents);
         const operators = JSON.parse(storedOperators);
         
+        console.log("Parsed events:", events);
+        console.log("Parsed operators:", operators);
+        
         // Find the current operator by email or name
         const currentOperator = operators.find(
           (op: any) => op.email === user.email || op.name === user.name
         );
         
+        console.log("Current operator found:", currentOperator);
+        
         if (!currentOperator || !currentOperator.assignedEvents) {
           console.log("No operator found or no assigned events");
           setTasks([]);
+          setLoading(false);
           return;
         }
         
         // Convert assignedEvents to numbers if they are strings to ensure proper comparison
         const normalizedAssignedEvents = currentOperator.assignedEvents.map((id: any) => Number(id));
+        console.log("Normalized assigned events:", normalizedAssignedEvents);
         
         // Get events assigned to this operator
         const operatorTasks = events
@@ -98,7 +114,7 @@ export const useOperatorTasks = () => {
             shifts: event.shifts || ["Mattina (09:00-13:00)", "Pomeriggio (14:00-18:00)"] // Default shifts
           }));
         
-        console.log("Operator tasks:", operatorTasks);
+        console.log("Final operator tasks:", operatorTasks);
         setTasks(operatorTasks);
         
       } catch (error) {
