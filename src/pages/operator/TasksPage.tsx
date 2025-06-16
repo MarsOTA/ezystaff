@@ -20,8 +20,8 @@ const TasksPage: React.FC = () => {
   const mockEvent = {
     id: 1,
     title: "Milano Security Conference",
-    startDate: today, // Set to today
-    endDate: today,   // Set to today
+    startDate: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 9, 0, 0),
+    endDate: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 18, 0, 0),
     startTime: "09:00",
     endTime: "18:00",
     location: "Via Milano 123, Milano, MI",
@@ -39,7 +39,13 @@ const TasksPage: React.FC = () => {
   
   // 1) Find event that includes today's date
   const todayEvent = validTasks.find(
-    (e) => e.startDate <= today && e.endDate >= today
+    (e) => {
+      const eventStart = new Date(e.startDate.getFullYear(), e.startDate.getMonth(), e.startDate.getDate());
+      const eventEnd = new Date(e.endDate.getFullYear(), e.endDate.getMonth(), e.endDate.getDate());
+      const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      
+      return todayDate >= eventStart && todayDate <= eventEnd;
+    }
   );
   
   // 2) If no today event exists, find the first upcoming event sorted by start date
@@ -59,36 +65,38 @@ const TasksPage: React.FC = () => {
     handleCheckAction
   } = useOperatorAttendance({ eventId: currentEvent.id });
 
-  console.log("Current event being displayed:", currentEvent);
+  console.log("Current event being displayed:", {
+    id: currentEvent.id,
+    title: currentEvent.title,
+    startDate: currentEvent.startDate.toISOString(),
+    endDate: currentEvent.endDate.toISOString()
+  });
+
+  if (loading) {
+    return (
+      <OperatorLayout>
+        <div className="space-y-6">
+          <h1 className="text-2xl font-bold">Le tue attività di oggi</h1>
+          <div className="p-8 text-center">Caricamento attività...</div>
+        </div>
+      </OperatorLayout>
+    );
+  }
 
   return (
     <OperatorLayout>
       <div className="space-y-6">
         <h1 className="text-2xl font-bold">Le tue attività di oggi</h1>
         
-        {loading ? (
-          <div className="p-8 text-center">Caricamento attività...</div>
-        ) : validTasks.length === 0 ? (
-          <TaskCard 
-            event={mockEvent}
-            isCheckingIn={isCheckingIn}
-            loadingLocation={loadingLocation}
-            lastCheckTime={lastCheckTime}
-            locationStatus={locationStatus}
-            locationAccuracy={locationAccuracy}
-            onCheckAction={handleCheckAction}
-          />
-        ) : (
-          <TaskCard 
-            event={currentEvent}
-            isCheckingIn={isCheckingIn}
-            loadingLocation={loadingLocation}
-            lastCheckTime={lastCheckTime}
-            locationStatus={locationStatus}
-            locationAccuracy={locationAccuracy}
-            onCheckAction={handleCheckAction}
-          />
-        )}
+        <TaskCard 
+          event={currentEvent}
+          isCheckingIn={isCheckingIn}
+          loadingLocation={loadingLocation}
+          lastCheckTime={lastCheckTime}
+          locationStatus={locationStatus}
+          locationAccuracy={locationAccuracy}
+          onCheckAction={handleCheckAction}
+        />
       </div>
     </OperatorLayout>
   );
