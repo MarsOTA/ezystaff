@@ -1,43 +1,82 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { LogIn, LogOut, Loader2 } from "lucide-react";
+import { Clock, MapPin, Loader2 } from "lucide-react";
+import { format } from "date-fns";
 
 interface TaskCheckButtonProps {
   isCheckingIn: boolean;
   loadingLocation: boolean;
-  onCheck: () => void;
+  lastCheckTime: Date | null;
+  locationStatus: "checking" | "valid" | "invalid" | "error";
+  locationAccuracy: number | null;
+  onCheckAction: () => void;
 }
 
 const TaskCheckButton: React.FC<TaskCheckButtonProps> = ({
   isCheckingIn,
   loadingLocation,
-  onCheck
+  lastCheckTime,
+  locationStatus,
+  locationAccuracy,
+  onCheckAction
 }) => {
+  const getLocationStatusColor = () => {
+    switch (locationStatus) {
+      case "valid": return "text-green-600";
+      case "invalid": return "text-red-600";
+      case "error": return "text-red-600";
+      default: return "text-muted-foreground";
+    }
+  };
+
+  const getLocationStatusText = () => {
+    switch (locationStatus) {
+      case "checking": return "Verificando posizione...";
+      case "valid": return `Posizione verificata (±${locationAccuracy}m)`;
+      case "invalid": return "Posizione non valida";
+      case "error": return "Errore nel rilevamento posizione";
+      default: return "Posizione sconosciuta";
+    }
+  };
+
   return (
-    <Button 
-      size="lg" 
-      className="w-full"
-      onClick={onCheck}
-      disabled={loadingLocation}
-    >
-      {loadingLocation ? (
-        <>
-          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-          Rilevamento posizione...
-        </>
-      ) : isCheckingIn ? (
-        <>
-          <LogIn className="mr-2 h-5 w-5" />
-          Check-in
-        </>
-      ) : (
-        <>
-          <LogOut className="mr-2 h-5 w-5" />
-          Check-out
-        </>
+    <div className="space-y-4">
+      <div className="flex items-center space-x-2">
+        <MapPin className={`h-4 w-4 ${getLocationStatusColor()}`} />
+        <span className={`text-sm ${getLocationStatusColor()}`}>
+          {getLocationStatusText()}
+        </span>
+      </div>
+
+      {lastCheckTime && (
+        <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+          <Clock className="h-4 w-4" />
+          <span>
+            Ultimo check: {format(lastCheckTime, "dd/MM/yyyy HH:mm")}
+          </span>
+        </div>
       )}
-    </Button>
+
+      <Button 
+        onClick={onCheckAction}
+        disabled={isCheckingIn || loadingLocation || locationStatus === "invalid"}
+        className="w-full"
+        size="lg"
+      >
+        {isCheckingIn ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            {lastCheckTime ? "Check-out in corso..." : "Check-in in corso..."}
+          </>
+        ) : (
+          <>
+            <Clock className="mr-2 h-4 w-4" />
+            {lastCheckTime ? "Check-out" : "Check-in"}
+          </>
+        )}
+      </Button>
+    </div>
   );
 };
 
