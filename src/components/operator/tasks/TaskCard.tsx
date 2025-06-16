@@ -17,29 +17,50 @@ interface TaskCardProps {
     location: string;
     shifts: string[];
   };
-  isCheckingIn: boolean;
-  loadingLocation: boolean;
-  lastCheckTime: Date | null;
-  locationStatus: "checking" | "valid" | "invalid" | "error";
-  locationAccuracy: number | null;
-  onCheckAction: () => void;
+  isCheckingIn?: boolean;
+  loadingLocation?: boolean;
+  lastCheckTime?: Date | null;
+  locationStatus?: "checking" | "valid" | "invalid" | "error";
+  locationAccuracy?: number | null;
+  onCheckAction?: () => void;
 }
 
 const TaskCard: React.FC<TaskCardProps> = ({
   event,
-  isCheckingIn,
-  loadingLocation,
-  lastCheckTime,
-  locationStatus,
-  locationAccuracy,
-  onCheckAction
+  isCheckingIn = false,
+  loadingLocation = false,
+  lastCheckTime = null,
+  locationStatus = "checking",
+  locationAccuracy = null,
+  onCheckAction = () => {}
 }) => {
   const isToday = (date: Date) => {
     const today = new Date();
-    return date.toDateString() === today.toDateString();
+    const eventDate = new Date(date);
+    return (
+      eventDate.getDate() === today.getDate() &&
+      eventDate.getMonth() === today.getMonth() &&
+      eventDate.getFullYear() === today.getFullYear()
+    );
   };
 
-  const eventIsToday = isToday(event.startDate);
+  const isTodayEvent = () => {
+    const today = new Date();
+    const startDate = new Date(event.startDate);
+    const endDate = new Date(event.endDate);
+    
+    // Check if today falls within the event period
+    return today >= startDate && today <= endDate;
+  };
+
+  const eventIsToday = isTodayEvent();
+
+  console.log("Event dates:", { 
+    startDate: event.startDate, 
+    endDate: event.endDate, 
+    today: new Date(), 
+    eventIsToday 
+  });
 
   return (
     <Card className="shadow-lg">
@@ -58,7 +79,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
             <div>
               <div className="font-medium">Date</div>
               <div className="text-sm text-muted-foreground">
-                {format(event.startDate, "dd/MM/yyyy")} - {format(event.endDate, "dd/MM/yyyy")}
+                {format(new Date(event.startDate), "dd/MM/yyyy")} - {format(new Date(event.endDate), "dd/MM/yyyy")}
               </div>
             </div>
           </div>
@@ -92,6 +113,12 @@ const TaskCard: React.FC<TaskCardProps> = ({
 
         {eventIsToday && (
           <div className="border-t pt-4">
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold mb-2">Check-in / Check-out</h3>
+              <p className="text-sm text-muted-foreground">
+                Effettua il check-in quando arrivi sul posto e il check-out quando termini il turno.
+              </p>
+            </div>
             <TaskCheckButton
               isCheckingIn={isCheckingIn}
               loadingLocation={loadingLocation}

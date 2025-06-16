@@ -15,12 +15,13 @@ const safeToDate = (dateValue: any): Date => {
 const TasksPage: React.FC = () => {
   const { tasks, loading } = useOperatorTasks();
   
-  // Mock event for demonstration when no tasks are available
+  // Mock event for demonstration when no tasks are available - SET FOR TODAY
+  const today = new Date();
   const mockEvent = {
     id: 1,
     title: "Milano Security Conference",
-    startDate: new Date("2025-05-05T09:00:00"),
-    endDate: new Date("2025-05-06T18:00:00"),
+    startDate: today, // Set to today
+    endDate: today,   // Set to today
     startTime: "09:00",
     endTime: "18:00",
     location: "Via Milano 123, Milano, MI",
@@ -28,7 +29,6 @@ const TasksPage: React.FC = () => {
   };
   
   // Select the most relevant event to display using proper prioritization
-  const today = new Date();
   
   // Ensure all task dates are properly converted
   const validTasks = tasks.map(task => ({
@@ -58,6 +58,8 @@ const TasksPage: React.FC = () => {
     locationAccuracy,
     handleCheckAction
   } = useOperatorAttendance({ eventId: currentEvent.id });
+
+  console.log("Current event being displayed:", currentEvent);
 
   return (
     <OperatorLayout>
