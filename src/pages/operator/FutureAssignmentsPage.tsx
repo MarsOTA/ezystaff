@@ -2,7 +2,7 @@
 import React from "react";
 import OperatorLayout from "@/components/OperatorLayout";
 import { useOperatorTasks } from "@/hooks/useOperatorTasks";
-import TaskCard from "@/components/operator/tasks/TaskCard";
+import AssignmentCard from "@/components/operator/tasks/AssignmentCard";
 
 // Utility per la data "oggi" senza ora/minuti
 const isFutureEvent = (startDate: Date) => {
@@ -30,7 +30,7 @@ const FutureAssignmentsPage: React.FC = () => {
             ) : (
               <div className="grid gap-4">
                 {futureTasks.map(event => (
-                  <TaskCard key={event.id} event={event} />
+                  <AssignmentCard key={event.id} event={event} />
                 ))}
               </div>
             )}

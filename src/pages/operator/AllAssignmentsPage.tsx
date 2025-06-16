@@ -2,7 +2,7 @@
 import React from "react";
 import OperatorLayout from "@/components/OperatorLayout";
 import { useOperatorTasks } from "@/hooks/useOperatorTasks";
-import TaskCard from "@/components/operator/tasks/TaskCard";
+import AssignmentCard from "@/components/operator/tasks/AssignmentCard";
 
 const AllAssignmentsPage: React.FC = () => {
   const { tasks, loading } = useOperatorTasks();
@@ -21,7 +21,7 @@ const AllAssignmentsPage: React.FC = () => {
             ) : (
               <div className="grid gap-4">
                 {sortedTasks.map(event => (
-                  <TaskCard key={event.id} event={event} />
+                  <AssignmentCard key={event.id} event={event} />
                 ))}
               </div>
             )}
