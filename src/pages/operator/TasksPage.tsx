@@ -27,7 +27,7 @@ const TasksPage: React.FC = () => {
     startTime: "09:00",
     endTime: "18:00",
     location: "Via Milano 123, Milano, MI",
-    shifts: ["Mattina (09:00-13:00)", "Pomeriggio (14:00-18:00)"]
+    shifts: ["Mattina (09:00-13:00)", "Pomeriggio (14:00-18:00)"] // Fixed: string array format
   };
   
   // Select the most relevant event to display using proper prioritization

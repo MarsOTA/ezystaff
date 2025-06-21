@@ -2,7 +2,6 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
 
 interface Task {
   id: number;
@@ -94,25 +93,42 @@ export const useOperatorTasks = () => {
         // Get events assigned to this operator
         const operatorTasks = events
           .filter((event: any) => normalizedAssignedEvents.includes(Number(event.id)))
-          .map((event: any) => ({
-            id: Number(event.id),
-            title: event.title,
-            startDate: new Date(event.startDate),
-            endDate: new Date(event.endDate),
-            // Format times with consistent 24-hour format
-            startTime: new Date(event.startDate).toLocaleTimeString([], { 
-              hour: '2-digit', 
-              minute: '2-digit',
-              hour12: false 
-            }),
-            endTime: new Date(event.endDate).toLocaleTimeString([], { 
-              hour: '2-digit', 
-              minute: '2-digit',
-              hour12: false 
-            }),
-            location: event.location || "Via Roma 123, Milano, MI", // Improved default location
-            shifts: event.shifts || ["Mattina (09:00-13:00)", "Pomeriggio (14:00-18:00)"] // Default shifts
-          }));
+          .map((event: any) => {
+            // Convert shifts from object format to string format
+            let shiftsArray = ["Mattina (09:00-13:00)", "Pomeriggio (14:00-18:00)"]; // Default
+            
+            if (event.shifts && Array.isArray(event.shifts)) {
+              shiftsArray = event.shifts.map((shift: any) => {
+                if (typeof shift === 'string') {
+                  return shift;
+                } else if (shift && typeof shift === 'object' && shift.startTime && shift.endTime) {
+                  // Convert shift object to string representation
+                  return `Turno (${shift.startTime}-${shift.endTime})`;
+                }
+                return "Turno completo";
+              });
+            }
+            
+            return {
+              id: Number(event.id),
+              title: event.title,
+              startDate: new Date(event.startDate),
+              endDate: new Date(event.endDate),
+              // Format times with consistent 24-hour format
+              startTime: new Date(event.startDate).toLocaleTimeString([], { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: false 
+              }),
+              endTime: new Date(event.endDate).toLocaleTimeString([], { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: false 
+              }),
+              location: event.location || "Via Roma 123, Milano, MI", // Improved default location
+              shifts: shiftsArray
+            };
+          });
         
         console.log("Final operator tasks:", operatorTasks);
         setTasks(operatorTasks);
