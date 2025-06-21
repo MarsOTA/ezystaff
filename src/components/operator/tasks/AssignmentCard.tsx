@@ -3,7 +3,10 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar, Clock } from "lucide-react";
 import { format } from "date-fns";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import TaskLocation from "./TaskLocation";
+import AttendanceRecords from "./AttendanceRecords";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface AssignmentCardProps {
   event: {
@@ -19,6 +22,8 @@ interface AssignmentCardProps {
 }
 
 const AssignmentCard: React.FC<AssignmentCardProps> = ({ event }) => {
+  const { user } = useAuth();
+
   return (
     <Card className="shadow-md">
       <CardHeader>
@@ -51,6 +56,20 @@ const AssignmentCard: React.FC<AssignmentCardProps> = ({ event }) => {
             </ul>
           </div>
         </div>
+
+        <Accordion type="single" collapsible className="w-full">
+          <AccordionItem value="attendance">
+            <AccordionTrigger>
+              Visualizza timbrature e ore lavorate
+            </AccordionTrigger>
+            <AccordionContent>
+              <AttendanceRecords 
+                eventId={event.id} 
+                operatorEmail={user?.email || ""} 
+              />
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
       </CardContent>
     </Card>
   );
