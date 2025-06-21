@@ -79,7 +79,8 @@ const TasksPage: React.FC = () => {
     loadingLocation,
     lastCheckTime,
     locationAccuracy,
-    handleCheckAction
+    handleCheckAction,
+    isCurrentlyCheckedIn
   } = useOperatorAttendance({ eventId: currentEvent.id });
 
   console.log("Attendance hook result:", {
@@ -87,7 +88,8 @@ const TasksPage: React.FC = () => {
     locationStatus,
     loadingLocation,
     lastCheckTime,
-    locationAccuracy
+    locationAccuracy,
+    isCurrentlyCheckedIn
   });
 
   if (loading) {

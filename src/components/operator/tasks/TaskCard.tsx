@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar, Clock, MapPin } from "lucide-react";
@@ -68,6 +67,25 @@ const TaskCard: React.FC<TaskCardProps> = ({
     eventIsToday 
   });
 
+  // Determina se l'operatore è attualmente in check-in
+  const isCurrentlyCheckedIn = React.useMemo(() => {
+    const records = localStorage.getItem("attendance_records");
+    if (!records) return false;
+
+    try {
+      const parsedRecords = JSON.parse(records);
+      const eventRecords = parsedRecords
+        .filter((record: any) => record.eventId === event.id)
+        .sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+      if (eventRecords.length === 0) return false;
+      return eventRecords[0].type === "check-in";
+    } catch (error) {
+      console.error("Error checking attendance status:", error);
+      return false;
+    }
+  }, [event.id, lastCheckTime]);
+
   return (
     <Card className="shadow-lg">
       <CardHeader>
@@ -132,6 +150,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
               locationStatus={locationStatus}
               locationAccuracy={locationAccuracy}
               onCheckAction={onCheckAction}
+              isCurrentlyCheckedIn={isCurrentlyCheckedIn}
             />
           </div>
         )}

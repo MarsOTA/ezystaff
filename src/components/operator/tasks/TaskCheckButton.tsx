@@ -11,6 +11,7 @@ interface TaskCheckButtonProps {
   locationStatus: "checking" | "valid" | "invalid" | "error";
   locationAccuracy: number | null;
   onCheckAction: () => void;
+  isCurrentlyCheckedIn?: boolean;
 }
 
 const TaskCheckButton: React.FC<TaskCheckButtonProps> = ({
@@ -19,7 +20,8 @@ const TaskCheckButton: React.FC<TaskCheckButtonProps> = ({
   lastCheckTime,
   locationStatus,
   locationAccuracy,
-  onCheckAction
+  onCheckAction,
+  isCurrentlyCheckedIn = false
 }) => {
   const getLocationStatusColor = () => {
     switch (locationStatus) {
@@ -40,6 +42,17 @@ const TaskCheckButton: React.FC<TaskCheckButtonProps> = ({
     }
   };
 
+  const getButtonText = () => {
+    if (isCheckingIn) {
+      return isCurrentlyCheckedIn ? "Check-out in corso..." : "Check-in in corso...";
+    }
+    return isCurrentlyCheckedIn ? "Check-out" : "Check-in";
+  };
+
+  const getButtonVariant = () => {
+    return isCurrentlyCheckedIn ? "destructive" : "default";
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center space-x-2">
@@ -48,6 +61,17 @@ const TaskCheckButton: React.FC<TaskCheckButtonProps> = ({
           {getLocationStatusText()}
         </span>
       </div>
+
+      {isCurrentlyCheckedIn && (
+        <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+          <div className="flex items-center space-x-2 text-green-700">
+            <Clock className="h-4 w-4" />
+            <span className="text-sm font-medium">
+              Attualmente in servizio
+            </span>
+          </div>
+        </div>
+      )}
 
       {lastCheckTime && (
         <div className="flex items-center space-x-2 text-sm text-muted-foreground">
@@ -63,16 +87,17 @@ const TaskCheckButton: React.FC<TaskCheckButtonProps> = ({
         disabled={isCheckingIn || loadingLocation || locationStatus === "invalid"}
         className="w-full"
         size="lg"
+        variant={getButtonVariant()}
       >
         {isCheckingIn ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            {lastCheckTime ? "Check-out in corso..." : "Check-in in corso..."}
+            {getButtonText()}
           </>
         ) : (
           <>
             <Clock className="mr-2 h-4 w-4" />
-            {lastCheckTime ? "Check-out" : "Check-in"}
+            {getButtonText()}
           </>
         )}
       </Button>
