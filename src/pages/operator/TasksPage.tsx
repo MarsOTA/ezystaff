@@ -17,17 +17,17 @@ const TasksPage: React.FC = () => {
   
   console.log("useOperatorTasks result:", { tasks, loading, tasksLength: tasks?.length });
   
-  // Mock event for demonstration when no tasks are available - SET FOR TODAY
+  // Mock event for demonstration when no tasks are available - SET FOR TODAY with correct data
   const today = new Date();
   const mockEvent = {
     id: 1,
-    title: "Milano Security Conference",
+    title: "Conferenza Sicurezza Milano",
     startDate: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 9, 0, 0),
     endDate: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 18, 0, 0),
     startTime: "09:00",
     endTime: "18:00",
-    location: "Via Milano 123, Milano, MI",
-    shifts: ["Mattina (09:00-13:00)", "Pomeriggio (14:00-18:00)"] // Fixed: string array format
+    location: "Centro Congressi Milano, Via Conferenze 15, Milano, MI",
+    shifts: ["Mattina (09:00-13:00)", "Pomeriggio (14:00-18:00)"]
   };
   
   // Select the most relevant event to display using proper prioritization
@@ -68,7 +68,8 @@ const TasksPage: React.FC = () => {
       id: currentEvent.id,
       title: currentEvent.title,
       startDate: currentEvent.startDate,
-      endDate: currentEvent.endDate
+      endDate: currentEvent.endDate,
+      location: currentEvent.location
     }
   });
   

@@ -34,19 +34,20 @@ export const useOperatorTasks = () => {
 
         // First attempt to fetch from Supabase
         if (user.email === "mario.rossi@example.com") {
-          // Special case for Mario to show the "Mare nostro" event with the correct address
+          // Special case for Mario to show the "Mare nostro" event with today's date and correct data
+          const today = new Date();
           const mareNostroEvent = {
             id: 2,
             title: "Mare nostro",
-            startDate: new Date("2025-05-05T09:00:00"),
-            endDate: new Date("2025-05-05T18:00:00"),
+            startDate: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 9, 0, 0),
+            endDate: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 18, 0, 0),
             startTime: "09:00",
             endTime: "18:00",
             location: "Via Napoli 45, Napoli, NA",
             shifts: ["Mattina (09:00-13:00)", "Pomeriggio (14:00-18:00)"]
           };
           
-          console.log("Setting Mare nostro event for Mario");
+          console.log("Setting Mare nostro event for Mario with today's date");
           setTasks([mareNostroEvent]);
           setLoading(false);
           return;
