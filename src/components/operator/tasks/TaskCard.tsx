@@ -34,28 +34,34 @@ const TaskCard: React.FC<TaskCardProps> = ({
   locationAccuracy = null,
   onCheckAction = () => {}
 }) => {
-  const isToday = (date: Date) => {
-    const today = new Date();
-    const eventDate = new Date(date);
-    return (
-      eventDate.getDate() === today.getDate() &&
-      eventDate.getMonth() === today.getMonth() &&
-      eventDate.getFullYear() === today.getFullYear()
-    );
-  };
-
   const isTodayEvent = () => {
     const today = new Date();
-    const startDate = new Date(event.startDate);
-    const endDate = new Date(event.endDate);
+    const todayDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
     
-    // Check if today falls within the event period
-    return today >= startDate && today <= endDate;
+    const startDate = new Date(event.startDate);
+    const startDateOnly = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+    
+    const endDate = new Date(event.endDate);
+    const endDateOnly = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+    
+    // Check if today falls within the event period (inclusive)
+    const isWithinPeriod = todayDateOnly >= startDateOnly && todayDateOnly <= endDateOnly;
+    
+    console.log("Date comparison:", {
+      today: todayDateOnly,
+      eventStart: startDateOnly,
+      eventEnd: endDateOnly,
+      isWithinPeriod,
+      eventTitle: event.title
+    });
+    
+    return isWithinPeriod;
   };
 
   const eventIsToday = isTodayEvent();
 
-  console.log("Event dates:", { 
+  console.log("TaskCard render:", { 
+    eventTitle: event.title,
     startDate: event.startDate, 
     endDate: event.endDate, 
     today: new Date(), 
