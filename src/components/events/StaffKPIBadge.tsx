@@ -64,45 +64,46 @@ const StaffKPIBadge = ({ event, operators, updateTrigger }: StaffKPIBadgeProps) 
     };
   }, [event.id]);
 
-  // Recalculate KPI whenever operators or triggers change
+  // Calculate hours-based KPI
   const kpi = useMemo(() => {
     const currentOperators = localOperators.length > 0 ? localOperators : operators;
     
-    console.log(`StaffKPIBadge: Calculating KPI for event ${event.id}`, {
+    console.log(`StaffKPIBadge: Calculating hours KPI for event ${event.id}`, {
       eventId: event.id,
       operatorsCount: currentOperators.length,
       updateTrigger,
       localUpdateTrigger,
-      operatorsData: currentOperators.map(op => ({ 
-        id: op.id, 
-        name: op.name, 
-        assignedEvents: op.assignedEvents 
-      }))
+      totalScheduledHours: event.totalScheduledHours
     });
 
-    const assignedOperatorsCount = currentOperators.filter((op: any) => 
-      op.assignedEvents && Array.isArray(op.assignedEvents) && op.assignedEvents.includes(event.id)
-    ).length;
+    // Get total planned hours from event scheduling
+    const totalPlannedHours = event.totalScheduledHours || 0;
 
-    // Calculate total required personnel from event data
-    const totalRequired = event.personnelCounts ? 
-      Object.values(event.personnelCounts).reduce((sum, count) => sum + count, 0) : 0;
+    // Calculate assigned hours based on operators assigned to this event
+    const assignedOperators = currentOperators.filter((op: any) => 
+      op.assignedEvents && Array.isArray(op.assignedEvents) && op.assignedEvents.includes(event.id)
+    );
+
+    // For now, assume each assigned operator works the full planned hours
+    // This is a simplified calculation - in a real scenario, you might have 
+    // more detailed shift assignments per operator
+    const assignedHours = assignedOperators.length * totalPlannedHours;
 
     const result = {
-      assigned: assignedOperatorsCount,
-      required: totalRequired,
-      percentage: totalRequired > 0 ? Math.round((assignedOperatorsCount / totalRequired) * 100) : 0
+      assigned: assignedHours,
+      total: totalPlannedHours,
+      percentage: totalPlannedHours > 0 ? Math.round((assignedHours / totalPlannedHours) * 100) : 0
     };
 
-    console.log(`StaffKPIBadge: KPI result for event ${event.id}:`, result);
+    console.log(`StaffKPIBadge: Hours KPI result for event ${event.id}:`, result);
     return result;
-  }, [event.id, event.personnelCounts, operators, localOperators, updateTrigger, localUpdateTrigger]);
+  }, [event.id, event.totalScheduledHours, operators, localOperators, updateTrigger, localUpdateTrigger]);
   
   return (
     <span 
       className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getKpiColorClass(kpi.percentage)}`}
     >
-      {kpi.assigned} / {kpi.required} ({kpi.percentage}%)
+      {kpi.assigned}h / {kpi.total}h ({kpi.percentage}%)
     </span>
   );
 };

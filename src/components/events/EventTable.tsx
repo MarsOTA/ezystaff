@@ -77,10 +77,9 @@ const EventTable: React.FC<EventTableProps> = ({
                     variant="outline"
                     size="sm"
                     onClick={(e) => handleSchedulingClick(e, event.id)}
-                    className="gap-1"
+                    title="Programmazione"
                   >
                     <Calendar className="h-3 w-3" />
-                    Programmazione
                   </Button>
                   <Button
                     variant="outline"
