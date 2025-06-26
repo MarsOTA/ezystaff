@@ -1,20 +1,14 @@
 
-import React from 'react';
-import { Event } from "@/types/event";
+import React from "react";
+import { format } from "date-fns";
+import { it } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2 } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { useOperatorData } from "@/hooks/useOperatorData";
-import { formatDateRange } from "@/utils/eventTableUtils";
-import StaffKPIBadge from "./StaffKPIBadge";
+import { Badge } from "@/components/ui/badge";
+import { Edit, Trash2, Calendar, Users } from "lucide-react";
+import { Event } from "@/types/event";
 import EventStatusBadge from "./EventStatusBadge";
+import StaffKPIBadge from "./StaffKPIBadge";
+import { useNavigate } from "react-router-dom";
 
 interface EventTableProps {
   events: Event[];
@@ -23,77 +17,87 @@ interface EventTableProps {
   onDeleteEvent: (e: React.MouseEvent, eventId: number) => void;
 }
 
-const EventTable = ({ events, onShowDetails, onEditEvent, onDeleteEvent }: EventTableProps) => {
-  const { operators, updateTrigger } = useOperatorData();
+const EventTable: React.FC<EventTableProps> = ({
+  events,
+  onShowDetails,
+  onEditEvent,
+  onDeleteEvent
+}) => {
+  const navigate = useNavigate();
 
-  console.log("EventTable render:", {
-    eventsCount: events.length,
-    operatorsCount: operators.length,
-    updateTrigger,
-    timestamp: new Date().toISOString()
-  });
+  const handleSchedulingClick = (e: React.MouseEvent, eventId: number) => {
+    e.stopPropagation();
+    navigate(`/events/scheduling/${eventId}`);
+  };
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Titolo Evento</TableHead>
-          <TableHead>Cliente</TableHead>
-          <TableHead>Data e Ora</TableHead>
-          <TableHead>Stato</TableHead>
-          <TableHead>Staff KPI</TableHead>
-          <TableHead className="text-right">Azioni</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {events.map((event) => (
-          <TableRow 
-            key={`${event.id}-${updateTrigger}`}
-            className="cursor-pointer hover:bg-muted/50" 
-            onClick={() => onShowDetails(event)}
-          >
-            <TableCell className="font-medium">{event.title}</TableCell>
-            <TableCell>{event.client}</TableCell>
-            <TableCell>{formatDateRange(event.startDate, event.endDate)}</TableCell>
-            <TableCell>
-              <EventStatusBadge status={event.status} />
-            </TableCell>
-            <TableCell>
-              <StaffKPIBadge 
-                event={event} 
-                operators={operators} 
-                updateTrigger={updateTrigger} 
-              />
-            </TableCell>
-            <TableCell className="text-right">
-              <div className="flex justify-end gap-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onEditEvent(e, event.id);
-                  }}
-                >
-                  <Edit className="h-4 w-4" />
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="text-red-500 hover:text-red-600" 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDeleteEvent(e, event.id);
-                  }}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+    <div className="overflow-x-auto">
+      <table className="w-full border-collapse">
+        <thead>
+          <tr className="border-b">
+            <th className="text-left p-4 font-medium">Titolo</th>
+            <th className="text-left p-4 font-medium">Cliente</th>
+            <th className="text-left p-4 font-medium">Data inizio</th>
+            <th className="text-left p-4 font-medium">Data fine</th>
+            <th className="text-left p-4 font-medium">Stato</th>
+            <th className="text-left p-4 font-medium">Staff</th>
+            <th className="text-left p-4 font-medium">Azioni</th>
+          </tr>
+        </thead>
+        <tbody>
+          {events.map((event) => (
+            <tr
+              key={event.id}
+              className="border-b hover:bg-muted/50 cursor-pointer"
+              onClick={() => onShowDetails(event)}
+            >
+              <td className="p-4 font-medium">{event.title}</td>
+              <td className="p-4">{event.client}</td>
+              <td className="p-4">
+                {format(event.startDate, "d MMM yyyy", { locale: it })}
+              </td>
+              <td className="p-4">
+                {format(event.endDate, "d MMM yyyy", { locale: it })}
+              </td>
+              <td className="p-4">
+                <EventStatusBadge status={event.status} />
+              </td>
+              <td className="p-4">
+                <StaffKPIBadge event={event} />
+              </td>
+              <td className="p-4">
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={(e) => handleSchedulingClick(e, event.id)}
+                    className="gap-1"
+                  >
+                    <Calendar className="h-3 w-3" />
+                    Programmazione
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={(e) => onEditEvent(e, event.id)}
+                  >
+                    <Edit className="h-3 w-3" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={(e) => onDeleteEvent(e, event.id)}
+                    className="text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 };
 

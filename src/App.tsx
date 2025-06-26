@@ -1,3 +1,4 @@
+
 import { Routes, Route } from "react-router-dom";
 import "./App.css";
 import Index from "./pages/Index";
@@ -14,6 +15,7 @@ import Login from "./pages/Login";
 import ProtectedRoute from "./components/ProtectedRoute";
 import OperatorRoute from "./components/OperatorRoute";
 import EventCreate from "./pages/EventCreate";
+import EventScheduling from "./pages/EventScheduling";
 import TasksPage from "./pages/operator/TasksPage";
 import ProfilePage from "./pages/operator/ProfilePage";
 import AttendancePage from "./pages/operator/AttendancePage";
@@ -38,6 +40,10 @@ function App() {
       <Route
         path="/events/create/:id"
         element={<ProtectedRoute component={EventCreate} />}
+      />
+      <Route
+        path="/events/scheduling/:eventId"
+        element={<ProtectedRoute component={EventScheduling} />}
       />
       <Route
         path="/calendar"

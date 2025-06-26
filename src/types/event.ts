@@ -7,6 +7,13 @@ export interface Shift {
   operatorId?: number;
 }
 
+export interface DaySchedule {
+  date: Date;
+  startTime: string;
+  endTime: string;
+  dailyHours: number;
+}
+
 export interface Event {
   id: number;
   title: string;
@@ -25,6 +32,8 @@ export interface Event {
   hourlyRateSell?: number;
   personnelCounts?: Record<string, number>;
   shifts?: Shift[];
+  daySchedules?: DaySchedule[];
+  totalScheduledHours?: number;
 }
 
 export const EVENTS_STORAGE_KEY = "app_events_data";
