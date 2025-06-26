@@ -9,6 +9,7 @@ import { Event } from "@/types/event";
 import EventStatusBadge from "./EventStatusBadge";
 import StaffKPIBadge from "./StaffKPIBadge";
 import { useNavigate } from "react-router-dom";
+import { useOperatorData } from "@/hooks/useOperatorData";
 
 interface EventTableProps {
   events: Event[];
@@ -24,6 +25,7 @@ const EventTable: React.FC<EventTableProps> = ({
   onDeleteEvent
 }) => {
   const navigate = useNavigate();
+  const { operators, updateTrigger } = useOperatorData();
 
   const handleSchedulingClick = (e: React.MouseEvent, eventId: number) => {
     e.stopPropagation();
@@ -63,7 +65,11 @@ const EventTable: React.FC<EventTableProps> = ({
                 <EventStatusBadge status={event.status} />
               </td>
               <td className="p-4">
-                <StaffKPIBadge event={event} />
+                <StaffKPIBadge 
+                  event={event} 
+                  operators={operators}
+                  updateTrigger={updateTrigger}
+                />
               </td>
               <td className="p-4">
                 <div className="flex items-center space-x-2">
