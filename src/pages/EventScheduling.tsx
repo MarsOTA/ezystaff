@@ -17,6 +17,8 @@ interface DaySchedule {
   date: Date;
   startTime: string;
   endTime: string;
+  lunchBreakStartTime: string;
+  lunchBreakEndTime: string;
   dailyHours: number;
 }
 
@@ -73,12 +75,14 @@ const EventScheduling = () => {
 
     for (let i = 0; i <= daysDifference; i++) {
       const currentDate = addDays(startDateOnly, i);
-      const dailyHours = calculateDailyHours(defaultStartTime, defaultEndTime);
+      const dailyHours = calculateDailyHours(defaultStartTime, defaultEndTime, "12:00", "13:00");
       
       schedules.push({
         date: currentDate,
         startTime: defaultStartTime,
         endTime: defaultEndTime,
+        lunchBreakStartTime: "12:00",
+        lunchBreakEndTime: "13:00",
         dailyHours
       });
     }
@@ -87,17 +91,25 @@ const EventScheduling = () => {
     updateTotalHours(schedules);
   };
 
-  const calculateDailyHours = (startTime: string, endTime: string): number => {
+  const calculateDailyHours = (startTime: string, endTime: string, lunchStart: string, lunchEnd: string): number => {
     const [startHour, startMinute] = startTime.split(':').map(Number);
     const [endHour, endMinute] = endTime.split(':').map(Number);
+    const [lunchStartHour, lunchStartMinute] = lunchStart.split(':').map(Number);
+    const [lunchEndHour, lunchEndMinute] = lunchEnd.split(':').map(Number);
     
     const startTimeMinutes = startHour * 60 + startMinute;
     const endTimeMinutes = endHour * 60 + endMinute;
+    const lunchStartMinutes = lunchStartHour * 60 + lunchStartMinute;
+    const lunchEndMinutes = lunchEndHour * 60 + lunchEndMinute;
     
     let dailyMinutes = endTimeMinutes - startTimeMinutes;
     if (dailyMinutes < 0) {
       dailyMinutes += 24 * 60; // Add 24 hours in minutes for next day
     }
+    
+    // Subtract lunch break duration
+    const lunchBreakMinutes = lunchEndMinutes - lunchStartMinutes;
+    dailyMinutes = Math.max(0, dailyMinutes - lunchBreakMinutes);
     
     return Math.max(0, dailyMinutes / 60);
   };
@@ -107,14 +119,17 @@ const EventScheduling = () => {
     setTotalHours(total);
   };
 
-  const handleTimeChange = (index: number, field: 'startTime' | 'endTime', value: string) => {
+  const handleTimeChange = (index: number, field: keyof DaySchedule, value: string) => {
     const updatedSchedules = [...daySchedules];
-    updatedSchedules[index][field] = value;
+    updatedSchedules[index][field] = value as any;
     
     // Recalculate daily hours for this day
+    const schedule = updatedSchedules[index];
     const dailyHours = calculateDailyHours(
-      updatedSchedules[index].startTime,
-      updatedSchedules[index].endTime
+      schedule.startTime,
+      schedule.endTime,
+      schedule.lunchBreakStartTime,
+      schedule.lunchBreakEndTime
     );
     updatedSchedules[index].dailyHours = dailyHours;
     
@@ -192,34 +207,56 @@ const EventScheduling = () => {
                 <div className="grid gap-4">
                   {daySchedules.map((schedule, index) => (
                     <Card key={index} className="p-4">
-                      <div className="grid md:grid-cols-4 gap-4 items-center">
+                      <div className="space-y-4">
                         <div className="font-medium">
                           {format(schedule.date, "EEEE d MMMM yyyy", { locale: it })}
                         </div>
                         
-                        <div className="space-y-2">
-                          <Label htmlFor={`start-${index}`}>Ora inizio</Label>
-                          <Input
-                            id={`start-${index}`}
-                            type="time"
-                            value={schedule.startTime}
-                            onChange={(e) => handleTimeChange(index, 'startTime', e.target.value)}
-                          />
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <Label htmlFor={`end-${index}`}>Ora fine</Label>
-                          <Input
-                            id={`end-${index}`}
-                            type="time"
-                            value={schedule.endTime}
-                            onChange={(e) => handleTimeChange(index, 'endTime', e.target.value)}
-                          />
-                        </div>
-                        
-                        <div className="flex items-center gap-2 text-sm font-medium">
-                          <Clock className="h-4 w-4" />
-                          {schedule.dailyHours.toFixed(1)} ore
+                        <div className="grid md:grid-cols-6 gap-4 items-end">
+                          <div className="space-y-2">
+                            <Label htmlFor={`start-${index}`}>Ora inizio</Label>
+                            <Input
+                              id={`start-${index}`}
+                              type="time"
+                              value={schedule.startTime}
+                              onChange={(e) => handleTimeChange(index, 'startTime', e.target.value)}
+                            />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label htmlFor={`end-${index}`}>Ora fine</Label>
+                            <Input
+                              id={`end-${index}`}
+                              type="time"
+                              value={schedule.endTime}
+                              onChange={(e) => handleTimeChange(index, 'endTime', e.target.value)}
+                            />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label htmlFor={`lunch-start-${index}`}>Pausa pranzo - Inizio</Label>
+                            <Input
+                              id={`lunch-start-${index}`}
+                              type="time"
+                              value={schedule.lunchBreakStartTime}
+                              onChange={(e) => handleTimeChange(index, 'lunchBreakStartTime', e.target.value)}
+                            />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label htmlFor={`lunch-end-${index}`}>Pausa pranzo - Fine</Label>
+                            <Input
+                              id={`lunch-end-${index}`}
+                              type="time"
+                              value={schedule.lunchBreakEndTime}
+                              onChange={(e) => handleTimeChange(index, 'lunchBreakEndTime', e.target.value)}
+                            />
+                          </div>
+                          
+                          <div className="flex items-center gap-2 text-sm font-medium">
+                            <Clock className="h-4 w-4" />
+                            {schedule.dailyHours.toFixed(1)} ore
+                          </div>
                         </div>
                       </div>
                     </Card>

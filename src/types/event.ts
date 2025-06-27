@@ -11,6 +11,8 @@ export interface DaySchedule {
   date: Date;
   startTime: string;
   endTime: string;
+  lunchBreakStartTime: string;
+  lunchBreakEndTime: string;
   dailyHours: number;
 }
 
