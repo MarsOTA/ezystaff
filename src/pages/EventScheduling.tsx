@@ -121,7 +121,15 @@ const EventScheduling = () => {
 
   const handleTimeChange = (index: number, field: keyof DaySchedule, value: string) => {
     const updatedSchedules = [...daySchedules];
-    updatedSchedules[index][field] = value as any;
+    
+    // Handle different field types properly
+    if (field === 'date') {
+      // This shouldn't happen in our current UI, but handle it for type safety
+      return;
+    } else {
+      // All other fields are strings
+      (updatedSchedules[index] as any)[field] = value;
+    }
     
     // Recalculate daily hours for this day
     const schedule = updatedSchedules[index];
