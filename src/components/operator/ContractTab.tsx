@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { ExtendedOperator } from "@/types/operator";
@@ -9,6 +8,7 @@ import ContractDatesFields from "./contract/ContractDatesFields";
 import ContractClauseFields from "./contract/ContractClauseFields";
 import ContractTrainerFields from "./contract/ContractTrainerFields";
 import ContractFileUpload from "./contract/ContractFileUpload";
+import ContractSigningComponent from "./contract/ContractSigningComponent";
 
 interface ContractTabProps {
   operator: ExtendedOperator;
@@ -109,6 +109,10 @@ const ContractTab: React.FC<ContractTabProps> = (props) => {
         unilavFile={unilavFile}
         setUnilavFile={setUnilavFile}
       />
+      
+      {/* New Contract Signing Component */}
+      <ContractSigningComponent operator={props.operator} />
+      
       <div className="flex gap-2">
         <Button variant="secondary" onClick={props.onGenerateContract}>
           Genera Contratto
