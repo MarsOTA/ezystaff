@@ -13,7 +13,7 @@ interface SignatureStatus {
 export const useContractSigning = (operator: ExtendedOperator) => {
   const { toast } = useToast();
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
-  const [isSendingToDocuSign, setIsSendingToDocuSign] = useState(false);
+  const [isSendingToYousign, setIsSendingToYousign] = useState(false);
   const [signatureStatus, setSignatureStatus] = useState<SignatureStatus>({ 
     status: 'not_sent' 
   });
@@ -61,7 +61,7 @@ export const useContractSigning = (operator: ExtendedOperator) => {
     }
   };
 
-  const sendToDocuSign = async () => {
+  const sendToYousign = async () => {
     if (!contractPdfUrl) {
       toast({
         title: "Errore",
@@ -71,9 +71,9 @@ export const useContractSigning = (operator: ExtendedOperator) => {
       return;
     }
 
-    setIsSendingToDocuSign(true);
+    setIsSendingToYousign(true);
     try {
-      await ContractSigningAPI.sendToDocuSign({
+      await ContractSigningAPI.sendToYousign({
         operatorId: operator.id,
         operatorName: operator.name,
         operatorEmail: operator.email,
@@ -88,18 +88,18 @@ export const useContractSigning = (operator: ExtendedOperator) => {
       });
 
       toast({
-        title: "Inviato a DocuSign",
-        description: `Il contratto è stato inviato a ${operator.email} per la firma.`,
+        title: "Inviato a Yousign",
+        description: `Il contratto è stato inviato a ${operator.email} per la firma tramite Yousign.`,
       });
     } catch (error) {
-      console.error('Error sending to DocuSign:', error);
+      console.error('Error sending to Yousign:', error);
       toast({
         title: "Errore",
-        description: "Errore nell'invio del contratto per la firma.",
+        description: "Errore nell'invio del contratto per la firma tramite Yousign.",
         variant: "destructive",
       });
     } finally {
-      setIsSendingToDocuSign(false);
+      setIsSendingToYousign(false);
     }
   };
 
@@ -142,11 +142,11 @@ export const useContractSigning = (operator: ExtendedOperator) => {
 
   return {
     isGeneratingPdf,
-    isSendingToDocuSign,
+    isSendingToYousign,
     signatureStatus,
     contractPdfUrl,
     generateContractPdf,
-    sendToDocuSign,
+    sendToYousign,
     checkSignatureStatus,
     downloadSignedPdf
   };

@@ -8,7 +8,7 @@ interface GenerateContractRequest {
   signaturePlaceholder: string;
 }
 
-interface SendDocuSignRequest {
+interface SendYousignRequest {
   operatorId: number;
   operatorName: string;
   operatorEmail: string;
@@ -22,6 +22,8 @@ interface SignatureStatusResponse {
   signedPdfUrl?: string;
   lastUpdated?: string;
 }
+
+const YOUSIGN_API_KEY = '5FHKNCViD3U0KiqJRWiSBCiCXrtBl5Gr';
 
 export class ContractSigningAPI {
   static async generateContract(data: GenerateContractRequest): Promise<Blob> {
@@ -40,24 +42,29 @@ export class ContractSigningAPI {
     return response.blob();
   }
 
-  static async sendToDocuSign(data: SendDocuSignRequest): Promise<any> {
-    const response = await fetch('/api/send-docusign', {
+  static async sendToYousign(data: SendYousignRequest): Promise<any> {
+    const response = await fetch('/api/send-yousign', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${YOUSIGN_API_KEY}`,
       },
       body: JSON.stringify(data),
     });
 
     if (!response.ok) {
-      throw new Error(`Failed to send to DocuSign: ${response.statusText}`);
+      throw new Error(`Failed to send to Yousign: ${response.statusText}`);
     }
 
     return response.json();
   }
 
   static async getSignatureStatus(operatorId: number): Promise<SignatureStatusResponse> {
-    const response = await fetch(`/api/get-signature-status?operatorId=${operatorId}`);
+    const response = await fetch(`/api/get-signature-status?operatorId=${operatorId}`, {
+      headers: {
+        'Authorization': `Bearer ${YOUSIGN_API_KEY}`,
+      }
+    });
 
     if (!response.ok) {
       throw new Error(`Failed to get signature status: ${response.statusText}`);
@@ -71,6 +78,7 @@ export class ContractSigningAPI {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${YOUSIGN_API_KEY}`,
       },
       body: JSON.stringify({
         operatorId,
