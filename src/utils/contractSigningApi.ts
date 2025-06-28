@@ -1,4 +1,6 @@
 
+import { supabase } from "@/integrations/supabase/client";
+
 interface GenerateContractRequest {
   operatorId: number;
   operatorName: string;
@@ -30,26 +32,17 @@ export class ContractSigningAPI {
     console.log('🔵 Generating contract with data:', data);
     
     try {
-      const response = await fetch('/api/generate-contract', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
+      const { data: response, error } = await supabase.functions.invoke('generate-contract', {
+        body: data,
       });
 
-      console.log('🔵 Generate contract response status:', response.status);
-      console.log('🔵 Generate contract response ok:', response.ok);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('🔴 Generate contract error response:', errorText);
-        throw new Error(`Errore generazione contratto (${response.status}): ${errorText}`);
+      if (error) {
+        console.error('🔴 Generate contract error:', error);
+        throw new Error(`Errore generazione contratto: ${error.message}`);
       }
 
-      const blob = await response.blob();
-      console.log('🟢 Contract PDF generated successfully, size:', blob.size);
-      return blob;
+      console.log('🟢 Contract PDF generated successfully');
+      return new Blob([response]);
     } catch (error) {
       console.error('🔴 Error in generateContract:', error);
       throw error;
@@ -63,27 +56,20 @@ export class ContractSigningAPI {
     });
     
     try {
-      const response = await fetch('/api/send-yousign', {
-        method: 'POST',
+      const { data: response, error } = await supabase.functions.invoke('send-yousign', {
+        body: data,
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${YOUSIGN_API_KEY}`,
-        },
-        body: JSON.stringify(data),
+        }
       });
 
-      console.log('🔵 Send to Yousign response status:', response.status);
-      console.log('🔵 Send to Yousign response ok:', response.ok);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('🔴 Send to Yousign error response:', errorText);
-        throw new Error(`Errore invio Yousign (${response.status}): ${errorText}`);
+      if (error) {
+        console.error('🔴 Send to Yousign error:', error);
+        throw new Error(`Errore invio Yousign: ${error.message}`);
       }
 
-      const result = await response.json();
-      console.log('🟢 Sent to Yousign successfully:', result);
-      return result;
+      console.log('🟢 Sent to Yousign successfully:', response);
+      return response;
     } catch (error) {
       console.error('🔴 Error in sendToYousign:', error);
       throw error;
@@ -94,23 +80,20 @@ export class ContractSigningAPI {
     console.log('🔵 Getting signature status for operator:', operatorId);
     
     try {
-      const response = await fetch(`/api/get-signature-status?operatorId=${operatorId}`, {
+      const { data: response, error } = await supabase.functions.invoke('get-signature-status', {
+        body: { operatorId },
         headers: {
           'Authorization': `Bearer ${YOUSIGN_API_KEY}`,
         }
       });
 
-      console.log('🔵 Get signature status response status:', response.status);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('🔴 Get signature status error:', errorText);
-        throw new Error(`Errore verifica stato firma (${response.status}): ${errorText}`);
+      if (error) {
+        console.error('🔴 Get signature status error:', error);
+        throw new Error(`Errore verifica stato firma: ${error.message}`);
       }
 
-      const result = await response.json();
-      console.log('🟢 Signature status retrieved:', result);
-      return result;
+      console.log('🟢 Signature status retrieved:', response);
+      return response;
     } catch (error) {
       console.error('🔴 Error in getSignatureStatus:', error);
       throw error;
@@ -121,29 +104,23 @@ export class ContractSigningAPI {
     console.log('🔵 Getting signed PDF for operator:', operatorId);
     
     try {
-      const response = await fetch('/api/get-signed-pdf', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${YOUSIGN_API_KEY}`,
-        },
-        body: JSON.stringify({
+      const { data: response, error } = await supabase.functions.invoke('get-signed-pdf', {
+        body: {
           operatorId,
           signedPdfUrl
-        }),
+        },
+        headers: {
+          'Authorization': `Bearer ${YOUSIGN_API_KEY}`,
+        }
       });
 
-      console.log('🔵 Get signed PDF response status:', response.status);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('🔴 Get signed PDF error:', errorText);
-        throw new Error(`Errore download PDF firmato (${response.status}): ${errorText}`);
+      if (error) {
+        console.error('🔴 Get signed PDF error:', error);
+        throw new Error(`Errore download PDF firmato: ${error.message}`);
       }
 
-      const blob = await response.blob();
-      console.log('🟢 Signed PDF downloaded successfully, size:', blob.size);
-      return blob;
+      console.log('🟢 Signed PDF downloaded successfully');
+      return new Blob([response]);
     } catch (error) {
       console.error('🔴 Error in getSignedPdf:', error);
       throw error;
