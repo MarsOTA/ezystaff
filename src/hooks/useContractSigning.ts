@@ -31,7 +31,9 @@ export const useContractSigning = (operator: ExtendedOperator) => {
   }, [signatureStatus.status]);
 
   const generateContractPdf = async () => {
+    console.log('🔵 Starting contract PDF generation for operator:', operator.name);
     setIsGeneratingPdf(true);
+    
     try {
       const blob = await ContractSigningAPI.generateContract({
         operatorId: operator.id,
@@ -44,16 +46,17 @@ export const useContractSigning = (operator: ExtendedOperator) => {
 
       const url = URL.createObjectURL(blob);
       setContractPdfUrl(url);
+      console.log('🟢 Contract PDF generated and URL created');
       
       toast({
         title: "PDF Generato",
         description: "Il contratto PDF è stato generato con successo.",
       });
-    } catch (error) {
-      console.error('Error generating contract PDF:', error);
+    } catch (error: any) {
+      console.error('🔴 Error generating contract PDF:', error);
       toast({
-        title: "Errore",
-        description: "Errore nella generazione del PDF del contratto.",
+        title: "Errore Generazione PDF",
+        description: error.message || "Errore nella generazione del PDF del contratto.",
         variant: "destructive",
       });
     } finally {
@@ -62,7 +65,12 @@ export const useContractSigning = (operator: ExtendedOperator) => {
   };
 
   const sendToYousign = async () => {
+    console.log('🔵 Starting Yousign sending process');
+    console.log('🔵 Contract PDF URL exists:', !!contractPdfUrl);
+    console.log('🔵 Operator data:', { id: operator.id, name: operator.name, email: operator.email });
+    
     if (!contractPdfUrl) {
+      console.log('🔴 No contract PDF URL available');
       toast({
         title: "Errore",
         description: "Genera prima il PDF del contratto.",
@@ -72,6 +80,7 @@ export const useContractSigning = (operator: ExtendedOperator) => {
     }
 
     setIsSendingToYousign(true);
+    
     try {
       await ContractSigningAPI.sendToYousign({
         operatorId: operator.id,
@@ -87,15 +96,23 @@ export const useContractSigning = (operator: ExtendedOperator) => {
         lastUpdated: new Date().toISOString()
       });
 
+      console.log('🟢 Contract sent to Yousign successfully');
       toast({
         title: "Inviato a Yousign",
         description: `Il contratto è stato inviato a ${operator.email} per la firma tramite Yousign.`,
       });
-    } catch (error) {
-      console.error('Error sending to Yousign:', error);
+    } catch (error: any) {
+      console.error('🔴 Error sending to Yousign:', error);
+      
+      // Messaggio di errore più dettagliato
+      let errorMessage = "Errore nell'invio del contratto per la firma tramite Yousign.";
+      if (error.message) {
+        errorMessage = error.message;
+      }
+      
       toast({
-        title: "Errore",
-        description: "Errore nell'invio del contratto per la firma tramite Yousign.",
+        title: "Errore Invio Yousign",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -104,17 +121,25 @@ export const useContractSigning = (operator: ExtendedOperator) => {
   };
 
   const checkSignatureStatus = async () => {
+    console.log('🔵 Checking signature status for operator:', operator.id);
+    
     try {
       const status = await ContractSigningAPI.getSignatureStatus(operator.id);
       setSignatureStatus(status);
-    } catch (error) {
-      console.error('Error checking signature status:', error);
+      console.log('🟢 Signature status updated:', status);
+    } catch (error: any) {
+      console.error('🔴 Error checking signature status:', error);
     }
   };
 
   const downloadSignedPdf = async () => {
-    if (!signatureStatus.signedPdfUrl) return;
+    if (!signatureStatus.signedPdfUrl) {
+      console.log('🔴 No signed PDF URL available');
+      return;
+    }
 
+    console.log('🔵 Starting signed PDF download');
+    
     try {
       const blob = await ContractSigningAPI.getSignedPdf(operator.id, signatureStatus.signedPdfUrl);
       const url = URL.createObjectURL(blob);
@@ -126,15 +151,16 @@ export const useContractSigning = (operator: ExtendedOperator) => {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
+      console.log('🟢 Signed PDF downloaded successfully');
       toast({
         title: "Download Completato",
         description: "Il contratto firmato è stato scaricato con successo.",
       });
-    } catch (error) {
-      console.error('Error downloading signed PDF:', error);
+    } catch (error: any) {
+      console.error('🔴 Error downloading signed PDF:', error);
       toast({
-        title: "Errore",
-        description: "Errore nel download del contratto firmato.",
+        title: "Errore Download",
+        description: error.message || "Errore nel download del contratto firmato.",
         variant: "destructive",
       });
     }
