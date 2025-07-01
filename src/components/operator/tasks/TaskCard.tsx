@@ -1,9 +1,11 @@
+
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, Clock, MapPin } from "lucide-react";
+import { Calendar, Clock, MapPin, User, Phone } from "lucide-react";
 import { format } from "date-fns";
 import TaskCheckButton from "./TaskCheckButton";
 import TaskLocation from "./TaskLocation";
+import { Operator } from "@/types/operator";
 
 interface TaskCardProps {
   event: {
@@ -15,6 +17,10 @@ interface TaskCardProps {
     endTime: string;
     location: string;
     shifts: string[];
+    eventReferentName?: string;
+    eventReferentSurname?: string;
+    eventReferentPhone?: string;
+    teamLeaderId?: number;
   };
   isCheckingIn?: boolean;
   loadingLocation?: boolean;
@@ -22,6 +28,8 @@ interface TaskCardProps {
   locationStatus?: "checking" | "valid" | "invalid" | "error";
   locationAccuracy?: number | null;
   onCheckAction?: () => void;
+  assignedOperators?: Operator[];
+  teamLeader?: Operator;
 }
 
 const TaskCard: React.FC<TaskCardProps> = ({
@@ -31,7 +39,9 @@ const TaskCard: React.FC<TaskCardProps> = ({
   lastCheckTime = null,
   locationStatus = "checking",
   locationAccuracy = null,
-  onCheckAction = () => {}
+  onCheckAction = () => {},
+  assignedOperators = [],
+  teamLeader
 }) => {
   const isTodayEvent = () => {
     const today = new Date();
@@ -120,6 +130,75 @@ const TaskCard: React.FC<TaskCardProps> = ({
         </div>
 
         <TaskLocation location={event.location} />
+
+        {/* Event Referent Information */}
+        {(event.eventReferentName || event.eventReferentSurname || event.eventReferentPhone) && (
+          <div className="space-y-2">
+            <div className="font-medium flex items-center gap-2">
+              <User className="h-4 w-4" />
+              Referente dell'evento
+            </div>
+            <div className="bg-gray-50 p-3 rounded-lg">
+              {(event.eventReferentName || event.eventReferentSurname) && (
+                <div className="font-medium">
+                  {event.eventReferentName} {event.eventReferentSurname}
+                </div>
+              )}
+              {event.eventReferentPhone && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Phone className="h-3 w-3" />
+                  {event.eventReferentPhone}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Team Leader Information */}
+        {teamLeader && (
+          <div className="space-y-2">
+            <div className="font-medium flex items-center gap-2">
+              <User className="h-4 w-4" />
+              Team Leader
+            </div>
+            <div className="bg-blue-50 p-3 rounded-lg">
+              <div className="font-medium">
+                {teamLeader.name} {teamLeader.surname}
+              </div>
+              {teamLeader.phone && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Phone className="h-3 w-3" />
+                  {teamLeader.phone}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Assigned Colleagues */}
+        {assignedOperators.length > 0 && (
+          <div className="space-y-2">
+            <div className="font-medium flex items-center gap-2">
+              <User className="h-4 w-4" />
+              I tuoi colleghi ({assignedOperators.length})
+            </div>
+            <div className="space-y-2">
+              {assignedOperators.map((operator) => (
+                <div key={operator.id} className="bg-gray-50 p-3 rounded-lg">
+                  <div className="font-medium">
+                    {operator.name} {operator.surname}
+                  </div>
+                  {operator.phone && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Phone className="h-3 w-3" />
+                      {operator.phone}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="space-y-2">
           <div className="font-medium">Turni assegnati</div>

@@ -12,6 +12,10 @@ interface Task {
   endTime: string;
   location: string;
   shifts: string[];
+  eventReferentName?: string;
+  eventReferentSurname?: string;
+  eventReferentPhone?: string;
+  teamLeaderId?: number;
 }
 
 export const useOperatorTasks = () => {
@@ -44,7 +48,11 @@ export const useOperatorTasks = () => {
             startTime: "09:00",
             endTime: "18:00",
             location: "Via Napoli 45, Napoli, NA",
-            shifts: ["Mattina (09:00-13:00)", "Pomeriggio (14:00-18:00)"]
+            shifts: ["Mattina (09:00-13:00)", "Pomeriggio (14:00-18:00)"],
+            eventReferentName: "Giuseppe",
+            eventReferentSurname: "Verdi",
+            eventReferentPhone: "+39 333 123 4567",
+            teamLeaderId: 1
           };
           
           console.log("Setting Mare nostro event for Mario with today's date");
@@ -127,7 +135,11 @@ export const useOperatorTasks = () => {
                 hour12: false 
               }),
               location: event.location || "Via Roma 123, Milano, MI", // Improved default location
-              shifts: shiftsArray
+              shifts: shiftsArray,
+              eventReferentName: event.eventReferentName,
+              eventReferentSurname: event.eventReferentSurname,
+              eventReferentPhone: event.eventReferentPhone,
+              teamLeaderId: event.teamLeaderId
             };
           });
         

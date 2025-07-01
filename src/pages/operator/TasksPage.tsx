@@ -4,6 +4,8 @@ import OperatorLayout from "@/components/OperatorLayout";
 import TaskCard from "@/components/operator/tasks/TaskCard";
 import { useOperatorTasks } from "@/hooks/useOperatorTasks";
 import { useOperatorAttendance } from "@/hooks/useOperatorAttendance";
+import { useAuth } from "@/contexts/AuthContext";
+import { Operator } from "@/types/operator";
 
 // Helper function to safely convert to Date
 const safeToDate = (dateValue: any): Date => {
@@ -14,6 +16,7 @@ const safeToDate = (dateValue: any): Date => {
 
 const TasksPage: React.FC = () => {
   const { tasks, loading } = useOperatorTasks();
+  const { user } = useAuth();
   
   console.log("useOperatorTasks result:", { tasks, loading, tasksLength: tasks?.length });
   
@@ -27,7 +30,11 @@ const TasksPage: React.FC = () => {
     startTime: "09:00",
     endTime: "18:00",
     location: "Centro Congressi Milano, Via Conferenze 15, Milano, MI",
-    shifts: ["Mattina (09:00-13:00)", "Pomeriggio (14:00-18:00)"]
+    shifts: ["Mattina (09:00-13:00)", "Pomeriggio (14:00-18:00)"],
+    eventReferentName: "Marco",
+    eventReferentSurname: "Bianchi",
+    eventReferentPhone: "+39 333 987 6543",
+    teamLeaderId: 1
   };
   
   // Select the most relevant event to display using proper prioritization
@@ -92,6 +99,44 @@ const TasksPage: React.FC = () => {
     isCurrentlyCheckedIn
   });
 
+  // Get operators data to show colleagues and team leader
+  const getOperatorsData = () => {
+    try {
+      const storedOperators = localStorage.getItem("app_operators_data");
+      const storedEvents = localStorage.getItem("app_events_data");
+      
+      if (!storedOperators || !storedEvents) {
+        return { assignedOperators: [], teamLeader: null };
+      }
+      
+      const operators = JSON.parse(storedOperators);
+      const events = JSON.parse(storedEvents);
+      
+      // Find the current event in stored events
+      const eventData = events.find((e: any) => e.id === currentEvent.id);
+      
+      // Get all operators assigned to this event (excluding current user)
+      const assignedOperators = operators.filter((op: Operator) => {
+        if (!op.assignedEvents) return false;
+        const isAssigned = op.assignedEvents.includes(currentEvent.id);
+        const isCurrentUser = op.email === user?.email || op.name === user?.name;
+        return isAssigned && !isCurrentUser;
+      });
+      
+      // Get team leader if specified
+      const teamLeader = eventData?.teamLeaderId 
+        ? operators.find((op: Operator) => op.id === eventData.teamLeaderId)
+        : null;
+      
+      return { assignedOperators, teamLeader };
+    } catch (error) {
+      console.error("Error getting operators data:", error);
+      return { assignedOperators: [], teamLeader: null };
+    }
+  };
+
+  const { assignedOperators, teamLeader } = getOperatorsData();
+
   if (loading) {
     console.log("Showing loading state");
     return (
@@ -104,7 +149,7 @@ const TasksPage: React.FC = () => {
     );
   }
 
-  console.log("Rendering TaskCard with:", { currentEvent });
+  console.log("Rendering TaskCard with:", { currentEvent, assignedOperators, teamLeader });
 
   return (
     <OperatorLayout>
@@ -119,6 +164,8 @@ const TasksPage: React.FC = () => {
           locationStatus={locationStatus}
           locationAccuracy={locationAccuracy}
           onCheckAction={handleCheckAction}
+          assignedOperators={assignedOperators}
+          teamLeader={teamLeader}
         />
       </div>
     </OperatorLayout>
