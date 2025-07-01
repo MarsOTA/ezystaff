@@ -30,7 +30,7 @@ const PersonnelTypes: React.FC<PersonnelTypesProps> = ({
   
   return (
     <div className="space-y-2" onClick={(e) => e.stopPropagation()}>
-      <Label>Tipologia di personale richiesto *</Label>
+      <Label>Quantità di personale richiesto *</Label>
       <div className="space-y-4">
         {personnelTypes.map((type) => (
           <div key={type.id} className="flex items-center justify-between border p-2 rounded-md">

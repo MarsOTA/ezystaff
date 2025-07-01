@@ -4,17 +4,21 @@ export interface PlacePrediction {
   place_id: string;
 }
 
-export type PersonnelType = "security" | "doorman" | "hostess";
+export type PersonnelType = "security" | "doorman" | "hostess" | "teamleader";
 
 export const personnelTypes = [
   { id: "security", label: "Security" },
   { id: "doorman", label: "Doorman" },
   { id: "hostess", label: "Hostess/Steward" },
+  { id: "teamleader", label: "Team Leader" },
 ];
 
 export interface EventFormData {
   title: string;
   client: string;
+  eventReferentName: string;
+  eventReferentSurname: string;
+  eventReferentPhone: string;
   selectedPersonnel: string[];
   startDate: Date | undefined;
   endDate: Date | undefined;

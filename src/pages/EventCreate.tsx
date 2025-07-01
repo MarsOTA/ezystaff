@@ -216,6 +216,37 @@ const EventCreate = () => {
                   </p>
                 )}
               </div>
+
+              {/* Campi referente evento */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="eventReferentName">Nome Referente</Label>
+                  <Input 
+                    id="eventReferentName" 
+                    placeholder="Nome referente evento" 
+                    value={formData.eventReferentName || ""}
+                    onChange={(e) => updateFormField('eventReferentName', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="eventReferentSurname">Cognome Referente</Label>
+                  <Input 
+                    id="eventReferentSurname" 
+                    placeholder="Cognome referente evento" 
+                    value={formData.eventReferentSurname || ""}
+                    onChange={(e) => updateFormField('eventReferentSurname', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="eventReferentPhone">Telefono Referente</Label>
+                  <Input 
+                    id="eventReferentPhone" 
+                    placeholder="Numero di telefono" 
+                    value={formData.eventReferentPhone || ""}
+                    onChange={(e) => updateFormField('eventReferentPhone', e.target.value)}
+                  />
+                </div>
+              </div>
               
               <EventLocationFields 
                 eventLocation={formData.eventLocation}

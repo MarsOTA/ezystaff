@@ -13,6 +13,9 @@ export function useEventForm(eventId: string | null) {
   const [formData, setFormData] = useState<EventFormData>({
     title: "",
     client: "",
+    eventReferentName: "",
+    eventReferentSurname: "",
+    eventReferentPhone: "",
     selectedPersonnel: [],
     startDate: new Date(),
     endDate: new Date(),
@@ -68,6 +71,9 @@ export function useEventForm(eventId: string | null) {
             setFormData({
               title: eventToEdit.title,
               client: clientObject ? clientObject.id.toString() : "",
+              eventReferentName: (eventToEdit as any).eventReferentName || "",
+              eventReferentSurname: (eventToEdit as any).eventReferentSurname || "",
+              eventReferentPhone: (eventToEdit as any).eventReferentPhone || "",
               selectedPersonnel: eventToEdit.personnelTypes,
               startDate: eventToEdit.startDate,
               endDate: eventToEdit.endDate,

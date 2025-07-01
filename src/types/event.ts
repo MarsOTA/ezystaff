@@ -20,6 +20,9 @@ export interface Event {
   id: number;
   title: string;
   client: string;
+  eventReferentName?: string;
+  eventReferentSurname?: string;
+  eventReferentPhone?: string;
   startDate: Date;
   endDate: Date;
   personnelTypes: string[];
