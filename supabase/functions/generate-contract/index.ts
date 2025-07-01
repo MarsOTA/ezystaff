@@ -41,7 +41,7 @@ serve(async (req) => {
       headers: {
         ...corsHeaders,
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="contratto_${operatorName.replace(/\s+/g, '_")}.pdf"`,
+        'Content-Disposition': `attachment; filename="contratto_${operatorName.replace(/\s+/g, '_')}.pdf"`,
       },
     });
 
