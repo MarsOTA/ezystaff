@@ -39,6 +39,7 @@ export interface Event {
   shifts?: Shift[];
   daySchedules?: DaySchedule[];
   totalScheduledHours?: number;
+  teamLeaderId?: number;
 }
 
 export const EVENTS_STORAGE_KEY = "app_events_data";

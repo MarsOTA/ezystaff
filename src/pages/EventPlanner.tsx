@@ -36,7 +36,8 @@ const EventPlanner = () => {
     removeShift,
     isDateInEventRange,
     handleRemoveEvent,
-    handleAssign
+    handleAssign,
+    handleTeamLeaderChange
   } = useEventPlannerLogic(operatorId);
 
   if (!selectedOperator) {
@@ -63,6 +64,8 @@ const EventPlanner = () => {
           events={events}
           selectedEventId={selectedEventId}
           onEventChange={setSelectedEventId}
+          selectedEvent={selectedEvent}
+          onTeamLeaderChange={handleTeamLeaderChange}
         />
 
         <AssignedEventsList 

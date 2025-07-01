@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
@@ -107,6 +106,24 @@ export const useEventPlannerLogic = (operatorId: string | undefined) => {
         return {
           ...event,
           shifts: updatedShifts
+        };
+      }
+      return event;
+    });
+
+    setEvents(updatedEvents);
+    safeLocalStorage.setItem(EVENTS_STORAGE_KEY, JSON.stringify(updatedEvents));
+  };
+
+  const handleTeamLeaderChange = (isTeamLeader: boolean) => {
+    if (!selectedOperator || !selectedEventId) return;
+
+    const eventId = parseInt(selectedEventId);
+    const updatedEvents = events.map(event => {
+      if (event.id === eventId) {
+        return {
+          ...event,
+          teamLeaderId: isTeamLeader ? selectedOperator.id : undefined
         };
       }
       return event;
@@ -281,6 +298,7 @@ export const useEventPlannerLogic = (operatorId: string | undefined) => {
     
     // Actions
     handleRemoveEvent,
-    handleAssign
+    handleAssign,
+    handleTeamLeaderChange
   };
 };
