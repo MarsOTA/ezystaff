@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Layout from "@/components/Layout";
-import { ArrowLeft, Calendar, Clock } from "lucide-react";
+import { ArrowLeft, Calendar, Clock, Users } from "lucide-react";
 import { toast } from "sonner";
 import { Event, EVENTS_STORAGE_KEY } from "@/types/event";
 import { safeLocalStorage } from "@/utils/fileUtils";
@@ -28,6 +27,7 @@ const EventScheduling = () => {
   const [event, setEvent] = useState<Event | null>(null);
   const [daySchedules, setDaySchedules] = useState<DaySchedule[]>([]);
   const [totalHours, setTotalHours] = useState(0);
+  const [assignedOperatorsCount, setAssignedOperatorsCount] = useState(0);
 
   // Load event data
   useEffect(() => {
@@ -46,6 +46,7 @@ const EventScheduling = () => {
         if (foundEvent) {
           setEvent(foundEvent);
           generateDaySchedules(foundEvent);
+          calculateAssignedOperators(foundEvent);
         } else {
           toast.error("Evento non trovato");
           navigate("/events");
@@ -57,6 +58,22 @@ const EventScheduling = () => {
       }
     }
   }, [eventId, navigate]);
+
+  const calculateAssignedOperators = (eventData: Event) => {
+    try {
+      const storedOperators = safeLocalStorage.getItem("app_operators_data");
+      if (storedOperators) {
+        const operators = JSON.parse(storedOperators);
+        const assignedCount = operators.filter((operator: any) => 
+          operator.assignedEvents && operator.assignedEvents.includes(eventData.id)
+        ).length;
+        setAssignedOperatorsCount(assignedCount);
+      }
+    } catch (error) {
+      console.error("Errore nel calcolo degli operatori assegnati:", error);
+      setAssignedOperatorsCount(0);
+    }
+  };
 
   const generateDaySchedules = (eventData: Event) => {
     const startDate = new Date(eventData.startDate);
@@ -182,6 +199,7 @@ const EventScheduling = () => {
   }
 
   const eventDuration = differenceInDays(new Date(event.endDate), new Date(event.startDate)) + 1;
+  const totalPersonnelHours = totalHours * assignedOperatorsCount;
 
   return (
     <Layout>
@@ -207,6 +225,7 @@ const EventScheduling = () => {
               <p><strong>{event.title}</strong></p>
               <p>Cliente: {event.client}</p>
               <p>Durata: {eventDuration} {eventDuration === 1 ? 'giorno' : 'giorni'}</p>
+              <p>Operatori assegnati: {assignedOperatorsCount}</p>
             </div>
           </CardHeader>
           <CardContent>
@@ -271,12 +290,26 @@ const EventScheduling = () => {
                   ))}
                 </div>
 
-                <div className="border-t pt-4">
+                <div className="border-t pt-4 space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-lg font-semibold">Monte ore totale:</span>
+                    <span className="text-lg font-semibold">Monte ore evento:</span>
                     <span className="text-2xl font-bold text-primary">
                       {totalHours.toFixed(1)} ore
                     </span>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <span className="text-lg font-semibold flex items-center gap-2">
+                      <Users className="h-5 w-5" />
+                      Monte ore personale:
+                    </span>
+                    <span className="text-2xl font-bold text-secondary">
+                      {totalPersonnelHours.toFixed(1)} ore
+                    </span>
+                  </div>
+                  
+                  <div className="text-sm text-muted-foreground">
+                    Monte ore personale = Monte ore evento ({totalHours.toFixed(1)}) × Operatori assegnati ({assignedOperatorsCount})
                   </div>
                 </div>
 
