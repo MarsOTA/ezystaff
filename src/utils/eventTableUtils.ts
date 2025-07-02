@@ -50,7 +50,7 @@ export const getStatusText = (status?: string) => {
 };
 
 export const calculateStaffKPI = (event: Event, operators: any[]) => {
-  // Forza il calcolo sempre aggiornato senza cache
+  // Calculate assigned operators for this event
   const assignedOperatorsCount = operators.filter((op: any) => 
     op.assignedEvents && op.assignedEvents.includes(event.id)
   ).length;
@@ -65,20 +65,28 @@ export const calculateStaffKPI = (event: Event, operators: any[]) => {
     timestamp: new Date().toISOString()
   });
 
-  // Calculate total required personnel from event data
-  const totalRequired = event.personnelCounts ? 
-    Object.values(event.personnelCounts).reduce((sum, count) => sum + count, 0) : 0;
+  // Get total planned hours from event scheduling (monte ore evento)
+  const totalPlannedHours = event.totalScheduledHours || 0;
 
-  // Return both numbers and percentage
+  // Calculate assigned hours (ore assegnate tramite i turni operatore)
+  const assignedHours = assignedOperatorsCount * totalPlannedHours;
+
+  // Calculate total required hours (monte ore totale dei dipendenti previsti)
+  const totalRequiredHours = event.personnelCounts ? 
+    Object.values(event.personnelCounts).reduce((sum, count) => sum + count, 0) * totalPlannedHours : 
+    totalPlannedHours;
+
+  const percentage = totalRequiredHours > 0 ? Math.round((assignedHours / totalRequiredHours) * 100) : 0;
+
   return {
-    assigned: assignedOperatorsCount,
-    required: totalRequired,
-    percentage: totalRequired > 0 ? Math.round((assignedOperatorsCount / totalRequired) * 100) : 0
+    assigned: assignedHours,
+    total: totalRequiredHours,
+    percentage
   };
 };
 
 export const getKpiColorClass = (percentage: number) => {
-  if (percentage >= 100) return "bg-green-100 text-green-800";
-  if (percentage >= 75) return "bg-yellow-100 text-yellow-800";
-  return "bg-red-100 text-red-800";
+  if (percentage >= 90) return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
+  if (percentage >= 70) return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
+  return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
 };

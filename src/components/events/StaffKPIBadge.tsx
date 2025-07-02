@@ -1,7 +1,6 @@
 
 import React, { useMemo, useEffect, useState } from 'react';
 import { Event } from "@/types/event";
-import { getKpiColorClass } from "@/utils/eventTableUtils";
 import { safeLocalStorage } from "@/utils/fileUtils";
 import { OPERATORS_STORAGE_KEY } from "@/types/operator";
 
@@ -76,7 +75,7 @@ const StaffKPIBadge = ({ event, operators, updateTrigger }: StaffKPIBadgeProps) 
       totalScheduledHours: event.totalScheduledHours
     });
 
-    // Get total planned hours from event scheduling
+    // Get total planned hours from event scheduling (monte ore evento)
     const totalPlannedHours = event.totalScheduledHours || 0;
 
     // Calculate assigned hours based on operators assigned to this event
@@ -85,23 +84,38 @@ const StaffKPIBadge = ({ event, operators, updateTrigger }: StaffKPIBadgeProps) 
     );
 
     // For now, assume each assigned operator works the full planned hours
-    // This is a simplified calculation - in a real scenario, you might have 
-    // more detailed shift assignments per operator
+    // This represents the "ore assegnate tramite i turni operatore"
     const assignedHours = assignedOperators.length * totalPlannedHours;
+
+    // Calculate the total required hours based on the event's personnel requirements
+    // This represents the "monte ore totale dei dipendenti previsti"
+    const totalRequiredHours = event.personnelCounts ? 
+      Object.values(event.personnelCounts).reduce((sum, count) => sum + count, 0) * totalPlannedHours : 
+      totalPlannedHours;
+
+    const percentage = totalRequiredHours > 0 ? Math.round((assignedHours / totalRequiredHours) * 100) : 0;
 
     const result = {
       assigned: assignedHours,
-      total: totalPlannedHours,
-      percentage: totalPlannedHours > 0 ? Math.round((assignedHours / totalPlannedHours) * 100) : 0
+      total: totalRequiredHours,
+      percentage
     };
 
     console.log(`StaffKPIBadge: Hours KPI result for event ${event.id}:`, result);
     return result;
-  }, [event.id, event.totalScheduledHours, operators, localOperators, updateTrigger, localUpdateTrigger]);
+  }, [event.id, event.totalScheduledHours, event.personnelCounts, operators, localOperators, updateTrigger, localUpdateTrigger]);
+  
+  // Dynamic color based on percentage
+  const getKpiColorClass = (percentage: number) => {
+    if (percentage >= 90) return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
+    if (percentage >= 70) return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
+    return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
+  };
   
   return (
     <span 
       className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getKpiColorClass(kpi.percentage)}`}
+      title={`Ore assegnate: ${kpi.assigned}h / Ore richieste: ${kpi.total}h`}
     >
       {kpi.assigned}h / {kpi.total}h ({kpi.percentage}%)
     </span>

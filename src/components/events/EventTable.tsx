@@ -42,7 +42,7 @@ const EventTable: React.FC<EventTableProps> = ({
             <th className="text-left p-4 font-medium">Data inizio</th>
             <th className="text-left p-4 font-medium">Data fine</th>
             <th className="text-left p-4 font-medium">Stato</th>
-            <th className="text-left p-4 font-medium">Staff</th>
+            <th className="text-left p-4 font-medium">Staff KPI</th>
             <th className="text-left p-4 font-medium">Azioni</th>
           </tr>
         </thead>
