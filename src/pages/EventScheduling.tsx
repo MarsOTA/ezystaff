@@ -337,7 +337,7 @@ const EventScheduling = () => {
                           </div>
                         </div>
 
-                        <div className="grid md:grid-cols-4 gap-4 items-end mt-4 pt-4 border-t">
+                        <div className="grid md:grid-cols-3 gap-4 items-end mt-4 pt-4 border-t">
                           <div className="space-y-2">
                             <Label htmlFor={`operators-${index}`}>Numero operatori</Label>
                             <Input
@@ -368,7 +368,7 @@ const EventScheduling = () => {
                           </div>
 
                           <div className="space-y-2">
-                            <Label>Operatori assegnati</Label>
+                            <Label>Selezione operatori</Label>
                             <Button
                               variant="outline"
                               onClick={() => handleOpenOperatorSelection(index)}
@@ -377,22 +377,6 @@ const EventScheduling = () => {
                               <UserPlus className="h-4 w-4" />
                               Seleziona operatori
                             </Button>
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label className="text-sm text-muted-foreground">Operatori selezionati</Label>
-                            <div className="text-sm p-2 bg-muted rounded-md min-h-[40px] flex items-center">
-                              {schedule.assignedOperators && schedule.assignedOperators.length > 0 ? (
-                                <div>
-                                  <span className="font-medium">{schedule.assignedOperators.length} operatori</span>
-                                  <div className="text-xs text-muted-foreground mt-1 truncate">
-                                    {getOperatorNames(schedule.assignedOperators)}
-                                  </div>
-                                </div>
-                              ) : (
-                                <span className="text-muted-foreground">Nessun operatore selezionato</span>
-                              )}
-                            </div>
                           </div>
                         </div>
 

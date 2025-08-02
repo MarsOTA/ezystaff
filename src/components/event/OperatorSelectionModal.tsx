@@ -29,7 +29,9 @@ const OperatorSelectionModal: React.FC<OperatorSelectionModalProps> = ({
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    setSelectedOperators(preSelectedOperators);
+    if (open) {
+      setSelectedOperators([...preSelectedOperators]);
+    }
   }, [preSelectedOperators, open]);
 
   const filteredOperators = operators.filter(operator => {
