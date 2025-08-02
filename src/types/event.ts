@@ -14,6 +14,9 @@ export interface DaySchedule {
   lunchBreakStartTime: string;
   lunchBreakEndTime: string;
   dailyHours: number;
+  requiredOperators?: number;
+  activityType?: string;
+  assignedOperators?: number[];
 }
 
 export interface Event {

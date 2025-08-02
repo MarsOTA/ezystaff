@@ -5,12 +5,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Layout from "@/components/Layout";
-import { ArrowLeft, Calendar, Clock, Users } from "lucide-react";
+import { ArrowLeft, Calendar, Clock, Users, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { Event, EVENTS_STORAGE_KEY } from "@/types/event";
 import { safeLocalStorage } from "@/utils/fileUtils";
 import { format, addDays, differenceInDays } from "date-fns";
 import { it } from "date-fns/locale";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import OperatorSelectionModal from "@/components/event/OperatorSelectionModal";
+import { useOperators } from "@/hooks/useOperators";
 
 interface DaySchedule {
   date: Date;
@@ -19,15 +22,21 @@ interface DaySchedule {
   lunchBreakStartTime: string;
   lunchBreakEndTime: string;
   dailyHours: number;
+  requiredOperators?: number;
+  activityType?: string;
+  assignedOperators?: number[];
 }
 
 const EventScheduling = () => {
   const navigate = useNavigate();
   const { eventId } = useParams<{ eventId: string }>();
+  const { operators } = useOperators();
   const [event, setEvent] = useState<Event | null>(null);
   const [daySchedules, setDaySchedules] = useState<DaySchedule[]>([]);
   const [totalHours, setTotalHours] = useState(0);
   const [assignedOperatorsCount, setAssignedOperatorsCount] = useState(0);
+  const [operatorModalOpen, setOperatorModalOpen] = useState(false);
+  const [selectedDayIndex, setSelectedDayIndex] = useState<number | null>(null);
 
   // Load event data
   useEffect(() => {
@@ -136,7 +145,7 @@ const EventScheduling = () => {
     setTotalHours(total);
   };
 
-  const handleTimeChange = (index: number, field: keyof DaySchedule, value: string) => {
+  const handleTimeChange = (index: number, field: keyof DaySchedule, value: string | number) => {
     const updatedSchedules = [...daySchedules];
     
     // Handle different field types properly
@@ -144,22 +153,48 @@ const EventScheduling = () => {
       // This shouldn't happen in our current UI, but handle it for type safety
       return;
     } else {
-      // All other fields are strings
+      // All other fields are strings or numbers
       (updatedSchedules[index] as any)[field] = value;
     }
     
-    // Recalculate daily hours for this day
-    const schedule = updatedSchedules[index];
-    const dailyHours = calculateDailyHours(
-      schedule.startTime,
-      schedule.endTime,
-      schedule.lunchBreakStartTime,
-      schedule.lunchBreakEndTime
-    );
-    updatedSchedules[index].dailyHours = dailyHours;
+    // Recalculate daily hours for this day if time fields changed
+    if (['startTime', 'endTime', 'lunchBreakStartTime', 'lunchBreakEndTime'].includes(field)) {
+      const schedule = updatedSchedules[index];
+      const dailyHours = calculateDailyHours(
+        schedule.startTime,
+        schedule.endTime,
+        schedule.lunchBreakStartTime,
+        schedule.lunchBreakEndTime
+      );
+      updatedSchedules[index].dailyHours = dailyHours;
+    }
     
     setDaySchedules(updatedSchedules);
     updateTotalHours(updatedSchedules);
+  };
+
+  const handleOpenOperatorSelection = (dayIndex: number) => {
+    setSelectedDayIndex(dayIndex);
+    setOperatorModalOpen(true);
+  };
+
+  const handleOperatorSelection = (selectedOperatorIds: number[]) => {
+    if (selectedDayIndex !== null) {
+      const updatedSchedules = [...daySchedules];
+      updatedSchedules[selectedDayIndex].assignedOperators = selectedOperatorIds;
+      setDaySchedules(updatedSchedules);
+      toast.success(`${selectedOperatorIds.length} operatori assegnati al giorno`);
+    }
+  };
+
+  const getOperatorNames = (operatorIds: number[] = []) => {
+    return operatorIds
+      .map(id => {
+        const operator = operators.find(op => op.id === id);
+        return operator ? `${operator.name} ${operator.surname}` : '';
+      })
+      .filter(Boolean)
+      .join(', ');
   };
 
   const handleSave = () => {
@@ -285,6 +320,65 @@ const EventScheduling = () => {
                             {schedule.dailyHours.toFixed(1)} ore
                           </div>
                         </div>
+
+                        <div className="grid md:grid-cols-4 gap-4 items-end mt-4 pt-4 border-t">
+                          <div className="space-y-2">
+                            <Label htmlFor={`operators-${index}`}>Numero operatori</Label>
+                            <Input
+                              id={`operators-${index}`}
+                              type="number"
+                              min="0"
+                              value={schedule.requiredOperators || 0}
+                              onChange={(e) => handleTimeChange(index, 'requiredOperators', parseInt(e.target.value) || 0)}
+                              placeholder="0"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor={`activity-${index}`}>Tipologia attività</Label>
+                            <Select
+                              value={schedule.activityType || ''}
+                              onValueChange={(value) => handleTimeChange(index, 'activityType', value)}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Seleziona tipologia" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="close-protection">Close protection</SelectItem>
+                                <SelectItem value="security">Security</SelectItem>
+                                <SelectItem value="shooting">Shooting</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label>Operatori assegnati</Label>
+                            <Button
+                              variant="outline"
+                              onClick={() => handleOpenOperatorSelection(index)}
+                              className="w-full justify-start gap-2"
+                            >
+                              <UserPlus className="h-4 w-4" />
+                              Seleziona operatori
+                            </Button>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label className="text-sm text-muted-foreground">Operatori selezionati</Label>
+                            <div className="text-sm p-2 bg-muted rounded-md min-h-[40px] flex items-center">
+                              {schedule.assignedOperators && schedule.assignedOperators.length > 0 ? (
+                                <div>
+                                  <span className="font-medium">{schedule.assignedOperators.length} operatori</span>
+                                  <div className="text-xs text-muted-foreground mt-1 truncate">
+                                    {getOperatorNames(schedule.assignedOperators)}
+                                  </div>
+                                </div>
+                              ) : (
+                                <span className="text-muted-foreground">Nessun operatore selezionato</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </Card>
                   ))}
@@ -332,6 +426,14 @@ const EventScheduling = () => {
             )}
           </CardContent>
         </Card>
+
+        <OperatorSelectionModal
+          open={operatorModalOpen}
+          onClose={() => setOperatorModalOpen(false)}
+          onConfirm={handleOperatorSelection}
+          preSelectedOperators={selectedDayIndex !== null ? daySchedules[selectedDayIndex]?.assignedOperators || [] : []}
+          date={selectedDayIndex !== null ? daySchedules[selectedDayIndex]?.date || new Date() : new Date()}
+        />
       </div>
     </Layout>
   );
