@@ -13,6 +13,7 @@ import { format, addDays, differenceInDays } from "date-fns";
 import { it } from "date-fns/locale";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import OperatorSelectionModal from "@/components/event/OperatorSelectionModal";
+import AssignedOperatorsSection from "@/components/event/AssignedOperatorsSection";
 import { useOperators } from "@/hooks/useOperators";
 
 interface DaySchedule {
@@ -184,6 +185,21 @@ const EventScheduling = () => {
       updatedSchedules[selectedDayIndex].assignedOperators = selectedOperatorIds;
       setDaySchedules(updatedSchedules);
       toast.success(`${selectedOperatorIds.length} operatori assegnati al giorno`);
+    }
+  };
+
+  const handleRemoveOperator = (dayIndex: number, operatorId: number) => {
+    const updatedSchedules = [...daySchedules];
+    if (updatedSchedules[dayIndex].assignedOperators) {
+      updatedSchedules[dayIndex].assignedOperators = updatedSchedules[dayIndex].assignedOperators!.filter(
+        id => id !== operatorId
+      );
+      setDaySchedules(updatedSchedules);
+      
+      const operator = operators.find(op => op.id === operatorId);
+      if (operator) {
+        toast.success(`${operator.name} ${operator.surname} rimosso dal turno`);
+      }
     }
   };
 
@@ -379,6 +395,13 @@ const EventScheduling = () => {
                             </div>
                           </div>
                         </div>
+
+                        {schedule.assignedOperators && schedule.assignedOperators.length > 0 && (
+                          <AssignedOperatorsSection
+                            assignedOperators={schedule.assignedOperators}
+                            onRemoveOperator={(operatorId) => handleRemoveOperator(index, operatorId)}
+                          />
+                        )}
                       </div>
                     </Card>
                   ))}
